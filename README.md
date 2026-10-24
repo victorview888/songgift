@@ -1,5 +1,49 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## MusicAPI.ai free-credit testing
+
+The default music adapter uses MusicAPI.ai Sonic. Sign up at https://musicapi.ai/, create an API key, and put it in `.env.local` as `MUSICAPI_KEY`. Free signup credits are attached to the MusicAPI.ai account, not to this codebase. Keep the key server-side.
+
+```env
+MUSIC_PROVIDER=musicapi
+MUSICAPI_KEY=your_server_side_key
+MUSICAPI_BASE_URL=https://api.musicapi.ai/api/v1
+MUSICAPI_MODEL=sonic-v5
+```
+
+MusicAPI.ai's Sonic create endpoint always generates two versions and charges for a two-song generation. It has no `n: 1` option. SongGift selects the first playable version, stores that single audio file in Supabase, and shows only that song to the customer. The other version is not persisted. Set `MUSIC_PROVIDER=mureka` to switch back to the retained Mureka integration, which requests one song with `n: 1`.
+
+## DeepSeek lyrics access
+
+The default lyrics adapter uses `deepseek-flash`. Create an API key in the [DeepSeek platform](https://platform.deepseek.com/), then add these server-side values to `.env.local`:
+
+```env
+LYRICS_PROVIDER=deepseek
+DEEPSEEK_API_KEY=your_server_side_key
+DEEPSEEK_MODEL=deepseek-flash
+```
+
+DeepSeek charges for API usage from your account balance or promotional credit. Restart `npm run dev` after updating `.env.local`. `/api/health` reports `lyricsProvider` and `hasDeepSeekKey`; the key itself is never sent to the browser.
+
+## Optional Gemini lyrics access
+
+Set `LYRICS_PROVIDER=gemini`, `GEMINI_MODEL=gemini-3.8-flash`, and a Gemini API key from Google AI Studio. If `/api/lyrics` returns `503` saying the key's project is restricted, inspect that project's status in AI Studio and contact Google support to restore access. Creating another key under the same restricted project will not resolve the `403` response. This project restriction does not affect the MusicAPI.ai adapter.
+
+## Switching back to Mureka
+
+The production music provider is selected with `MUSIC_PROVIDER`. The retained Mureka China adapter can be selected with:
+
+```env
+MUSIC_PROVIDER=mureka
+MUREKA_API_KEY=your_server_side_key
+MUREKA_API_BASE_URL=https://api.mureka.cn
+MUREKA_MODEL=auto
+```
+
+Create the key in the Mureka API platform and keep it in `.env.local` or Vercel server-side environment variables. The browser never receives this key. Song creation returns an asynchronous task; the result page polls the task, downloads the provider's temporary audio URL on the server, and stores the final file in Supabase Storage when Supabase is configured.
+
+The lyrics-to-song request sets `n: 1`, so Mureka generates and bills for one complete vocal song per request. The song includes its musical accompaniment. Mureka's separate instrumental/background-music and stem-separation APIs are not part of this flow.
+
 ## Getting Started
 
 First, run the development server:
