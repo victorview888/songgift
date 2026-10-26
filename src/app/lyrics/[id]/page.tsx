@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 const starterLyrics = [
   "Verse 1",
@@ -40,7 +40,67 @@ export default function LyricsPage() {
   const [lyrics, setLyrics] = useState(starterLyrics);
   const [title, setTitle] = useState("Untitled song");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState("");
   const [error, setError] = useState("");
+
+  const generateMusic = useCallback(async () => {
+    const savedStory = sessionStorage.getItem("songgift-story");
+    const story = savedStory
+      ? (JSON.parse(savedStory) as {
+          recipientName?: string;
+          occasion?: string;
+          story?: string;
+          mood?: string;
+          style?: string;
+        })
+      : {};
+    const response = await fetch("/api/music", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recipientName: story.recipientName || recipient,
+        occasion: story.occasion || "",
+        story: story.story || "",
+        mood: story.mood || "",
+        style: story.style || "",
+        lyricsText: lyrics,
+        orderId: sessionStorage.getItem("songgift-order-id") || undefined,
+      }),
+    });
+    const payload = (await response.json()) as { error?: string; [key: string]: unknown };
+    if (!response.ok) throw new Error(payload.error || "Music generation failed.");
+    sessionStorage.setItem("songgift-lyrics", lyrics);
+    sessionStorage.setItem("songgift-result", JSON.stringify(payload));
+    router.push("/song/demo");
+  }, [lyrics, recipient, router]);
+
+  useEffect(() => {
+    const paypalToken = new URLSearchParams(window.location.search).get("token");
+    if (!paypalToken) return;
+    let active = true;
+    window.setTimeout(async () => {
+      setIsGenerating(true);
+      setPaymentStatus("Confirming your payment...");
+      setError("");
+      try {
+        const response = await fetch("/api/paypal/capture-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paypalOrderId: paypalToken }),
+        });
+        const payload = (await response.json()) as { error?: string; orderId?: string };
+        if (!response.ok) throw new Error(payload.error || "Payment confirmation failed.");
+        if (payload.orderId) sessionStorage.setItem("songgift-order-id", payload.orderId);
+        setPaymentStatus("Payment confirmed. Starting song generation...");
+        if (active) await generateMusic();
+      } catch (caught) {
+        if (active) setError(caught instanceof Error ? caught.message : "Payment confirmation failed.");
+      } finally {
+        if (active) setIsGenerating(false);
+      }
+    }, 0);
+    return () => { active = false; };
+  }, [generateMusic]);
 
   useEffect(() => {
     const savedStory = sessionStorage.getItem("songgift-story");
@@ -66,40 +126,23 @@ export default function LyricsPage() {
     event.preventDefault();
     setIsGenerating(true);
     setError("");
+    setPaymentStatus("Opening secure PayPal checkout...");
 
     try {
-      const savedStory = sessionStorage.getItem("songgift-story");
-      const story = savedStory
-        ? (JSON.parse(savedStory) as {
-            recipientName?: string;
-            occasion?: string;
-            story?: string;
-          mood?: string;
-          style?: string;
-          })
-        : {};
-      const response = await fetch("/api/music", {
+      const response = await fetch("/api/paypal/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipientName: story.recipientName || recipient,
-          occasion: story.occasion || "",
-          story: story.story || "",
-          mood: story.mood || "",
-          style: story.style || "",
-          lyricsText: lyrics,
-          orderId: sessionStorage.getItem("songgift-order-id") || undefined,
-        }),
+        body: JSON.stringify({ orderId: sessionStorage.getItem("songgift-order-id") || "" }),
       });
-      const payload = (await response.json()) as {
-        error?: string;
-        [key: string]: unknown;
-      };
-      if (!response.ok) throw new Error(payload.error || "Music generation failed.");
-
-      sessionStorage.setItem("songgift-lyrics", lyrics);
-      sessionStorage.setItem("songgift-result", JSON.stringify(payload));
-      router.push("/song/demo");
+      const payload = (await response.json()) as { error?: string; approvalUrl?: string; alreadyPaid?: boolean };
+      if (!response.ok) throw new Error(payload.error || "PayPal checkout could not start.");
+      if (payload.alreadyPaid) {
+        setPaymentStatus("Payment already confirmed. Starting song generation...");
+        await generateMusic();
+        return;
+      }
+      if (!payload.approvalUrl) throw new Error("PayPal did not return a checkout link.");
+      window.location.assign(payload.approvalUrl);
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Music generation failed.",
@@ -129,10 +172,11 @@ export default function LyricsPage() {
           <div className="form-submit-row">
             <Link className="text-link" href="/create">← Edit story</Link>
             <button className="primary-button" type="submit" disabled={isGenerating}>
-              {isGenerating ? "Creating music..." : "Continue to song"}
+              {isGenerating ? (paymentStatus || "Processing...") : "Pay and create song"}
               {!isGenerating && <span aria-hidden="true">↗</span>}
             </button>
           </div>
+          {paymentStatus && <p className="form-note" role="status">{paymentStatus}</p>}
           {error && <p className="form-error" role="alert">{error}</p>}
         </form>
       </section>

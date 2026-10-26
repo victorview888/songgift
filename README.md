@@ -25,6 +25,12 @@ DEEPSEEK_MODEL=deepseek-flash
 
 DeepSeek charges for API usage from your account balance or promotional credit. Restart `npm run dev` after updating `.env.local`. `/api/health` reports `lyricsProvider` and `hasDeepSeekKey`; the key itself is never sent to the browser.
 
+## PayPal checkout and email delivery
+
+Song generation is gated by PayPal when `PAYPAL_REQUIRED=true` (the default). Create a PayPal REST app in Sandbox for testing and set `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENVIRONMENT=sandbox`, and `SONG_PRICE_USD`. The checkout return URL is derived from the current site URL unless `PAYPAL_RETURN_URL` and `PAYPAL_CANCEL_URL` are set explicitly. Run the additions in `supabase/schema.sql` to add the payment columns to `song_orders`.
+
+When a completed song is saved, SongGift sends the signed audio link to the order email through Resend. Set `RESEND_API_KEY` and `SONGGIFT_FROM_EMAIL` to enable delivery. Email failures are reported in the API response without discarding the saved audio.
+
 ## Optional Gemini lyrics access
 
 Set `LYRICS_PROVIDER=gemini`, `GEMINI_MODEL=gemini-3.8-flash`, and a Gemini API key from Google AI Studio. If `/api/lyrics` returns `503` saying the key's project is restricted, inspect that project's status in AI Studio and contact Google support to restore access. Creating another key under the same restricted project will not resolve the `403` response. This project restriction does not affect the MusicAPI.ai adapter.

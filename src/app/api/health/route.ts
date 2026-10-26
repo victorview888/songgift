@@ -16,6 +16,12 @@ export async function GET() {
     ),
     hasMurekaKey: Boolean(process.env.MUREKA_API_KEY),
     hasMusicApiKey: Boolean(process.env.MUSICAPI_KEY),
+    hasPayPalCredentials: Boolean(
+      process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET,
+    ),
+    hasEmailCredentials: Boolean(
+      process.env.RESEND_API_KEY && process.env.SONGGIFT_FROM_EMAIL,
+    ),
   };
 
   if (!isSupabaseConfigured()) {

@@ -3,8 +3,10 @@ import { getMusicProvider } from "@/lib/providers/factory";
 import { isSupabaseConfigured } from "@/lib/supabase/admin";
 import {
   createSongOrder,
+  getSongOrder,
   persistGeneratedAudio,
 } from "@/lib/supabase/song-assets";
+import { sendSongReadyEmail } from "@/lib/email";
 import type { MusicGenerationInput } from "@/lib/types/song";
 
 export const runtime = "nodejs";
@@ -32,6 +34,16 @@ export async function POST(request: Request) {
       );
     }
     const orderId = input.orderId || crypto.randomUUID();
+    if (process.env.PAYPAL_REQUIRED !== "false") {
+      if (!input.orderId || !isSupabaseConfigured()) {
+        return NextResponse.json({ error: "Payment must be completed before generating a song." }, { status: 402 });
+      }
+      const order = await getSongOrder(input.orderId);
+      if (!order) return NextResponse.json({ error: "Song order not found." }, { status: 404 });
+      if (order.status !== "paid" && order.status !== "generating" && order.status !== "completed") {
+        return NextResponse.json({ error: "Payment must be completed before generating a song." }, { status: 402 });
+      }
+    }
     const result = await getMusicProvider().generateSong(input);
 
     if (result.status === "failed") {
@@ -73,7 +85,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ ...result, orderId });
     }
 
-    return NextResponse.json(await persistGeneratedAudio(orderId, result));
+    const saved = await persistGeneratedAudio(orderId, result);
+    const order = await getSongOrder(orderId);
+    if (order?.email && saved.audioUrl) {
+      try {
+        const email = await sendSongReadyEmail({ email: order.email, recipientName: order.recipient_name, audioUrl: saved.audioUrl, result: saved });
+        return NextResponse.json({ ...saved, emailStatus: email.status });
+      } catch (emailError) {
+        return NextResponse.json({ ...saved, emailStatus: "failed", emailError: emailError instanceof Error ? emailError.message : "Email delivery failed." });
+      }
+    }
+    return NextResponse.json({ ...saved, emailStatus: "skipped" });
   } catch (error) {
     const status = error instanceof Error && error.name === "ProviderConfigurationError" ? 503 : 500;
     const message = error instanceof Error ? error.message : "Music generation failed.";

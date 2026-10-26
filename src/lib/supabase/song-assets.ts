@@ -186,6 +186,17 @@ export async function persistGeneratedAudio(
   };
 }
 
+export async function getSongOrder(orderId: string) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("song_orders")
+    .select("id,email,recipient_name,status")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (error) throw new Error("Could not look up the song order: " + error.message);
+  return data as { id: string; email: string | null; recipient_name: string; status: string } | null;
+}
+
 export async function getPersistedAudioForJob(
   orderId: string,
   providerJobId: string,

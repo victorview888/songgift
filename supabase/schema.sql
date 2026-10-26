@@ -10,6 +10,8 @@ create table if not exists public.song_orders (
   mood text,
   style text,
   email text,
+  paypal_order_id text,
+  paid_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -37,6 +39,9 @@ create index if not exists song_assets_provider_job_id_idx
 
 alter table public.song_orders enable row level security;
 alter table public.song_assets enable row level security;
+
+alter table public.song_orders add column if not exists paypal_order_id text;
+alter table public.song_orders add column if not exists paid_at timestamptz;
 
 insert into storage.buckets (id, name, public)
 values ('songs', 'songs', false)
