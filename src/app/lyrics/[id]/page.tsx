@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 const starterLyrics = [
   "Verse 1",
@@ -42,6 +42,8 @@ export default function LyricsPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState("");
   const [error, setError] = useState("");
+  const [pageReady, setPageReady] = useState(false);
+  const captureStartedFor = useRef<string | null>(null);
 
   const generateMusic = useCallback(async () => {
     const savedStory = sessionStorage.getItem("songgift-story");
@@ -75,10 +77,29 @@ export default function LyricsPage() {
   }, [lyrics, recipient, router]);
 
   useEffect(() => {
+    const savedStory = sessionStorage.getItem("songgift-story");
+    const savedLyrics = sessionStorage.getItem("songgift-lyrics-result");
+    const parsedStory = savedStory
+      ? (JSON.parse(savedStory) as { recipientName?: string })
+      : {};
+    const parsedLyrics = savedLyrics
+      ? (JSON.parse(savedLyrics) as { title?: string; lyricsText?: string })
+      : {};
+
+    window.setTimeout(() => {
+      if (parsedStory.recipientName) setRecipient(parsedStory.recipientName);
+      if (parsedLyrics.title) setTitle(parsedLyrics.title);
+      if (parsedLyrics.lyricsText) setLyrics(parsedLyrics.lyricsText);
+      setPageReady(true);
+    }, 0);
+  }, []);
+
+  useEffect(() => {
     const paypalToken = new URLSearchParams(window.location.search).get("token");
-    if (!paypalToken) return;
+    if (!pageReady || !paypalToken || captureStartedFor.current === paypalToken) return;
+    captureStartedFor.current = paypalToken;
     let active = true;
-    window.setTimeout(async () => {
+    void (async () => {
       setIsGenerating(true);
       setPaymentStatus("Confirming your payment...");
       setError("");
@@ -98,29 +119,9 @@ export default function LyricsPage() {
       } finally {
         if (active) setIsGenerating(false);
       }
-    }, 0);
+    })();
     return () => { active = false; };
-  }, [generateMusic]);
-
-  useEffect(() => {
-    const savedStory = sessionStorage.getItem("songgift-story");
-    const savedLyrics = sessionStorage.getItem("songgift-lyrics-result");
-    const parsedStory = savedStory
-      ? (JSON.parse(savedStory) as { recipientName?: string })
-      : {};
-    const parsedLyrics = savedLyrics
-      ? (JSON.parse(savedLyrics) as { title?: string; lyricsText?: string })
-      : {};
-    const name = parsedStory.recipientName;
-    const generatedTitle = parsedLyrics.title;
-    const generatedLyrics = parsedLyrics.lyricsText;
-
-    window.setTimeout(() => {
-      if (name) setRecipient(name);
-      if (generatedTitle) setTitle(generatedTitle);
-      if (generatedLyrics) setLyrics(generatedLyrics);
-    }, 0);
-  }, []);
+  }, [generateMusic, pageReady]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
