@@ -16,6 +16,7 @@ export async function GET() {
     ),
     hasMurekaKey: Boolean(process.env.MUREKA_API_KEY),
     hasMusicApiKey: Boolean(process.env.MUSICAPI_KEY),
+    hasFalKey: Boolean(process.env.FAL_KEY?.trim()),
     hasPayPalCredentials: Boolean(
       process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET,
     ),

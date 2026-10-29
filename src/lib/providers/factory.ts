@@ -1,4 +1,5 @@
 import { DeepSeekLyricsProvider } from "./deepseek-lyrics-provider";
+import { FalLyriaProvider, FAL_LYRIA_JOB_PREFIX } from "./fal-lyria-provider";
 import { GeminiFlashProvider } from "./gemini-flash-provider";
 import { GoogleLyriaProvider } from "./google-lyria-provider";
 import { MockLyricsProvider } from "./mock-lyrics-provider";
@@ -20,9 +21,11 @@ export function getLyricsProvider(): LyricsProvider {
   throw new Error(`Unknown lyrics provider: ${configured}`);
 }
 
-export function getMusicProvider(): MusicProvider {
+export function getMusicProvider(jobId?: string): MusicProvider {
+  if (jobId?.startsWith(FAL_LYRIA_JOB_PREFIX)) return new FalLyriaProvider();
   const configured = (process.env.MUSIC_PROVIDER || "musicapi").toLowerCase();
   if (configured === "mock") return new MockMusicProvider();
+  if (configured === "fal") return new FalLyriaProvider();
   if (configured === "musicapi") return new MusicApiProvider();
   if (configured === "mureka" || configured === "mureka_cn" || configured === "mureka-cn") {
     if (!process.env.MUREKA_API_KEY && canUseMockFallback()) return new MockMusicProvider();

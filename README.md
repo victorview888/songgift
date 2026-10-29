@@ -1,5 +1,31 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Lyria 3 Pro on fal (pay as you go)
+
+The fal adapter uses `fal-ai/lyria3/pro`. In the fal dashboard, add credits and
+create a server-side API key, then set these values in `.env.local`:
+
+```env
+MUSIC_PROVIDER=fal
+FAL_KEY=your_server_side_key
+```
+
+Restart `npm run dev` after changing the provider. `/api/health` reports
+`musicProvider` and `hasFalKey` without exposing the key. Keep MusicAPI.ai
+and Mureka credentials to switch back with `MUSIC_PROVIDER=musicapi` or `mureka`.
+
+The server submits one asynchronous song request, polls the fal queue, and
+persists the MP3 through the existing Supabase flow. Queue retrieval uses the
+`fal-ai/lyria3` app path, excluding `/pro`. fal task IDs include a provider
+prefix so they continue routing to fal after a configuration change.
+Lyria embeds an inaudible SynthID watermark. Lyrics are sent in the prompt;
+listen for name accuracy and lyric adherence before customer delivery.
+Missing credentials and insufficient credit are reported as configuration
+errors, without a fallback generation or automatic paid resubmission.
+
+Run the offline queue contract checks with
+`node --test tests/fal-lyria-provider.test.mjs`.
+
 ## MusicAPI.ai free-credit testing
 
 The default music adapter uses MusicAPI.ai Sonic. Sign up at https://musicapi.ai/, create an API key, and put it in `.env.local` as `MUSICAPI_KEY`. Free signup credits are attached to the MusicAPI.ai account, not to this codebase. Keep the key server-side.

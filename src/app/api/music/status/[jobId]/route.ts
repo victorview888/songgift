@@ -17,7 +17,7 @@ export async function GET(
       const saved = await getPersistedAudioForJob(orderId, jobId);
       if (saved) return NextResponse.json(saved);
     }
-    const provider = getMusicProvider();
+    const provider = getMusicProvider(jobId);
     if (!provider.getStatus) {
       return NextResponse.json(
         { error: "The selected music provider does not support status polling." },
