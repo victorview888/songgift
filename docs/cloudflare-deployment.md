@@ -70,3 +70,17 @@ submit extra paid model requests just to check hosting.
 Only connect songforalways.com and www.songforalways.com after preview validation.
 Preserve the canonical redirect from the apex domain to www. Keep the old Vercel
 deployment available until the custom domain has been verified on Workers.
+
+## Connected deployment
+
+The Cloudflare Worker is named songgift. Its preview URL is
+https://songgift.victorview888.workers.dev and its Git source is the master branch
+of victorview888/songgift. Build with npm run build:vinext and upload the generated
+Worker with npm run deploy:vinext; the deploy command does not rebuild it.
+NODE_VERSION=24 is configured in Workers Builds. Runtime secrets are encrypted on
+the Worker and are not supplied to the build or committed to this repository.
+
+Verified on 2026-11-02: homepage, create, lyrics/demo, song/demo, health API, and
+range playback of a previously persisted real audio file. The preview reported
+Supabase database and Storage connected with DeepSeek and fal selected. No new
+paid generation or real payment was submitted during hosting verification.
