@@ -1,0 +1,9 @@
+# Local Workers runtime secrets. Copy to .dev.vars and never commit real values.
+DEEPSEEK_API_KEY=
+FAL_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+PAYPAL_CLIENT_ID=
+PAYPAL_CLIENT_SECRET=
+# Optional email delivery
+RESEND_API_KEY=
+SONGGIFT_FROM_EMAIL=

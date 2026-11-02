@@ -1,5 +1,12 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Cloudflare Workers Free
+
+See [the Workers deployment guide](docs/cloudflare-deployment.md) for the new
+website/API hosting path. It reuses the current Supabase database and private
+audio storage. Run npm run build:vinext and npm run start:vinext to verify the
+Workers runtime; the original Next.js scripts remain available.
+
 ## Lyria 3 Pro on fal (pay as you go)
 
 The fal adapter uses `fal-ai/lyria3/pro`. In the fal dashboard, add credits and

@@ -1,0 +1,40 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "songgift",
+  "compatibility_date": "2026-11-02",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "main": "vinext/server/fetch-handler",
+  "assets": {
+    "directory": "dist/client",
+    "html_handling": "none",
+    "not_found_handling": "none",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/*",
+      "!/_next/static/*",
+      "!/*/_next/static/*"
+    ]
+  },
+  "account_id": "c3a074fb2cf5be667cf6f5e939c96c7e",
+  "workers_dev": true,
+  "keep_vars": true,
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "LYRICS_PROVIDER": "deepseek",
+    "DEEPSEEK_MODEL": "deepseek-flash",
+    "MUSIC_PROVIDER": "fal",
+    "ALLOW_MOCK_FALLBACK": "false",
+    "SUPABASE_URL": "https://ngggfgfpaxzwjphkwmpy.supabase.co",
+    "SUPABASE_STORAGE_BUCKET": "songs",
+    "SUPABASE_SIGNED_URL_SECONDS": "3600",
+    "PAYPAL_REQUIRED": "true",
+    "PAYPAL_ENVIRONMENT": "sandbox",
+    "PAYPAL_CURRENCY": "USD",
+    "SONG_PRICE_USD": "9.99",
+    "PAYPAL_BRAND_NAME": "SongGift"
+  }
+}
