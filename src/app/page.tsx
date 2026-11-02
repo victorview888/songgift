@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AccountNav } from "@/components/account-nav";
 
 const steps = [
   ["01", "Tell us the story", "Share the names, memories, and details that make this person special."],
@@ -41,7 +42,7 @@ export default function Home() {
           <a href="#occasions">Occasions</a>
           <a href="#faq">FAQ</a>
         </nav>
-        <Link className="header-cta" href="/create">Create a song <span aria-hidden="true">↗</span></Link>
+        <div className="header-actions"><AccountNav /><Link className="header-cta" href="/create">Create a song <span aria-hidden="true">↗</span></Link></div>
       </header>
 
       <section className="hero-section">
@@ -139,7 +140,7 @@ export default function Home() {
       <footer className="site-footer">
         <div className="footer-main">
           <div><Link className="brand-link footer-brand-link" href="/"><Brand /></Link><p>Turn the moments that matter into music.</p></div>
-          <div className="footer-links"><Link href="/create">Create a song</Link><a href="#how-it-works">How it works</a><a href="#faq">FAQ</a></div>
+          <div className="footer-links"><Link href="/my-songs">My Songs</Link><Link href="/create">Create a song</Link><a href="#how-it-works">How it works</a><a href="#faq">FAQ</a></div>
         </div>
         <div className="footer-bottom"><span>© 2026 SongGift</span><span>Made for meaningful moments</span></div>
       </footer>

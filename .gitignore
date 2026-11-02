@@ -51,3 +51,6 @@ next-env.d.ts
 .dev.vars
 .dev.vars.*
 !.dev.vars.example
+
+# Disposable account verification sessions
+/.account-test-fixtures/

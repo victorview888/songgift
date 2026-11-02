@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./account.css";
+import { AccountProvider } from "@/components/account-provider";
 
 export const metadata: Metadata = {
   title: "SongGift — Turn memories into music",
@@ -11,7 +13,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body>{children}</body>
+      <body><AccountProvider>{children}</AccountProvider></body>
     </html>
   );
 }

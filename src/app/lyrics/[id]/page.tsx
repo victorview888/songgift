@@ -1,186 +1,79 @@
 "use client";
-
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-
-const starterLyrics = [
-  "Verse 1",
-  "There are a thousand little reasons",
-  "Why the world feels brighter when you are near",
-  "From the way you turn an ordinary moment",
-  "Into something I will always hold dear",
-  "",
-  "Pre-Chorus",
-  "And every road has led me here",
-  "To say the words I hope you hear",
-  "",
-  "Chorus",
-  "This is your song, for all that you are",
-  "For every small light that has carried me far",
-  "Through every season, wherever we go",
-  "I hope you always know, you are loved more than you know",
-  "",
-  "Verse 2",
-  "I remember the moments we keep",
-  "The quiet promises, the laughter, the dreams",
-  "And all of the places that feel like home",
-  "Because every memory is better with you",
-  "",
-  "Bridge",
-  "If the years keep moving, let them move on",
-  "Some things stay true when everything is gone",
-  "Your story is written in the best parts of me",
-  "And this is the song you will always be",
-].join("\n");
+import { AccountHeader } from "@/components/account-header";
+import { useAccount } from "@/components/account-provider";
+import type { AccountOrder } from "@/lib/types/account";
 
 export default function LyricsPage() {
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [recipient, setRecipient] = useState("someone special");
-  const [lyrics, setLyrics] = useState(starterLyrics);
-  const [title, setTitle] = useState("Untitled song");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState("");
+  const { user, loading: authLoading } = useAccount();
+  const [order, setOrder] = useState<AccountOrder | null>(null);
+  const [lyrics, setLyrics] = useState("");
+  const [savedLyrics, setSavedLyrics] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [pageReady, setPageReady] = useState(false);
-  const captureStartedFor = useRef<string | null>(null);
-
-  const generateMusic = useCallback(async () => {
-    const savedStory = sessionStorage.getItem("songgift-story");
-    const story = savedStory
-      ? (JSON.parse(savedStory) as {
-          recipientName?: string;
-          occasion?: string;
-          story?: string;
-          mood?: string;
-          style?: string;
-        })
-      : {};
-    const response = await fetch("/api/music", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        recipientName: story.recipientName || recipient,
-        occasion: story.occasion || "",
-        story: story.story || "",
-        mood: story.mood || "",
-        style: story.style || "",
-        lyricsText: lyrics,
-        orderId: sessionStorage.getItem("songgift-order-id") || undefined,
-      }),
-    });
-    const payload = (await response.json()) as { error?: string; [key: string]: unknown };
-    if (!response.ok) throw new Error(payload.error || "Music generation failed.");
-    sessionStorage.setItem("songgift-lyrics", lyrics);
-    sessionStorage.setItem("songgift-result", JSON.stringify(payload));
-    router.push("/song/demo");
-  }, [lyrics, recipient, router]);
-
+  const captureStarted = useRef(false);
+  const generate = useCallback(async () => {
+    const response = await fetch("/api/music", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id }) });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "We couldn't start your song. Your order is saved.");
+    router.push("/song/" + id);
+  }, [id, router]);
   useEffect(() => {
-    const savedStory = sessionStorage.getItem("songgift-story");
-    const savedLyrics = sessionStorage.getItem("songgift-lyrics-result");
-    const parsedStory = savedStory
-      ? (JSON.parse(savedStory) as { recipientName?: string })
-      : {};
-    const parsedLyrics = savedLyrics
-      ? (JSON.parse(savedLyrics) as { title?: string; lyricsText?: string })
-      : {};
-
-    window.setTimeout(() => {
-      if (parsedStory.recipientName) setRecipient(parsedStory.recipientName);
-      if (parsedLyrics.title) setTitle(parsedLyrics.title);
-      if (parsedLyrics.lyricsText) setLyrics(parsedLyrics.lyricsText);
-      setPageReady(true);
-    }, 0);
-  }, []);
-
-  useEffect(() => {
-    const paypalToken = new URLSearchParams(window.location.search).get("token");
-    if (!pageReady || !paypalToken || captureStartedFor.current === paypalToken) return;
-    captureStartedFor.current = paypalToken;
+    if (authLoading) return;
+    if (!user) { window.location.replace("/login?next=" + encodeURIComponent("/lyrics/" + id + window.location.search)); return; }
+    if (id === "demo") { window.location.replace("/my-songs"); return; }
     let active = true;
     void (async () => {
-      setIsGenerating(true);
-      setPaymentStatus("Confirming your payment...");
-      setError("");
       try {
-        const response = await fetch("/api/paypal/capture-order", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paypalOrderId: paypalToken }),
-        });
-        const payload = (await response.json()) as { error?: string; orderId?: string };
-        if (!response.ok) throw new Error(payload.error || "Payment confirmation failed.");
-        if (payload.orderId) sessionStorage.setItem("songgift-order-id", payload.orderId);
-        setPaymentStatus("Payment confirmed. Starting song generation...");
-        if (active) await generateMusic();
-      } catch (caught) {
-        if (active) setError(caught instanceof Error ? caught.message : "Payment confirmation failed.");
-      } finally {
-        if (active) setIsGenerating(false);
-      }
+        const response = await fetch("/api/orders/" + id, { cache: "no-store" });
+        if (response.status === 401) { window.location.replace("/login?next=" + encodeURIComponent("/lyrics/" + id)); return; }
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "We couldn't load your lyrics.");
+        if (!active) return;
+        const current = data.order as AccountOrder;
+        if (current.song_assets.length || current.status === "generating") { router.replace("/song/" + id); return; }
+        setOrder(current); setLyrics(current.lyrics_text || ""); setSavedLyrics(current.lyrics_text || "");
+      } catch (caught) { if (active) setError(caught instanceof Error ? caught.message : "Please try again."); }
     })();
     return () => { active = false; };
-  }, [generateMusic, pageReady]);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsGenerating(true);
-    setError("");
-    setPaymentStatus("Opening secure PayPal checkout...");
-
-    try {
-      const response = await fetch("/api/paypal/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: sessionStorage.getItem("songgift-order-id") || "" }),
-      });
-      const payload = (await response.json()) as { error?: string; approvalUrl?: string; alreadyPaid?: boolean };
-      if (!response.ok) throw new Error(payload.error || "PayPal checkout could not start.");
-      if (payload.alreadyPaid) {
-        setPaymentStatus("Payment already confirmed. Starting song generation...");
-        await generateMusic();
-        return;
-      }
-      if (!payload.approvalUrl) throw new Error("PayPal did not return a checkout link.");
-      window.location.assign(payload.approvalUrl);
-    } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Music generation failed.",
-      );
-    } finally {
-      setIsGenerating(false);
-    }
+  }, [id, user, authLoading, router]);
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("token");
+    if (!order || !token || captureStarted.current) return;
+    captureStarted.current = true;
+    setBusy(true); setMessage("Confirming your payment…");
+    void (async () => {
+      try {
+        const response = await fetch("/api/paypal/capture-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ paypalOrderId: token }) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "We couldn't confirm the payment.");
+        if (data.orderId !== id) throw new Error("This payment belongs to a different song.");
+        window.history.replaceState({}, "", "/lyrics/" + id);
+        setMessage("Payment confirmed. Starting your song…"); await generate();
+      } catch (caught) { setError(caught instanceof Error ? caught.message : "Please try again."); setBusy(false); setMessage(""); }
+    })();
+  }, [order, id, generate]);
+  async function save() {
+    const response = await fetch("/api/orders/" + id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lyricsText: lyrics }) });
+    const data = await response.json(); if (!response.ok) throw new Error(data.error || "We couldn't save your lyrics.");
+    setSavedLyrics(lyrics); setMessage("Your lyrics are saved to your account.");
   }
-
-  return (
-    <main className="form-page">
-      <header className="site-header form-header">
-        <Link className="brand-link" href="/" aria-label="SongGift home">
-          <span className="brand"><span className="brand-mark" aria-hidden="true">♪</span>songgift</span>
-        </Link>
-        <span className="form-progress">Step 2 of 3</span>
-      </header>
-      <section className="form-shell lyrics-shell">
-        <div className="form-intro">
-          <p className="section-kicker">Your first draft</p>
-          <h1>A song for {recipient} starts here.</h1>
-          <p>Read through the lyrics and make any changes you would like. The story should sound like you.</p>
-        </div>
-        <form className="story-form lyrics-form" onSubmit={handleSubmit}>
-          <div className="lyrics-toolbar"><span>{title}</span><small>Draft saved locally</small></div>
-          <textarea className="lyrics-editor" aria-label="Song lyrics" value={lyrics} onChange={(event) => setLyrics(event.target.value)} />
-          <div className="form-submit-row">
-            <Link className="text-link" href="/create">← Edit story</Link>
-            <button className="primary-button" type="submit" disabled={isGenerating}>
-              {isGenerating ? (paymentStatus || "Processing...") : "Pay and create song"}
-              {!isGenerating && <span aria-hidden="true">↗</span>}
-            </button>
-          </div>
-          {paymentStatus && <p className="form-note" role="status">{paymentStatus}</p>}
-          {error && <p className="form-error" role="alert">{error}</p>}
-        </form>
-      </section>
-    </main>
-  );
+  async function submit(event: FormEvent) {
+    event.preventDefault(); setBusy(true); setError(""); setMessage(order?.paid_at ? "Starting your song…" : "Opening secure PayPal checkout…");
+    try {
+      await save();
+      if (order?.paid_at) { await generate(); return; }
+      const response = await fetch("/api/paypal/create-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id }) });
+      const data = await response.json(); if (!response.ok) throw new Error(data.error || "We couldn't open checkout.");
+      if (data.alreadyPaid) { await generate(); return; }
+      if (!data.approvalUrl) throw new Error("Checkout is temporarily unavailable.");
+      window.location.assign(data.approvalUrl);
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "Please try again."); setBusy(false); setMessage(""); }
+  }
+  return <main className="form-page"><AccountHeader step="Step 2 of 3" /><section className="form-shell lyrics-shell"><div className="form-intro"><p className="section-kicker">Your personal lyrics</p><h1>{order ? `A song for ${order.recipient_name} starts here.` : "Finding your lyrics…"}</h1><p>Read through the lyrics and make any changes you like. Your story is saved to your account.</p></div>{order && <form className="story-form lyrics-form" onSubmit={submit}><div className="lyrics-toolbar"><span>{order.title || "Your song"}</span><small>{lyrics === savedLyrics ? "Saved to your account" : "Unsaved changes"}</small></div><textarea className="lyrics-editor" aria-label="Song lyrics" value={lyrics} maxLength={12000} minLength={20} required disabled={busy} onChange={(event) => setLyrics(event.target.value)} /><div className="form-submit-row"><button className="text-button" type="button" disabled={busy || lyrics === savedLyrics} onClick={async () => { setBusy(true); setError(""); try { await save(); } catch (caught) { setError(caught instanceof Error ? caught.message : "Please try again."); } finally { setBusy(false); } }}>Save lyrics</button><button className="primary-button" type="submit" disabled={busy}>{busy ? "Please wait…" : order.paid_at ? "Create my song" : "Pay and create song"}<span aria-hidden="true">↗</span></button></div></form>}{message && <p className="form-note" role="status">{message}</p>}{error && <p className="form-error" role="alert">{error}</p>}<Link className="text-link back-to-library" href="/my-songs">← My Songs</Link></section></main>;
 }

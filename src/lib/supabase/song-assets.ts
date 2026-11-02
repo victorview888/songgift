@@ -165,6 +165,10 @@ export async function persistGeneratedAudio(
 ): Promise<MusicGenerationResult> {
   if (!result.audioBase64 && !result.audioUrl) return result;
 
+  if (result.providerJobId) {
+    const existing = await getPersistedAudioForJob(orderId, result.providerJobId);
+    if (existing) return existing;
+  }
   const asset = await persistAudioAsset({
     orderId,
     provider: result.provider,
@@ -174,6 +178,9 @@ export async function persistGeneratedAudio(
     audioBase64: result.audioBase64,
     audioUrl: result.audioUrl,
   });
+
+  const completed = await getSupabaseAdmin().from("song_orders").update({ status: "completed", generation_error: null, updated_at: new Date().toISOString() }).eq("id", orderId);
+  if (completed.error) throw new Error("Could not mark song completed: " + completed.error.message);
 
   return {
     ...result,

@@ -87,59 +87,33 @@ export async function createPayPalOrder(orderId: string, urls?: { returnUrl?: st
   return { id: payload.id, approvalUrl };
 }
 
-export async function capturePayPalOrder(paypalOrderId: string) {
+export async function capturePayPalOrder(paypalOrderId: string, owner: { orderId: string; userId: string }) {
   const token = await paypalAccessToken();
-  const orderUrl = paypalBaseUrl() + "/v2/checkout/orders/" + encodeURIComponent(paypalOrderId);
-  const response = await fetch(orderUrl + "/capture", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + token,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-    },
-    body: "{}",
-    cache: "no-store",
-  });
-  const payload = (await response.json()) as {
-    id?: string;
-    status?: string;
-    purchase_units?: Array<{ custom_id?: string }>;
-    message?: string;
-    details?: Array<{ issue?: string; description?: string }>;
+  const url = paypalBaseUrl() + "/v2/checkout/orders/" + encodeURIComponent(paypalOrderId);
+  type Payload = { id?: string; status?: string; purchase_units?: Array<{ custom_id?: string; amount?: {currency_code?: string; value?: string} }>; message?: string };
+  const read = async () => {
+    const response = await fetch(url, { headers: { Authorization: "Bearer " + token, Accept: "application/json" }, cache: "no-store" });
+    if (!response.ok) throw new Error("Could not verify the PayPal order.");
+    return await response.json() as Payload;
   };
-
-  // PayPal rejects a second capture for an already completed order. Treat
-  // that case as idempotent by reading the order's final state.
-  let completedPayload = payload;
-  if (!response.ok || payload.status !== "COMPLETED") {
-    const currentResponse = await fetch(orderUrl, {
-      headers: { Authorization: "Bearer " + token, Accept: "application/json" },
-      cache: "no-store",
-    });
-    const currentPayload = (await currentResponse.json()) as typeof payload;
-    if (currentResponse.ok && currentPayload.status === "COMPLETED") {
-      completedPayload = currentPayload;
-    } else {
-      const detail = payload.details?.[0]?.issue || payload.details?.[0]?.description;
-      throw new Error(
-        "PayPal payment was not completed: " +
-          (payload.message || detail || payload.status || response.status),
-      );
+  const assertMatches = (payload: Payload) => {
+    const unit = payload.purchase_units?.[0];
+    if (payload.id !== paypalOrderId || unit?.custom_id !== owner.orderId || unit.amount?.currency_code !== (process.env.PAYPAL_CURRENCY || "USD") || Number(unit.amount.value) !== Number(process.env.SONG_PRICE_USD || "9.99")) throw new Error("PayPal payment does not match this song order.");
+  };
+  let payload = await read();
+  assertMatches(payload);
+  if (payload.status !== "COMPLETED") {
+    const response = await fetch(url + "/capture", { method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": "application/json", Prefer: "return=representation", "PayPal-Request-Id": owner.orderId }, body: "{}", cache: "no-store" });
+    if (!response.ok) {
+      const current = await read();
+      if (current.status !== "COMPLETED") throw new Error("PayPal payment was not completed. Please check your payment and try again.");
     }
+    payload = await read();
   }
-
-  if (completedPayload.status !== "COMPLETED") {
-    throw new Error(
-      "PayPal payment was not completed: " + completedPayload.status,
-    );
-  }
-  const orderId = completedPayload.purchase_units?.[0]?.custom_id;
-  if (!orderId) throw new Error("PayPal payment did not include a SongGift order.");
-  const supabase = getSupabaseAdmin();
-  const { error } = await supabase
-    .from("song_orders")
-    .update({ status: "paid", paypal_order_id: completedPayload.id, paid_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-    .eq("id", orderId);
+  assertMatches(payload);
+  if (payload.status !== "COMPLETED") throw new Error("PayPal payment was not completed.");
+  const db = getSupabaseAdmin();
+  const { error } = await db.from("song_orders").update({ status: "paid", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", owner.orderId).eq("user_id", owner.userId).eq("paypal_order_id", paypalOrderId).is("paid_at", null);
   if (error) throw new Error("Could not record PayPal payment: " + error.message);
-  return { orderId, paypalOrderId: payload.id };
+  return { orderId: owner.orderId, paypalOrderId };
 }
