@@ -84,3 +84,17 @@ Verified on 2026-11-02: homepage, create, lyrics/demo, song/demo, health API, an
 range playback of a previously persisted real audio file. The preview reported
 Supabase database and Storage connected with DeepSeek and fal selected. No new
 paid generation or real payment was submitted during hosting verification.
+
+## Live domain routing
+
+The primary address is https://www.songforalways.com. Cloudflare Custom Domains
+connects www directly to the songgift production Worker. The apex CNAME points to
+www.songforalways.com with proxying enabled. The Single Redirect rule
+SongForAlways apex to www matches only http.host == songforalways.com and returns
+308 to the same path on HTTPS www, preserving the query string. DNS and redirects
+are managed in the Cloudflare dashboard, separately from the deployment token.
+
+Rollback: the previous Vercel CNAME target for both @ and www was
+79f0b83b9d974619.vercel-dns-017.com, DNS only, TTL Auto. Keep the Vercel project as
+a fallback. Remove the custom Worker domain and disable the apex redirect before
+restoring those two records. Supabase data does not need to be moved or restored.
