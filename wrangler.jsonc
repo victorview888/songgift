@@ -32,7 +32,7 @@
     "SUPABASE_STORAGE_BUCKET": "songs",
     "SUPABASE_SIGNED_URL_SECONDS": "3600",
     "PAYPAL_REQUIRED": "true",
-    "PAYPAL_ENVIRONMENT": "sandbox",
+    "PAYPAL_ENVIRONMENT": "live",
     "PAYPAL_CURRENCY": "USD",
     "SONG_PRICE_USD": "9.99",
     "PAYPAL_BRAND_NAME": "SongGift",

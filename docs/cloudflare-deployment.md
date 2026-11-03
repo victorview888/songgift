@@ -56,10 +56,27 @@ of a successful local build.
 
 ## Payment URLs and validation
 
-PayPal remains in sandbox mode. The API derives its return and cancel origins
-from the current request when PAYPAL_RETURN_URL and PAYPAL_CANCEL_URL are unset,
-so preview testing stays on its own origin. Do not copy localhost callback
-overrides to the cloud. Add Live credentials separately before real checkout.
+The `work` branch prepares PayPal Live with `PAYPAL_ENVIRONMENT=live` in
+`wrangler.jsonc`; `master` should receive this change only after the Live
+credentials are installed on the production Worker. In Cloudflare Dashboard,
+open Workers & Pages → songgift → Settings → Variables and Secrets. Replace
+`PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` with the Client ID and Secret
+from the same PayPal Live app. Save both as encrypted Secrets, never as public
+variables or repository files. Keep `PAYPAL_REQUIRED=true`,
+`PAYPAL_CURRENCY=USD`, and the intended `SONG_PRICE_USD` (currently `9.99`).
+The Live PayPal app must belong to the merchant account that should receive
+the funds.
+
+The checkout API generates return and cancel URLs from each incoming request,
+such as `https://www.songforalways.com/lyrics/<order-id>`. The current route
+does not read `PAYPAL_RETURN_URL` or `PAYPAL_CANCEL_URL`; they can remain unset.
+Do not use localhost URLs for production checkout. After saving the Live
+secrets, merge `work` into `master` to trigger the connected deployment.
+Check `/api/health` for `hasPayPalCredentials: true`, then make one controlled
+Live payment and verify the amount, captured order, song creation, storage,
+re-login, and download. A healthy credential flag alone does not prove that
+the credentials belong to the Live API. Do not submit additional paid song
+requests merely to check the hosting environment.
 
 Check the homepage, /create, /lyrics/demo, /song/demo, and /api/health on the
 workers.dev preview. Health must report database=connected, storage=connected,
