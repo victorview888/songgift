@@ -1,5 +1,12 @@
 import Link from "next/link";
 import { AccountNav } from "@/components/account-nav";
+import { publicPageMetadata, siteName, siteUrl } from "@/lib/seo";
+
+export const metadata = publicPageMetadata(
+  "Personalized Songs from Your Story | SongGift",
+  "Create a personalized song for someone you love. Share your story, review the lyrics, and turn your memories into music they can keep.",
+  "/",
+);
 
 const steps = [
   ["01", "Tell us the story", "Share the names, memories, and details that make this person special."],
@@ -8,12 +15,12 @@ const steps = [
 ];
 
 const occasions = [
-  ["Birthday", "A surprise they will remember long after the candles are gone."],
-  ["Wedding", "The little moments that made your love story yours."],
-  ["Anniversary", "Celebrate the years, places, and memories you share."],
-  ["Family", "A song for a parent, child, grandparent, or chosen family."],
-  ["Pet", "A joyful tribute for the companion always by your side."],
-  ["In memory", "Keep a meaningful story close with a song full of heart."],
+  ["Birthday", "A surprise they will remember long after the candles are gone.", "/occasions/birthday"],
+  ["Wedding", "The little moments that made your love story yours.", "/occasions/wedding"],
+  ["Anniversary", "Celebrate the years, places, and memories you share.", "/occasions/anniversary"],
+  ["Family", "A song for a parent, child, grandparent, or chosen family.", "/create"],
+  ["Pet", "A joyful tribute for the companion always by your side.", "/create"],
+  ["In memory", "Keep a meaningful story close with a song full of heart.", "/create"],
 ];
 
 const faqs = [
@@ -35,6 +42,12 @@ function Brand() {
 export default function Home() {
   return (
     <main>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: siteName,
+        url: siteUrl,
+      }) }} />
       <header className="site-header">
         <Link className="brand-link" href="/" aria-label="SongGift home"><Brand /></Link>
         <nav className="desktop-nav" aria-label="Main navigation">
@@ -101,8 +114,8 @@ export default function Home() {
           <p>Start with an occasion, then make it completely personal with the memories behind it.</p>
         </div>
         <div className="occasion-grid">
-          {occasions.map(([title, text], index) => (
-            <Link className="occasion-card" href="/create" key={title}>
+          {occasions.map(([title, text, href], index) => (
+            <Link className="occasion-card" href={href} key={title}>
               <span className="occasion-number">0{index + 1}</span>
               <div><h3>{title}</h3><p>{text}</p></div>
               <span className="occasion-arrow" aria-hidden="true">↗</span>
@@ -140,7 +153,7 @@ export default function Home() {
       <footer className="site-footer">
         <div className="footer-main">
           <div><Link className="brand-link footer-brand-link" href="/"><Brand /></Link><p>Turn the moments that matter into music.</p></div>
-          <div className="footer-links"><Link href="/my-songs">My Songs</Link><Link href="/create">Create a song</Link><a href="#how-it-works">How it works</a><a href="#faq">FAQ</a></div>
+          <div className="footer-links"><Link href="/my-songs">My Songs</Link><Link href="/create">Create a song</Link><Link href="/occasions/birthday">Birthday songs</Link><Link href="/occasions/wedding">Wedding songs</Link><Link href="/occasions/anniversary">Anniversary songs</Link><a href="#faq">FAQ</a></div>
         </div>
         <div className="footer-bottom"><span>© 2026 SongGift</span><span>Made for meaningful moments</span></div>
       </footer>
