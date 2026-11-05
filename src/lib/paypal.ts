@@ -40,7 +40,7 @@ async function paypalAccessToken() {
   return payload.access_token;
 }
 
-export async function createPayPalOrder(orderId: string, urls?: { returnUrl?: string; cancelUrl?: string }) {
+export async function createPayPalOrder(orderId: string, priceUsd: string, urls?: { returnUrl?: string; cancelUrl?: string }) {
   const token = await paypalAccessToken();
   const response = await fetch(paypalBaseUrl() + "/v2/checkout/orders", {
     method: "POST",
@@ -57,7 +57,7 @@ export async function createPayPalOrder(orderId: string, urls?: { returnUrl?: st
           description: "Personalized SongGift song",
           amount: {
             currency_code: process.env.PAYPAL_CURRENCY || "USD",
-            value: process.env.SONG_PRICE_USD || "9.99",
+            value: priceUsd,
           },
         },
       ],
@@ -87,7 +87,7 @@ export async function createPayPalOrder(orderId: string, urls?: { returnUrl?: st
   return { id: payload.id, approvalUrl };
 }
 
-export async function capturePayPalOrder(paypalOrderId: string, owner: { orderId: string; userId: string }) {
+export async function capturePayPalOrder(paypalOrderId: string, owner: { orderId: string; userId: string; priceUsd: string }) {
   const token = await paypalAccessToken();
   const url = paypalBaseUrl() + "/v2/checkout/orders/" + encodeURIComponent(paypalOrderId);
   type Payload = { id?: string; status?: string; purchase_units?: Array<{ custom_id?: string; amount?: {currency_code?: string; value?: string} }>; message?: string };
@@ -98,7 +98,7 @@ export async function capturePayPalOrder(paypalOrderId: string, owner: { orderId
   };
   const assertMatches = (payload: Payload) => {
     const unit = payload.purchase_units?.[0];
-    if (payload.id !== paypalOrderId || unit?.custom_id !== owner.orderId || unit.amount?.currency_code !== (process.env.PAYPAL_CURRENCY || "USD") || Number(unit.amount.value) !== Number(process.env.SONG_PRICE_USD || "9.99")) throw new Error("PayPal payment does not match this song order.");
+    if (payload.id !== paypalOrderId || payload.purchase_units?.length !== 1 || unit?.custom_id !== owner.orderId || unit.amount?.currency_code !== (process.env.PAYPAL_CURRENCY || "USD") || Number(unit.amount.value) !== Number(owner.priceUsd)) throw new Error("PayPal payment does not match this song order.");
   };
   let payload = await read();
   assertMatches(payload);
