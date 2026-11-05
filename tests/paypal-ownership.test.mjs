@@ -13,21 +13,24 @@ function fixture(orderResponses, envOverrides={}) {
   const source = readFileSync("src/lib/paypal.ts", "utf8");
   const compiled = ts.transpileModule(source, { compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022} }).outputText;
   const exports={};vm.runInContext(`(function(exports,require){${compiled}\n})`,context)(exports,()=>({getSupabaseAdmin:()=>db}));
-  return {...exports,calls,writes,filters};
+  const pricingSource = readFileSync("src/lib/pricing.ts", "utf8");
+  const pricingCompiled = ts.transpileModule(pricingSource, { compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022} }).outputText;
+  const pricingExports={};vm.runInContext(`(function(exports){${pricingCompiled}\n})`,context)(pricingExports);
+  return {...exports,...pricingExports,calls,writes,filters};
 }
-const owner={orderId:"song-order-a",userId:"customer-a"};
+const owner={orderId:"song-order-a",userId:"customer-a",priceUsd:"9.99"};
 const paypalOrder=(status="APPROVED",extra={})=>({id:"paypal-order-a",status,purchase_units:[{custom_id:owner.orderId,amount:{currency_code:"USD",value:"9.99"}}],...extra});
 
 test("Sandbox checkout ignores Live credentials staged ahead of cutover",async()=>{
   const f=fixture([{id:"paypal-order-a",links:[{rel:"approve",href:"https://www.sandbox.paypal.com/checkoutnow"}]}],{PAYPAL_LIVE_CLIENT_ID:"live-id",PAYPAL_LIVE_CLIENT_SECRET:"live-secret"});
-  await f.createPayPalOrder(owner.orderId,{returnUrl:"https://www.songforalways.com/lyrics/song-order-a",cancelUrl:"https://www.songforalways.com/lyrics/song-order-a"});
+  await f.createPayPalOrder(owner.orderId,owner.priceUsd,{returnUrl:"https://www.songforalways.com/lyrics/song-order-a",cancelUrl:"https://www.songforalways.com/lyrics/song-order-a"});
   assert.equal(f.calls[0].url,"https://api-m.sandbox.paypal.com/v1/oauth2/token");
   assert.equal(f.calls[0].init.headers.Authorization,"Basic "+Buffer.from("test-id:test-secret").toString("base64"));
 });
 
 test("Live checkout uses the Live endpoint and credential pair",async()=>{
   const f=fixture([{id:"paypal-order-a",links:[{rel:"approve",href:"https://www.paypal.com/checkoutnow"}]}],{PAYPAL_ENVIRONMENT:"live",PAYPAL_LIVE_CLIENT_ID:"live-id",PAYPAL_LIVE_CLIENT_SECRET:"live-secret"});
-  await f.createPayPalOrder(owner.orderId,{returnUrl:"https://www.songforalways.com/lyrics/song-order-a",cancelUrl:"https://www.songforalways.com/lyrics/song-order-a"});
+  await f.createPayPalOrder(owner.orderId,owner.priceUsd,{returnUrl:"https://www.songforalways.com/lyrics/song-order-a",cancelUrl:"https://www.songforalways.com/lyrics/song-order-a"});
   assert.equal(f.calls[0].url,"https://api-m.paypal.com/v1/oauth2/token");
   assert.equal(f.calls[0].init.headers.Authorization,"Basic "+Buffer.from("live-id:live-secret").toString("base64"));
   assert.equal(f.calls[1].url,"https://api-m.paypal.com/v2/checkout/orders");
@@ -36,7 +39,7 @@ test("Live checkout uses the Live endpoint and credential pair",async()=>{
 
 test("Live mode never falls back to Sandbox credentials",async()=>{
   const f=fixture([],{PAYPAL_ENVIRONMENT:"live"});
-  await assert.rejects(f.createPayPalOrder(owner.orderId),/PAYPAL_LIVE_CLIENT_ID and PAYPAL_LIVE_CLIENT_SECRET/);
+  await assert.rejects(f.createPayPalOrder(owner.orderId,owner.priceUsd),/PAYPAL_LIVE_CLIENT_ID and PAYPAL_LIVE_CLIENT_SECRET/);
   assert.equal(f.calls.length,0);
 });
 
@@ -48,6 +51,28 @@ test("rejects a different song binding before capture or payment writes",async()
 test("rejects mismatched amount before capture",async()=>{
   const f=fixture([paypalOrder("APPROVED",{purchase_units:[{custom_id:owner.orderId,amount:{currency_code:"USD",value:"0.01"}}]})]);
   await assert.rejects(f.capturePayPalOrder("paypal-order-a",owner),/does not match/);assert.equal(f.writes.length,0);
+});
+test("verified test-account email pays $1 and other accounts pay $9.99",async()=>{
+  const f=fixture([{id:"paypal-order-a",links:[{rel:"approve",href:"https://www.sandbox.paypal.com/checkoutnow"}]}]);
+  const testPrice=f.songPriceUsdForEmail("  VictorView888@GMAIL.COM ");
+  assert.equal(testPrice,"1.00");
+  assert.equal(f.songPriceUsdForEmail("another@example.com"),"9.99");
+  assert.equal(f.songPriceUsdForEmail(undefined),"9.99");
+  await f.createPayPalOrder(owner.orderId,testPrice);
+  assert.equal(JSON.parse(f.calls[1].init.body).purchase_units[0].amount.value,"1.00");
+});
+test("a $1 checkout captures only for the test-account price",async()=>{
+  const paidOrder=paypalOrder("APPROVED",{purchase_units:[{custom_id:owner.orderId,amount:{currency_code:"USD",value:"1.00"}}]});
+  const f=fixture([paidOrder,{id:"paypal-order-a"},paypalOrder("COMPLETED",{purchase_units:paidOrder.purchase_units})]);
+  await f.capturePayPalOrder("paypal-order-a",{...owner,priceUsd:f.songPriceUsdForEmail("victorview888@gmail.com")});
+  assert.equal(f.writes.length,1);
+});
+test("a $1 checkout is rejected for an ordinary account before capture",async()=>{
+  const paidOrder=paypalOrder("APPROVED",{purchase_units:[{custom_id:owner.orderId,amount:{currency_code:"USD",value:"1.00"}}]});
+  const f=fixture([paidOrder]);
+  await assert.rejects(f.capturePayPalOrder("paypal-order-a",{...owner,priceUsd:f.songPriceUsdForEmail("another@example.com")}),/does not match/);
+  assert.equal(f.calls.filter(c=>c.url.endsWith("/capture")).length,0);
+  assert.equal(f.writes.length,0);
 });
 test("captures the matching order once and constrains writes to its owner",async()=>{
   const f=fixture([paypalOrder(),paypalOrder("COMPLETED"),paypalOrder("COMPLETED")]);
