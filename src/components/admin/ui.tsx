@@ -51,7 +51,7 @@ export function Pager({ page, totalPages, href }: { page: number; totalPages: nu
 }
 
 const tones: Record<string, string> = { recorded: "ok", delivered: "ok", generating: "warn", failed: "bad" };
-const labels: Record<string, string> = { recorded: "已记录付款", unrecorded: "未记录付款", delivered: "已有最终音频", undelivered: "无最终音频记录", generating: "生成中", failed: "失败", draft: "草稿", lyrics_ready: "歌词已保存", paid: "本地标记已付款", completed: "本地标记已完成" };
+const labels: Record<string, string> = { submitting: "提交中", queued: "排队中", processing: "生成中", storing: "待完成音频保存", needs_review: "结果待核查", recorded: "已记录付款", unrecorded: "未记录付款", delivered: "已有最终音频", undelivered: "无最终音频记录", generating: "生成中", failed: "失败", draft: "草稿", lyrics_ready: "歌词已保存", paid: "本地标记已付款", completed: "本地标记已完成" };
 export function Status({ value }: { value: string }) {
   return <span className={`admin-order-badge admin-tone-${tones[value] || "muted"}`}>{labels[value] || value}</span>;
 }

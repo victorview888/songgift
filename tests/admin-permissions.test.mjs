@@ -12,7 +12,7 @@ const verified = (extra = {}) => ({ id: "a3f10454-1234-4234-8234-012345678901", 
 const member = (extra = {}) => ({ user_id: verified().id, role: "owner", active: true, ...extra });
 
 function fixture(options = {}) {
-  const state = { user: verified(), membership: member(), dbError: null, authError: null, reads: [], handlers: 0, orderReads: 0, detailReads: 0, audioReads: 0, ...options };
+  const state = { user: verified(), membership: member(), dbError: null, authError: null, reads: [], handlers: 0, orderReads: 0, detailReads: 0, historyReads: 0, audioReads: 0, ...options };
   const modules = new Map();
   const context = vm.createContext({ URL, Request, Response, Headers, Map, console: { error() {} }, process: { env: { SUPABASE_URL: "https://test-project.supabase.invalid", SUPABASE_PUBLISHABLE_KEY: "test-public-key", ...options.env } } });
   const db = { from(table) {
@@ -41,6 +41,7 @@ function fixture(options = {}) {
       if(name==="@supabase/ssr")return {createServerClient};
       if(name==="@/lib/supabase/admin")return {getSupabaseAdmin:()=>db};
       if(name==="@/lib/admin/orders")return {parseOrderFilters:()=>({}),listAdminOrders:async()=>{state.orderReads++;return {orders:[],total:0,page:1,pageSize:20,totalPages:0};}};
+      if(name==="@/lib/admin/order-history")return {getAdminOrderHistory:async()=>{state.historyReads++;return {quote:null,payments:[],jobs:[],events:[],audit:[]};}};
       if(name==="@/lib/admin/order-detail")return {getAdminOrderDetail:async()=>{state.detailReads++;return {order:{id:"isolated-order"}};}};
       if(name==="@/lib/admin/audio")return {issueAdminAudioLink:async()=>{state.audioReads++;return "https://isolated.supabase.invalid/signed-audio";}};
       if(name==="@/lib/auth/admin")return load("src/lib/auth/admin.ts");
@@ -176,4 +177,16 @@ test("invalid and duplicate audio modes stop before signing or audit",async()=>{
     const response=await f.load("src/app/api/admin/orders/[id]/audio/[assetId]/route.ts").GET(new Request("https://songgift.example/api/admin/orders/isolated/audio/isolated?"+query),{params:Promise.resolve({id:"isolated",assetId:"isolated"})});
     assert.equal(response.status,400);assert.equal(f.state.audioReads,0);
   }
+});
+
+
+test("operation history API authorizes before any financial/job/audit query",async()=>{
+  const file="src/app/api/admin/orders/[id]/history/route.ts",context={params:Promise.resolve({id:"isolated"})};
+  for(const options of [{user:null},{membership:null},{membership:member({active:false})},{dbError:{message:"missing"}}]) {
+    const f=fixture(options);const response=await f.load(file).GET(new Request("https://songgift.example/api/admin/orders/isolated/history"),context);
+    assert.ok([401,403,503].includes(response.status));assert.equal(f.state.historyReads,0);assert.match(response.headers.get("cache-control"),/private.*no-store/);
+  }
+  const f=fixture();const get=()=>f.load(file).GET(new Request("https://songgift.example/api/admin/orders/isolated/history"),context);
+  assert.equal((await get()).status,200);assert.equal(f.state.historyReads,1);
+  f.state.membership.active=false;assert.equal((await get()).status,403);assert.equal(f.state.historyReads,1);
 });

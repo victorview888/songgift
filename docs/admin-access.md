@@ -176,3 +176,28 @@ context, ordinary-user and revoked-session rejection, bound audio access, audit
 failure, short-lived redirects and capability-free detail responses. The fixture
 uses in-memory PostgreSQL for membership/audit and simulated order/Storage APIs;
 it does not validate real production files or real Supabase storage signing.
+
+## Order operations foundation
+
+`20261105_order_operations.sql` adds nullable immutable quote fields, append-only
+payment transactions and order events, generation attempt/lease state, a unique
+final asset per new job, and structured administrator operation audit. The
+service-only primitives live in `src/lib/services/order-operations.ts`.
+
+This stage does not yet replace the existing customer checkout, capture,
+generation or audio-persistence routes. No administrator mutation buttons or
+provider calls were added. Integrate those entry points through the primitives
+and validate them together before enabling the full workflow.
+
+`GET /api/admin/orders/[id]/history` rechecks administrator membership and returns
+only the quote and latest 50 records of each history category. No lease token,
+submission key, raw provider response, Storage path or signed URL is returned.
+The detail page uses this reader; when the new schema is unavailable it displays
+that the processing history is unavailable and retains the existing details.
+Legacy amounts and task history are not inferred or backfilled.
+
+Migration ordering, RPC contracts, idempotency, unknown submissions and the next
+integration steps are documented in `docs/order-operations.md`. The expanded
+in-memory PostgreSQL tests exercise the actual migration and transaction
+functions. HTTP runtime checks simulate financial/job records; they are not proof
+of real PayPal captures, real task execution or production migration readiness.

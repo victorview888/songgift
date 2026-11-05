@@ -5,6 +5,8 @@ import { HttpError } from "@/lib/auth/server";
 import { getAdminOrderDetail, type AdminOrderDetail } from "@/lib/admin/order-detail";
 import { adminOrdersBackLink } from "@/lib/admin/links";
 import { AdminCard, AdminPage, AdminShell, AdminTimeline, LoadState, Status, shortDate } from "@/components/admin/ui";
+import { getAdminOrderHistory, type OrderHistory } from "@/lib/admin/order-history";
+import { AdminOrderHistory, recordedMoney } from "@/components/admin/order-history";
 import { AdminAudioPlayer } from "@/components/admin/audio-player";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +32,10 @@ export default async function AdminOrderDetailPage({ params, searchParams }: {
     unavailable = true;
   }
   if (unavailable || !data) return <AdminShell current="orders"><AdminPage title="订单详情"><LoadState error="订单详情暂时不可用，请稍后重试。"><Link href={back}>返回订单列表</Link></LoadState></AdminPage></AdminShell>;
+  let history: OrderHistory | undefined;
+  try { history = await getAdminOrderHistory(id); } catch { /* Existing details stay available while the operations schema is unavailable. */ }
   const { order, assets, timeline } = data;
+  const captured = history?.payments.find(payment => payment.transaction_type === "capture");
   return <AdminShell current="orders"><AdminPage title="订单详情" description="时间均为北京时间（UTC+8）。本页展示现有记录，不执行支付核对或生成任务查询。" actions={<Link className="admin-button admin-button-quiet" href={back}>← 返回订单列表</Link>}>
     <div className="admin-detail-heading"><code>{order.id}</code><Status value={order.paid_at ? "recorded" : "unrecorded"} /><Status value={data.hasFinalAudio ? "delivered" : "undelivered"} /></div>
     <div className="admin-detail-grid">
@@ -53,10 +58,12 @@ export default async function AdminOrderDetailPage({ params, searchParams }: {
         </AdminCard>
       </div>
       <div className="admin-detail-column">
-        <AdminCard title="本地支付记录"><dl className="admin-fields"><dt>付款状态</dt><dd><Status value={order.paid_at ? "recorded" : "unrecorded"} /></dd><dt>PayPal 订单号</dt><dd><code>{order.paypal_order_id || "未记录"}</code></dd><dt>付款记录时间</dt><dd>{shortDate(order.paid_at)}</dd><dt>报价 / 实收金额</dt><dd>未记录 / 未核实</dd><dt>币种 / 支付环境</dt><dd>未记录</dd><dt>捕获流水 / 退款</dt><dd>未记录 / 未核实</dd></dl><p className="admin-order-note">不使用当前售价或 Live 配置填补历史数据，也不将本地状态当作 PayPal 对账结果。</p></AdminCard>
-        <AdminCard title="当前生成记录"><dl className="admin-fields"><dt>原始状态</dt><dd><Status value={order.status} /></dd><dt>供应商</dt><dd>{order.music_provider || "未记录"}</dd><dt>模型</dt><dd>{order.music_model || "未记录"}</dd><dt>任务引用</dt><dd><code>{order.provider_job_id || "未记录"}</code></dd><dt>订单最后更新</dt><dd>{shortDate(order.updated_at)}</dd></dl><p className="admin-order-note">当前仅保存最新任务引用，完整尝试历史及错误诊断尚未接入。不自动查询供应商或重发生成请求。</p></AdminCard>
+        <AdminCard title="本地支付记录"><dl className="admin-fields"><dt>付款状态</dt><dd><Status value={order.paid_at ? "recorded" : "unrecorded"} /></dd><dt>PayPal 订单号</dt><dd><code>{order.paypal_order_id || "未记录"}</code></dd><dt>付款记录时间</dt><dd>{shortDate(order.paid_at)}</dd><dt>报价 / 已登记收款</dt><dd>{history?.quote ? recordedMoney(history.quote.amountMinor, history.quote.currency) : "未记录"} / {captured ? recordedMoney(captured.amount_minor, captured.currency) : "未核实"}</dd><dt>报价币种 / 环境</dt><dd>{history?.quote ? `${history.quote.currency} / ${history.quote.environment}` : "未记录"}</dd><dt>捕获流水号</dt><dd><code>{captured?.external_id || "未记录"}</code></dd></dl><p className="admin-order-note">不使用当前售价或 Live 配置填补历史数据，也不将本地状态当作 PayPal 对账结果。</p></AdminCard>
+        <AdminCard title="当前生成记录"><dl className="admin-fields"><dt>原始状态</dt><dd><Status value={order.status} /></dd><dt>供应商</dt><dd>{order.music_provider || "未记录"}</dd><dt>模型</dt><dd>{order.music_model || "未记录"}</dd><dt>任务引用</dt><dd><code>{order.provider_job_id || "未记录"}</code></dd><dt>订单最后更新</dt><dd>{shortDate(order.updated_at)}</dd></dl><p className="admin-order-note">此卡展示订单原有的最新任务引用；已登记的生成尝试见下方。缺失的历史无法还原，本页不查询供应商或发起新生成。</p></AdminCard>
       </div>
     </div>
+    {!history && <p className="admin-order-note" role="status">订单处理记录暂不可用；付款快照、结构化任务与审计记录尚未展示。</p>}
+    {history && <AdminOrderHistory history={history} />}
     <AdminCard title="已有记录时间线"><p className="admin-order-note">根据订单创建时间、本地付款时间和资产登记时间排列。缺少歌词确认、供应商完成、邮件发送和历史管理事件记录，不能据此还原完整交付过程。</p><AdminTimeline items={timeline} /></AdminCard>
   </AdminPage></AdminShell>;
 }

@@ -25,6 +25,7 @@ async function serve() {
   const auditMigration=readFileSync("supabase/migrations/20261105_admin_audio_audit.sql","utf8");
   await db.exec(auditMigration);
   let signingCalls=0;
+  let historyAvailable=true;
   const restore=async()=>{await db.exec(migration);await db.query("insert into public.admin_members(user_id,active) values ($1,true) on conflict(user_id) do update set active=true",[ownerId]);};
   await restore();
   const tokens = new Map();
@@ -42,6 +43,7 @@ async function serve() {
       let body={};
       if(req.method!=="GET"&&req.method!=="HEAD") {let text="";for await(const chunk of req){text+=chunk;if(text.length>10000){json(413,{error:"Fixture request too large"});return;}}if(text)body=JSON.parse(text);}
       if(url.pathname==="/__fixture__/health")return json(200,{fixture:"songgift-admin-loopback",owner:identities[0].email,customer:identities[1].email});
+      if(url.pathname==="/__fixture__/history" && req.method==="POST") {historyAvailable=body.available!==false;return json(200,{ok:true});}
       if(url.pathname==="/__fixture__/audit" && req.method==="POST") {
         if(body.mode==="missing")await db.exec("drop table public.admin_audit_logs");
         else {await db.exec(auditMigration);if(body.mode==="reset"){await db.exec("truncate public.admin_audit_logs");signingCalls=0;}}
@@ -54,6 +56,10 @@ async function serve() {
       if(url.pathname==="/rest/v1/admin_audit_logs") {
         if(req.headers.authorization!=="Bearer isolated-service-role")return json(403,{message:"Fixture audit requires service role"});
         try {
+          if(req.method==="GET") {
+            const rows=await db.query("select id,actor_user_id,action,target_type,target_id,result,null as reason_code,null as error_code,created_at,null as completed_at from public.admin_audit_logs where order_id=$1 order by created_at desc limit 51",[(url.searchParams.get("order_id")||"").replace(/^eq\./,"")]);
+            return json(200,rows.rows);
+          }
           if(req.method==="POST") {
             await db.query("insert into public.admin_audit_logs(request_id,actor_user_id,action,target_type,target_id,order_id,result) values ($1,$2,$3,$4,$5,$6,$7)",[body.request_id,body.actor_user_id,body.action,body.target_type,body.target_id,body.order_id,body.result]);
             return json(201,null);
@@ -113,6 +119,14 @@ async function serve() {
           relationship:"friend",story:"Fixture private story <script>test</script>",mood:"warm",style:"pop",title:"Fixture song",lyrics_text:"Fixture private lyrics\nSecond line",provider_job_id:"fixture-job-1",updated_at:row.created_at,
           song_assets:row.id===detailOrderId?[{id:detailAssetId,asset_type:"final",mime_type:"audio/mpeg",duration_seconds:null,provider:"fal",model_id:"isolated-model",provider_job_id:"fixture-job-1",is_final:true,created_at:"2026-11-05T01:20:00Z"}]:[]
         }));
+        if(url.searchParams.get("select")?.includes("quoted_amount_minor")) {
+          if(!historyAvailable)return json(404,{message:"Fixture operations schema unavailable"});
+          rows=rows.map(row=>({id:row.id,created_at:row.created_at,quoted_amount_minor:row.id===detailOrderId?100:null,currency:row.id===detailOrderId?"USD":null,payment_environment:row.id===detailOrderId?"live":null,price_version:row.id===detailOrderId?"isolated-v1":null,quoted_at:row.id===detailOrderId?row.created_at:null,
+            payment_transactions:row.id===detailOrderId?[{id:"f3f10454-1234-4234-8234-000000000001",provider:"paypal",environment:"live",transaction_type:"capture",external_id:"ISOLATED-CAPTURE",amount_minor:100,currency:"USD",fee_minor:null,occurred_at:"2026-11-05T01:00:00Z"}]:[],
+            generation_jobs:row.id===detailOrderId?[{id:"e3f10454-1234-4234-8234-000000000001",attempt_no:1,environment:"test",provider:"fal",model:"isolated-model",provider_job_id:"fixture-job-1",state:"completed",poll_count:1,error_code:null,final_asset_id:detailAssetId,started_at:"2026-11-05T01:10:00Z",completed_at:"2026-11-05T01:20:00Z"}]:[],
+            order_events:row.id===detailOrderId?[{id:"e3f10454-1234-4234-8234-000000000002",event_type:"payment.captured",actor_type:"customer",actor_id:customerId,reference_id:"f3f10454-1234-4234-8234-000000000001",state:null,created_at:"2026-11-05T01:00:00Z"}]:[]
+          }));
+        }
         for(const [key,value] of url.searchParams) {
           if(["id","paypal_order_id","music_provider","status"].includes(key))rows=rows.filter(r=>r[key]===value.replace(/^eq\./,""));
           if(key==="email")rows=rows.filter(r=>r.email.toLowerCase()===value.replace(/^ilike\./,"").replace(/\\([_%\\])/g,"$1").toLowerCase());
@@ -180,6 +194,14 @@ async function checks() {
   assert.equal((await owner("/api/admin/orders/c3f10454-1234-4234-8234-000000000099")).status,404);
   response=await owner("/admin/orders/"+detailOrderId+"?back="+encodeURIComponent("/admin/orders?page=2&provider=fal"));html=await response.text();assert.equal(response.status,200);assert.match(html,/Fixture private story/);assert.match(html,/&lt;script&gt;test&lt;\/script&gt;/);assert.doesNotMatch(html,/<script>test<\/script>/);assert.match(html,/page=2(?:&amp;|&)provider=fal/);assert.match(html,/no-referrer/);assert.match(response.headers.get("cache-control"),/private|no-store/);
   pass("detail API and SSR enforce access, escape text, preserve list context and omit storage capabilities");
+  const historyPath=detailPath+"/history";
+  for(const [request,status] of [[anonymous,401],[customer,403]])assert.equal((await request(historyPath)).status,status);
+  response=await owner(historyPath);const history=await response.json();assert.equal(response.status,200);assert.equal(history.quote.amountMinor,100);assert.equal(history.payments[0].external_id,"ISOLATED-CAPTURE");assert.equal(history.jobs[0].model,"isolated-model");assert.doesNotMatch(JSON.stringify(history),/lease_token|submission_key|storage_path|isolated-audio/);assert.match(response.headers.get("cache-control"),/private.*no-store/);
+  const changeHistory=available=>fetch(fixtureOrigin+"/__fixture__/history",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({available})});
+  await changeHistory(false);assert.equal((await owner(historyPath)).status,503);
+  response=await owner("/admin/orders/"+detailOrderId);html=await response.text();assert.match(html,/Fixture private story/);assert.match(html,/订单处理记录暂不可用/);
+  await changeHistory(true);response=await owner("/admin/orders/"+detailOrderId);html=await response.text();assert.match(html,/ISOLATED-CAPTURE/);assert.match(html,/生成尝试记录/);
+  pass("operation history is private, capability-free, and schema outages preserve existing detail access");
   let audit=await (await fetch(fixtureOrigin+"/__fixture__/audit")).json();assert.equal(audit.signingCalls,0);
   response=await owner(audioPath);assert.equal(response.status,302);assert.match(response.headers.get("location"),/isolated-audio/);assert.equal(response.headers.get("referrer-policy"),"no-referrer");assert.match(response.headers.get("cache-control"),/private.*no-store/);
   response=await owner(audioPath+"?download=1");assert.equal(response.status,302);assert.match(response.headers.get("location"),/download=SongGift/);
@@ -191,11 +213,13 @@ async function checks() {
   audit=await (await fetch(fixtureOrigin+"/__fixture__/audit")).json();assert.equal(audit.signingCalls,2);
   pass("audio access is bound to the order, durably audited and fails closed when audit is missing");
   await change({active:false});response=await owner("/api/admin/session");assert.equal(response.status,403);response=await owner("/admin");html=await response.text();assert.doesNotMatch(html,/后台访问已开启/);pass("revoking membership blocks the next request with the same session");
+  assert.equal((await owner(historyPath)).status,403);
   assert.equal((await owner(detailPath)).status,403);assert.equal((await owner(audioPath)).status,403);
   response=await owner("/admin/orders/"+detailOrderId);assert.doesNotMatch(await response.text(),/Fixture private story|Fixture private lyrics/);
   assert.equal((await owner("/api/admin/orders")).status,403);
   response=await owner("/admin/orders");assert.doesNotMatch(await response.text(),/Fixture recipient|buyer@admin-test/);
   await change({mode:"missing"});response=await owner("/api/admin/session");assert.equal(response.status,503);assert.doesNotMatch(await response.text(),/PGRST|service_role|isolated-service-role/);response=await owner("/admin");html=await response.text();assert.doesNotMatch(html,/后台访问已开启/);assert.ok(html.includes("暂时无法验证后台访问权限"));pass("missing membership migration fails closed in API and page");
+  assert.equal((await owner(historyPath)).status,503);
   assert.equal((await owner(detailPath)).status,503);assert.equal((await owner(audioPath)).status,503);
   response=await owner("/admin/orders/"+detailOrderId);assert.doesNotMatch(await response.text(),/Fixture private story|Fixture private lyrics/);
   assert.equal((await owner("/api/admin/orders")).status,503);
