@@ -60,7 +60,7 @@ DeepSeek charges for API usage from your account balance or promotional credit. 
 
 ## PayPal checkout and email delivery
 
-Song generation is gated by PayPal when `PAYPAL_REQUIRED=true` (the default). Create a PayPal REST app in Sandbox for testing and set `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENVIRONMENT=sandbox`, and `SONG_PRICE_USD`. The checkout return URL is derived from the current site URL unless `PAYPAL_RETURN_URL` and `PAYPAL_CANCEL_URL` are set explicitly. Run the additions in `supabase/schema.sql` to add the payment columns to `song_orders`.
+Song generation is gated by PayPal when `PAYPAL_REQUIRED=true` (the default). Use a PayPal REST app and a matching `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` pair for the selected `PAYPAL_ENVIRONMENT` (`sandbox` or `live`). The production Worker keeps these credentials as encrypted runtime Secrets; the checked-in `SONG_PRICE_USD` is `9.99` in USD. The checkout return URL is derived from the current request origin. Run the additions in `supabase/schema.sql` to add the payment columns to `song_orders`. See [Cloudflare deployment](docs/cloudflare-deployment.md#payment-urls-and-validation) for the Live cutover order.
 
 When a completed song is saved, SongGift sends the signed audio link to the order email through Resend. Set `RESEND_API_KEY` and `SONGGIFT_FROM_EMAIL` to enable delivery. Email failures are reported in the API response without discarding the saved audio.
 

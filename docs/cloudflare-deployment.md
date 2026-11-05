@@ -56,9 +56,9 @@ of a successful local build.
 
 ## Payment URLs and validation
 
-The `work` branch prepares PayPal Live with `PAYPAL_ENVIRONMENT=live` in
-`wrangler.jsonc`; `master` should receive this change only after the Live
-credentials are installed on the production Worker. In Cloudflare Dashboard,
+The PayPal Live cutover sets `PAYPAL_ENVIRONMENT=live` in `wrangler.jsonc`.
+Merge it into `master` only after the Live credentials are installed on the
+production Worker. In Cloudflare Dashboard,
 open Workers & Pages → songgift → Settings → Variables and Secrets. Replace
 `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` with the Client ID and Secret
 from the same PayPal Live app. Save both as encrypted Secrets, never as public
@@ -71,7 +71,7 @@ The checkout API generates return and cancel URLs from each incoming request,
 such as `https://www.songforalways.com/lyrics/<order-id>`. The current route
 does not read `PAYPAL_RETURN_URL` or `PAYPAL_CANCEL_URL`; they can remain unset.
 Do not use localhost URLs for production checkout. After saving the Live
-secrets, merge `work` into `master` to trigger the connected deployment.
+secrets, merge the cutover branch into `master` to trigger the connected deployment.
 Check `/api/health` for `hasPayPalCredentials: true`, then make one controlled
 Live payment and verify the amount, captured order, song creation, storage,
 re-login, and download. A healthy credential flag alone does not prove that
