@@ -10,7 +10,8 @@
     "dev:vinext": "vite dev --port 3001",
     "build:vinext": "vite build",
     "start:vinext": "wrangler dev --config dist/server/wrangler.json",
-    "deploy:vinext": "wrangler deploy --config dist/server/wrangler.json"
+    "deploy:vinext": "wrangler deploy --config dist/server/wrangler.json",
+    "test:admin": "node --test tests/admin-permissions.test.mjs tests/admin-migration.test.mjs tests/admin-owner-tool.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.67.0",
+    "@electric-sql/pglite": "0.5.15",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
