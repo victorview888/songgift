@@ -4,6 +4,7 @@ import "./admin.css";
 export const metadata: Metadata = {
   title: { absolute: "管理后台 | SongGift" },
   robots: { index: false, follow: false },
+  referrer: "no-referrer",
 };
 
 // Authorization belongs in each page's data access and each admin API, not only

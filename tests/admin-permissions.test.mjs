@@ -12,7 +12,7 @@ const verified = (extra = {}) => ({ id: "a3f10454-1234-4234-8234-012345678901", 
 const member = (extra = {}) => ({ user_id: verified().id, role: "owner", active: true, ...extra });
 
 function fixture(options = {}) {
-  const state = { user: verified(), membership: member(), dbError: null, authError: null, reads: [], handlers: 0, orderReads: 0, ...options };
+  const state = { user: verified(), membership: member(), dbError: null, authError: null, reads: [], handlers: 0, orderReads: 0, detailReads: 0, audioReads: 0, ...options };
   const modules = new Map();
   const context = vm.createContext({ URL, Request, Response, Headers, Map, console: { error() {} }, process: { env: { SUPABASE_URL: "https://test-project.supabase.invalid", SUPABASE_PUBLISHABLE_KEY: "test-public-key", ...options.env } } });
   const db = { from(table) {
@@ -41,8 +41,10 @@ function fixture(options = {}) {
       if(name==="@supabase/ssr")return {createServerClient};
       if(name==="@/lib/supabase/admin")return {getSupabaseAdmin:()=>db};
       if(name==="@/lib/admin/orders")return {parseOrderFilters:()=>({}),listAdminOrders:async()=>{state.orderReads++;return {orders:[],total:0,page:1,pageSize:20,totalPages:0};}};
+      if(name==="@/lib/admin/order-detail")return {getAdminOrderDetail:async()=>{state.detailReads++;return {order:{id:"isolated-order"}};}};
+      if(name==="@/lib/admin/audio")return {issueAdminAudioLink:async()=>{state.audioReads++;return "https://isolated.supabase.invalid/signed-audio";}};
       if(name==="@/lib/auth/admin")return load("src/lib/auth/admin.ts");
-      if(name==="./server")return load("src/lib/auth/server.ts");
+      if(name==="./server" || name==="@/lib/auth/server")return load("src/lib/auth/server.ts");
       if(name==="./redirect")return load("src/lib/auth/redirect.ts");
       if(name==="./admin")return load("src/lib/auth/admin.ts");
       throw new Error("Unexpected import: "+name);
@@ -148,4 +150,30 @@ test("orders API checks current membership before any customer query",async()=>{
   const request=()=>f.load("src/app/api/admin/orders/route.ts").GET(new Request("https://songgift.example/api/admin/orders"));
   assert.equal((await request()).status,200);assert.equal(f.state.orderReads,1);
   f.state.membership=null;assert.equal((await request()).status,403);assert.equal(f.state.orderReads,1);
+});
+
+
+test("order detail and audio APIs authorize before business reads, including revoked sessions",async()=>{
+  const files=["src/app/api/admin/orders/[id]/route.ts","src/app/api/admin/orders/[id]/audio/[assetId]/route.ts"];
+  for(const file of files)for(const options of [{user:null},{membership:null},{membership:member({active:false})},{dbError:{message:"missing"}}]) {
+    const f=fixture(options);
+    const response=await f.load(file).GET(new Request("https://songgift.example/api/admin/orders/isolated"),{params:Promise.resolve({id:"isolated",assetId:"isolated"})});
+    assert.ok([401,403,503].includes(response.status));assert.equal(f.state.detailReads,0);assert.equal(f.state.audioReads,0);
+    assert.match(response.headers.get("cache-control"),/private.*no-store/);
+  }
+  const f=fixture();const context={params:Promise.resolve({id:"isolated",assetId:"isolated"})};
+  const detail=()=>f.load(files[0]).GET(new Request("https://songgift.example/api/admin/orders/isolated"),context);
+  const audio=()=>f.load(files[1]).GET(new Request("https://songgift.example/api/admin/orders/isolated/audio/isolated"),context);
+  assert.equal((await detail()).status,200);
+  const signed=await audio();assert.equal(signed.status,302);assert.equal(signed.headers.get("referrer-policy"),"no-referrer");assert.match(signed.headers.get("cache-control"),/private.*no-store/);
+  f.state.membership.active=false;assert.equal((await detail()).status,403);assert.equal((await audio()).status,403);
+  assert.equal(f.state.detailReads,1);assert.equal(f.state.audioReads,1);
+});
+
+test("invalid and duplicate audio modes stop before signing or audit",async()=>{
+  const f=fixture();
+  for(const query of ["download=2","download=1&download=0"]) {
+    const response=await f.load("src/app/api/admin/orders/[id]/audio/[assetId]/route.ts").GET(new Request("https://songgift.example/api/admin/orders/isolated/audio/isolated?"+query),{params:Promise.resolve({id:"isolated",assetId:"isolated"})});
+    assert.equal(response.status,400);assert.equal(f.state.audioReads,0);
+  }
 });

@@ -25,6 +25,8 @@ before(async () => {
       using (user_id = nullif(current_setting('test.user_id',true),'')::uuid);
   `);
   await db.exec(migration);
+  await db.exec("alter default privileges grant all on tables to service_role");
+  await db.exec(readFileSync("supabase/migrations/20261105_admin_audio_audit.sql", "utf8"));
 });
 after(async () => { await db.close(); });
 
@@ -72,5 +74,26 @@ test("granting membership never changes customer order RLS",async()=>{
     assert.deepEqual(rows.rows,[{id:owner}]);
     await assert.rejects(db.query("select * from public.admin_members"),error=>error.code==="42501");
     await assert.rejects(db.query("update public.song_orders set user_id=$1 where id=$2",[owner,other]),error=>error.code==="42501");
+  });
+});
+
+
+test("audio audit migration is repeatable, empty and has RLS",async()=>{
+  await db.exec(readFileSync("supabase/migrations/20261105_admin_audio_audit.sql","utf8"));
+  assert.equal((await db.query("select count(*)::int as total from public.admin_audit_logs")).rows[0].total,0);
+  assert.equal((await db.query("select relrowsecurity from pg_class where oid='public.admin_audit_logs'::regclass")).rows[0].relrowsecurity,true);
+});
+
+test("customers cannot read or write audio audit, and service role cannot alter audit identity or delete rows",async()=>{
+  const request="d3f10454-1234-4234-8234-012345678903";
+  for(const role of ["anon","authenticated"])await asRole(role,async()=>{
+    for(const sql of [`insert into public.admin_audit_logs(request_id,actor_user_id,action,target_type,target_id,order_id,result) values ('${request}','${owner}','audio.preview','song_asset','${owner}','${owner}','requested')`,"select * from public.admin_audit_logs","update public.admin_audit_logs set result='issued'","delete from public.admin_audit_logs"])await assert.rejects(db.exec(sql),e=>e.code==="42501");
+  });
+  await asRole("service_role",async()=>{
+    await db.query("insert into public.admin_audit_logs(request_id,actor_user_id,action,target_type,target_id,order_id,result) values ($1,$2,'audio.preview','song_asset',$2,$2,'requested')",[request,owner]);
+    await db.query("update public.admin_audit_logs set result='issued' where request_id=$1",[request]);
+    assert.equal((await db.query("select result from public.admin_audit_logs where request_id=$1",[request])).rows[0].result,"issued");
+    await assert.rejects(db.query("update public.admin_audit_logs set actor_user_id=$1",[other]),e=>e.code==="42501");
+    await assert.rejects(db.exec("delete from public.admin_audit_logs"),e=>e.code==="42501");
   });
 });

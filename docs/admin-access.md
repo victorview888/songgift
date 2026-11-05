@@ -1,8 +1,8 @@
 # Administrator access
 
-This is the permission foundation, not the seven-page admin console. `/admin`
-shows only the verified administrator's own identity and the next development step.
-Orders, paid generation, refunds and customer exports are not implemented here.
+The console currently includes server-verified Owner access, a read-only order
+list and read-only order details. Paid generation, payment reconciliation, refunds
+and exports are not administrator actions in this implementation.
 
 ## Authorization boundary
 
@@ -124,3 +124,55 @@ checks. `scripts/test-admin-runtime.mjs test` additionally checks the orders pag
 and API with isolated Auth sessions and 25 synthetic orders: filters, exact email
 search, server pagination, noindex, private responses and revoked membership. The
 transport simulates PostgREST; it is not a production Supabase acceptance test.
+
+
+## Read-only details and protected audio
+
+- `/admin/orders/[id]` verifies current membership on the server before reading
+  the order. `GET /api/admin/orders/[id]` uses `adminRoute` and returns 404 for an
+  invalid or missing ID, 503 for a failed read. It never signs audio or calls a
+  payment/model provider. Asset metadata omits buckets, paths and signed URLs.
+- The detail page includes recorded story, lyrics, user/order identifiers, local
+  payment timestamps, the latest provider/model/job reference, and asset metadata.
+  Story and lyrics render as text. Missing amounts, currency, payment environment,
+  capture/refund evidence and full job/event history are labeled as unavailable.
+- The latest 100 assets are shown; truncation is explicit. Delivery evidence is
+  checked independently, so an older final asset is not hidden by this limit.
+  The timeline is derived only from creation, local `paid_at` and asset timestamps.
+- A `back` parameter may preserve the order list's filters/page. It is restricted
+  to the local `/admin/orders` path. No customer URL or arbitrary redirect is used.
+- `GET /api/admin/orders/[id]/audio/[assetId]` rechecks membership, binds both IDs
+  and `is_final=true`, then records the access before issuing a 60-second link.
+  `download=1` changes the download disposition and audit action. Invalid modes
+  return 400; unrelated/non-final/missing assets return 404. Responses remain
+  private/no-store and redirects set `Referrer-Policy: no-referrer`.
+- Playback uses `preload="none"`; opening/prefetching a detail page does not sign
+  links. Once issued, a bearer link remains usable for up to 60 seconds even if
+  membership is revoked; new requests are denied immediately. Audit records show
+  link issuance, not proof of listening or completed downloads.
+
+Before production audio access, review and apply
+`supabase/migrations/20261105_admin_audio_audit.sql` after the original membership
+migration. It creates the minimum `admin_audit_logs` table for audio access only;
+this is not the full operations audit system. There are no automatic grants,
+customer RLS changes or business data backfills. The schema is also included in
+`supabase/schema.sql` for new installations. No production migration was executed
+as part of development.
+
+Audit rows include only actor/request/order/asset IDs, action, issuance result and
+creation time. They contain no story, email, object path, token, signed URL, headers
+or raw provider error. Customer roles have no access. Service role can insert/read
+and update only `result`; it cannot change identity fields or delete rows through
+these grants. Audit insert failure prevents signing; failure to persist issuance
+prevents the redirect. An interrupted request can remain `requested`. Missing
+audit configuration disables audio access without blocking the read-only details.
+
+Template provenance and MIT notices: `docs/admin-template-migration.md` and
+`third-party/shrimpreel/LICENSE`. Querying a page remains server-rendered; the
+client request hook and payment mutation controls were not migrated.
+
+The expanded isolated checks exercise details, text escaping, preserved list
+context, ordinary-user and revoked-session rejection, bound audio access, audit
+failure, short-lived redirects and capability-free detail responses. The fixture
+uses in-memory PostgreSQL for membership/audit and simulated order/Storage APIs;
+it does not validate real production files or real Supabase storage signing.

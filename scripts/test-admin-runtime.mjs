@@ -8,6 +8,8 @@ import { PGlite } from "@electric-sql/pglite";
 // Neither mode reads .env files or accepts an external target.
 const fixtureOrigin = "http://127.0.0.1:54329";
 const ownerId = "a3f10454-1234-4234-8234-012345678901";
+const detailOrderId = "c3f10454-1234-4234-8234-000000000001";
+const detailAssetId = "d3f10454-1234-4234-8234-000000000001";
 const customerId = "b3f10454-1234-4234-8234-012345678902";
 const identities = [
   { id: ownerId, email: "owner@admin-test.example" },
@@ -20,6 +22,9 @@ async function serve() {
   await db.exec("create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create table auth.users(id uuid primary key);");
   for (const user of identities) await db.query("insert into auth.users(id) values ($1)",[user.id]);
   await db.exec(migration);
+  const auditMigration=readFileSync("supabase/migrations/20261105_admin_audio_audit.sql","utf8");
+  await db.exec(auditMigration);
+  let signingCalls=0;
   const restore=async()=>{await db.exec(migration);await db.query("insert into public.admin_members(user_id,active) values ($1,true) on conflict(user_id) do update set active=true",[ownerId]);};
   await restore();
   const tokens = new Map();
@@ -37,6 +42,38 @@ async function serve() {
       let body={};
       if(req.method!=="GET"&&req.method!=="HEAD") {let text="";for await(const chunk of req){text+=chunk;if(text.length>10000){json(413,{error:"Fixture request too large"});return;}}if(text)body=JSON.parse(text);}
       if(url.pathname==="/__fixture__/health")return json(200,{fixture:"songgift-admin-loopback",owner:identities[0].email,customer:identities[1].email});
+      if(url.pathname==="/__fixture__/audit" && req.method==="POST") {
+        if(body.mode==="missing")await db.exec("drop table public.admin_audit_logs");
+        else {await db.exec(auditMigration);if(body.mode==="reset"){await db.exec("truncate public.admin_audit_logs");signingCalls=0;}}
+        return json(200,{ok:true});
+      }
+      if(url.pathname==="/__fixture__/audit" && req.method==="GET") {
+        const rows=await db.query("select request_id,actor_user_id,action,target_type,target_id,order_id,result from public.admin_audit_logs order by created_at");
+        return json(200,{rows:rows.rows,signingCalls});
+      }
+      if(url.pathname==="/rest/v1/admin_audit_logs") {
+        if(req.headers.authorization!=="Bearer isolated-service-role")return json(403,{message:"Fixture audit requires service role"});
+        try {
+          if(req.method==="POST") {
+            await db.query("insert into public.admin_audit_logs(request_id,actor_user_id,action,target_type,target_id,order_id,result) values ($1,$2,$3,$4,$5,$6,$7)",[body.request_id,body.actor_user_id,body.action,body.target_type,body.target_id,body.order_id,body.result]);
+            return json(201,null);
+          }
+          if(req.method==="PATCH") {
+            const result=await db.query("update public.admin_audit_logs set result=$1 where request_id=$2 returning request_id",[body.result,(url.searchParams.get("request_id")||"").replace(/^eq\./,"")]);
+            return json(200,result.rows);
+          }
+        } catch {return json(404,{message:"Fixture audit unavailable"});}
+      }
+      if(url.pathname==="/rest/v1/song_assets") {
+        if(req.headers.authorization!=="Bearer isolated-service-role")return json(403,{message:"Fixture asset requires service role"});
+        const matches=url.searchParams.get("id")==="eq."+detailAssetId && url.searchParams.get("order_id")==="eq."+detailOrderId && url.searchParams.get("is_final")==="eq.true";
+        return json(200,matches?[{id:detailAssetId,order_id:detailOrderId,storage_bucket:"songs",storage_path:"fixture/audio.mp3",mime_type:"audio/mpeg"}]:[]);
+      }
+      if(url.pathname==="/storage/v1/object/sign/songs/fixture/audio.mp3" && req.method==="POST") {
+        if(req.headers.authorization!=="Bearer isolated-service-role")return json(403,{message:"Fixture signing requires service role"});
+        assert.equal(body.expiresIn,60);signingCalls++;
+        return json(200,{signedURL:"/object/sign/songs/fixture/audio.mp3?token=isolated-audio"});
+      }
       if(url.pathname==="/__fixture__/membership"&&req.method==="POST") {
         if(body.mode==="missing")await db.exec("drop table public.admin_members");
         else {await restore();if(body.active===false)await db.query("update public.admin_members set active=false where user_id=$1",[ownerId]);}
@@ -72,6 +109,10 @@ async function serve() {
           paid_at:i%2===0?"2026-11-05T01:00:00Z":null,created_at:`2026-11-05T00:${String(i).padStart(2,"0")}:00Z`,
           paypal_order_id:"FIXTURE"+i,music_provider:"fal",music_model:"isolated-model",final_assets:i%2===0?[{id:"fixture-asset-"+i}]:[]
         }));
+        if(url.searchParams.get("select")?.includes(",story,"))rows=rows.map(row=>({...row,
+          relationship:"friend",story:"Fixture private story <script>test</script>",mood:"warm",style:"pop",title:"Fixture song",lyrics_text:"Fixture private lyrics\nSecond line",provider_job_id:"fixture-job-1",updated_at:row.created_at,
+          song_assets:row.id===detailOrderId?[{id:detailAssetId,asset_type:"final",mime_type:"audio/mpeg",duration_seconds:null,provider:"fal",model_id:"isolated-model",provider_job_id:"fixture-job-1",is_final:true,created_at:"2026-11-05T01:20:00Z"}]:[]
+        }));
         for(const [key,value] of url.searchParams) {
           if(["id","paypal_order_id","music_provider","status"].includes(key))rows=rows.filter(r=>r[key]===value.replace(/^eq\./,""));
           if(key==="email")rows=rows.filter(r=>r.email.toLowerCase()===value.replace(/^ilike\./,"").replace(/\\([_%\\])/g,"$1").toLowerCase());
@@ -100,6 +141,7 @@ async function checks() {
   const health=await fetch(fixtureOrigin+"/__fixture__/health");assert.equal((await health.json()).fixture,"songgift-admin-loopback");
   const change=(body)=>fetch(fixtureOrigin+"/__fixture__/membership",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
   await change({active:true});
+  await fetch(fixtureOrigin+"/__fixture__/audit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"reset"})});
   let passed=0;const pass=(label)=>{passed++;console.log("PASS "+label);};
   function client(){const jar={};return async(path,method="GET",body,origin=base)=>{
     const headers={Cookie:Object.entries(jar).map(([k,v])=>k+"="+v).join("; ")};
@@ -127,10 +169,35 @@ async function checks() {
   response=await owner("/api/admin/orders?page=0");assert.equal(response.status,400);
   response=await owner("/admin/orders?page=2");html=await response.text();assert.equal(response.status,200);assert.match(html,/Fixture recipient/);assert.match(html,/noindex/);assert.match(response.headers.get("cache-control"),/private|no-store/);
   pass("owner order list filters, exact search, server pagination and private SSR work");
+  const detailPath="/api/admin/orders/"+detailOrderId;
+  const audioPath=detailPath+"/audio/"+detailAssetId;
+  for(const [request,status] of [[anonymous,401],[customer,403]]) {
+    for(const path of [detailPath,audioPath])assert.equal((await request(path)).status,status);
+    response=await request("/admin/orders/"+detailOrderId);html=await response.text();assert.doesNotMatch(html,/Fixture private story|Fixture private lyrics/);
+  }
+  response=await owner(detailPath);const detail=await response.json();assert.equal(response.status,200);assert.match(detail.order.story,/Fixture private story/);assert.equal(detail.assets.length,1);assert.doesNotMatch(JSON.stringify(detail),/storage_path|storage_bucket|signedUrl|isolated-audio/);
+  assert.equal((await owner("/api/admin/orders/not-valid")).status,404);
+  assert.equal((await owner("/api/admin/orders/c3f10454-1234-4234-8234-000000000099")).status,404);
+  response=await owner("/admin/orders/"+detailOrderId+"?back="+encodeURIComponent("/admin/orders?page=2&provider=fal"));html=await response.text();assert.equal(response.status,200);assert.match(html,/Fixture private story/);assert.match(html,/&lt;script&gt;test&lt;\/script&gt;/);assert.doesNotMatch(html,/<script>test<\/script>/);assert.match(html,/page=2(?:&amp;|&)provider=fal/);assert.match(html,/no-referrer/);assert.match(response.headers.get("cache-control"),/private|no-store/);
+  pass("detail API and SSR enforce access, escape text, preserve list context and omit storage capabilities");
+  let audit=await (await fetch(fixtureOrigin+"/__fixture__/audit")).json();assert.equal(audit.signingCalls,0);
+  response=await owner(audioPath);assert.equal(response.status,302);assert.match(response.headers.get("location"),/isolated-audio/);assert.equal(response.headers.get("referrer-policy"),"no-referrer");assert.match(response.headers.get("cache-control"),/private.*no-store/);
+  response=await owner(audioPath+"?download=1");assert.equal(response.status,302);assert.match(response.headers.get("location"),/download=SongGift/);
+  assert.equal((await owner("/api/admin/orders/c3f10454-1234-4234-8234-000000000002/audio/"+detailAssetId)).status,404);
+  audit=await (await fetch(fixtureOrigin+"/__fixture__/audit")).json();assert.equal(audit.rows.length,2);assert.ok(audit.rows.every(row=>row.actor_user_id===ownerId&&row.order_id===detailOrderId&&row.result==="issued"));assert.equal(audit.signingCalls,2);assert.doesNotMatch(JSON.stringify(audit.rows),/isolated-audio|storage_path|Fixture private/);
+  await fetch(fixtureOrigin+"/__fixture__/audit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"missing"})});
+  response=await owner(audioPath);assert.equal(response.status,503);assert.equal(response.headers.get("location"),null);
+  await fetch(fixtureOrigin+"/__fixture__/audit",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
+  audit=await (await fetch(fixtureOrigin+"/__fixture__/audit")).json();assert.equal(audit.signingCalls,2);
+  pass("audio access is bound to the order, durably audited and fails closed when audit is missing");
   await change({active:false});response=await owner("/api/admin/session");assert.equal(response.status,403);response=await owner("/admin");html=await response.text();assert.doesNotMatch(html,/后台访问已开启/);pass("revoking membership blocks the next request with the same session");
+  assert.equal((await owner(detailPath)).status,403);assert.equal((await owner(audioPath)).status,403);
+  response=await owner("/admin/orders/"+detailOrderId);assert.doesNotMatch(await response.text(),/Fixture private story|Fixture private lyrics/);
   assert.equal((await owner("/api/admin/orders")).status,403);
   response=await owner("/admin/orders");assert.doesNotMatch(await response.text(),/Fixture recipient|buyer@admin-test/);
   await change({mode:"missing"});response=await owner("/api/admin/session");assert.equal(response.status,503);assert.doesNotMatch(await response.text(),/PGRST|service_role|isolated-service-role/);response=await owner("/admin");html=await response.text();assert.doesNotMatch(html,/后台访问已开启/);assert.ok(html.includes("暂时无法验证后台访问权限"));pass("missing membership migration fails closed in API and page");
+  assert.equal((await owner(detailPath)).status,503);assert.equal((await owner(audioPath)).status,503);
+  response=await owner("/admin/orders/"+detailOrderId);assert.doesNotMatch(await response.text(),/Fixture private story|Fixture private lyrics/);
   assert.equal((await owner("/api/admin/orders")).status,503);
   response=await owner("/admin/orders");html=await response.text();assert.match(html,/暂时无法验证后台访问权限/);assert.doesNotMatch(html,/Fixture recipient|buyer@admin-test/);
   await change({active:true});response=await owner("/api/auth/signout","POST",{});assert.equal(response.status,200);assert.equal((await owner("/api/admin/session")).status,401);pass("sign-out removes administrator session access");

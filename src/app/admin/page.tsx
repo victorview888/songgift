@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getAdminPageAccess } from "@/lib/auth/admin-page";
-import { AdminSignOut } from "@/components/admin-sign-out";
+import { AdminShell } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -14,17 +14,9 @@ export default async function AdminPage() {
   }
 
   const { admin } = access;
-  return <div className="admin-shell">
-    <aside className="admin-sidebar">
-      <Link href="/" className="admin-brand">♪ songgift<span>管理后台</span></Link>
-      <nav aria-label="后台导航"><Link href="/admin" aria-current="page"><span aria-hidden="true">▦</span> 后台入口</Link><Link href="/admin/orders">订单列表</Link><Link href="/my-songs"><span aria-hidden="true">♫</span> 我的歌曲</Link><Link href="/"><span aria-hidden="true">↗</span> 返回网站</Link></nav>
-      <p className="admin-sidebar-note">为每一首歌，<br />做好交付的最后一步。</p>
-    </aside>
-    <main className="admin-main">
-      <header className="admin-topbar"><span>SongGift / 管理后台</span><AdminSignOut /></header>
-      <section className="admin-welcome"><p className="admin-eyebrow">管理工作区</p><h1>后台访问已开启。</h1><p>你的管理员身份已验证。可查询订单摘要；订单详情与异常恢复将逐步接入。</p></section>
+  return <AdminShell current="home">
+      <section className="admin-welcome"><p className="admin-eyebrow">管理工作区</p><h1>后台访问已开启。</h1><p>你的管理员身份已验证。可查询订单摘要；可查看订单详情、故事、歌词与音频记录。</p></section>
       <section className="admin-identity-card" aria-labelledby="admin-identity-title"><div className="admin-identity-icon" aria-hidden="true">✓</div><div><p className="admin-eyebrow">当前账号</p><h2 id="admin-identity-title">{admin.email}</h2><p>所有者 · Owner</p></div><span className="admin-status">访问已授权</span></section>
       <section className="admin-next-card"><div><p className="admin-eyebrow">只读订单查询</p><h2>先让每一笔订单都清晰可查。</h2><p>按订单号、邮箱或 PayPal 号搜索，并按日期、支付及交付记录筛选。</p></div><Link className="admin-button" href="/admin/orders">查看订单</Link></section>
-    </main>
-  </div>;
+  </AdminShell>;
 }
