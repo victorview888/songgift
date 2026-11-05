@@ -63,6 +63,29 @@ async function serve() {
         try {const data=await db.query("select user_id,role,active from public.admin_members where user_id=$1",[id]);return json(200,data.rows);}
         catch {return json(404,{code:"PGRST205",message:"Fixture membership table unavailable"});}
       }
+      if(url.pathname==="/rest/v1/song_orders" && req.method==="GET") {
+        if(req.headers.authorization!=="Bearer isolated-service-role")return json(403,{message:"Fixture orders require service role"});
+        let rows=Array.from({length:25},(_,i)=>({
+          id:`c3f10454-1234-4234-8234-${String(i+1).padStart(12,"0")}`,user_id:customerId,
+          email:i===0?"buyer_one@admin-test.example":"buyer@admin-test.example",
+          recipient_name:"Fixture recipient "+(i+1),occasion:"birthday",status:i%2===0?"completed":"generating",
+          paid_at:i%2===0?"2026-11-05T01:00:00Z":null,created_at:`2026-11-05T00:${String(i).padStart(2,"0")}:00Z`,
+          paypal_order_id:"FIXTURE"+i,music_provider:"fal",music_model:"isolated-model",final_assets:i%2===0?[{id:"fixture-asset-"+i}]:[]
+        }));
+        for(const [key,value] of url.searchParams) {
+          if(["id","paypal_order_id","music_provider","status"].includes(key))rows=rows.filter(r=>r[key]===value.replace(/^eq\./,""));
+          if(key==="email")rows=rows.filter(r=>r.email.toLowerCase()===value.replace(/^ilike\./,"").replace(/\\([_%\\])/g,"$1").toLowerCase());
+          if(key==="paid_at")rows=rows.filter(r=>value==="is.null"?!r.paid_at:!!r.paid_at);
+          if(key==="created_at")rows=rows.filter(r=>value.startsWith("gte.")?r.created_at>=value.slice(4):r.created_at<value.slice(3));
+          if(key==="final_assets")rows=rows.filter(r=>r.final_assets.length===0);
+        }
+        if(url.searchParams.get("select")?.includes("!inner"))rows=rows.filter(r=>r.final_assets.length>0);
+        rows.sort((a,b)=>b.created_at.localeCompare(a.created_at)||b.id.localeCompare(a.id));
+        const total=rows.length,offset=Number(url.searchParams.get("offset")||0),limit=Number(url.searchParams.get("limit")||20);
+        rows=rows.slice(offset,offset+limit);
+        res.setHeader("Content-Range",`${offset}-${offset+rows.length-1}/${total}`);
+        return json(200,rows);
+      }
       return json(404,{error:"Unexpected isolated transport request",path:url.pathname});
     } catch {json(500,{error:"Isolated fixture failed"});}
   });
@@ -93,8 +116,23 @@ async function checks() {
   response=await customer("/admin");html=await response.text();assert.doesNotMatch(html,/owner@admin-test.example/);assert.ok(html.includes("无法访问这个后台页面")||response.status===404);pass("ordinary user cannot render the administrator shell");
   await signIn(owner,identities[0].email);response=await owner("/api/admin/session");assert.equal(response.status,200,await response.clone().text());assert.equal((await response.json()).admin.userId,ownerId);pass("active owner receives server-checked identity");
   response=await owner("/admin");html=await response.text();assert.equal(response.status,200);assert.ok(html.includes("后台访问已开启"));assert.ok(html.includes(identities[0].email));assert.match(html,/noindex/);assert.match(response.headers.get("cache-control"),/private|no-store/);pass("owner page is dynamic, private, non-indexable and server-rendered");
+  for(const [request,status] of [[anonymous,401],[customer,403]]) {
+    response=await request("/api/admin/orders");assert.equal(response.status,status);
+    response=await request("/admin/orders");html=await response.text();assert.doesNotMatch(html,/Fixture recipient|buyer@admin-test/);
+  }
+  pass("orders API and SSR page deny unsigned and ordinary customer access");
+  response=await owner("/api/admin/orders?page=2");let orders=await response.json();assert.equal(response.status,200);assert.equal(orders.total,25);assert.equal(orders.orders.length,5);assert.match(response.headers.get("cache-control"),/private.*no-store/);
+  response=await owner("/api/admin/orders?delivery=delivered&payment=recorded&provider=fal&from=2026-11-05&to=2026-11-05");orders=await response.json();assert.equal(orders.total,13);assert.ok(orders.orders.every(o=>o.hasFinalAudio&&o.paid_at));
+  response=await owner("/api/admin/orders?searchBy=email&q=buyer_one%40admin-test.example");orders=await response.json();assert.equal(orders.total,1);
+  response=await owner("/api/admin/orders?page=0");assert.equal(response.status,400);
+  response=await owner("/admin/orders?page=2");html=await response.text();assert.equal(response.status,200);assert.match(html,/Fixture recipient/);assert.match(html,/noindex/);assert.match(response.headers.get("cache-control"),/private|no-store/);
+  pass("owner order list filters, exact search, server pagination and private SSR work");
   await change({active:false});response=await owner("/api/admin/session");assert.equal(response.status,403);response=await owner("/admin");html=await response.text();assert.doesNotMatch(html,/后台访问已开启/);pass("revoking membership blocks the next request with the same session");
+  assert.equal((await owner("/api/admin/orders")).status,403);
+  response=await owner("/admin/orders");assert.doesNotMatch(await response.text(),/Fixture recipient|buyer@admin-test/);
   await change({mode:"missing"});response=await owner("/api/admin/session");assert.equal(response.status,503);assert.doesNotMatch(await response.text(),/PGRST|service_role|isolated-service-role/);response=await owner("/admin");html=await response.text();assert.doesNotMatch(html,/后台访问已开启/);assert.ok(html.includes("暂时无法验证后台访问权限"));pass("missing membership migration fails closed in API and page");
+  assert.equal((await owner("/api/admin/orders")).status,503);
+  response=await owner("/admin/orders");html=await response.text();assert.match(html,/暂时无法验证后台访问权限/);assert.doesNotMatch(html,/Fixture recipient|buyer@admin-test/);
   await change({active:true});response=await owner("/api/auth/signout","POST",{});assert.equal(response.status,200);assert.equal((await owner("/api/admin/session")).status,401);pass("sign-out removes administrator session access");
   response=await anonymous("/robots.txt");assert.match(await response.text(),/Disallow: \/admin/);pass("admin routes are excluded from the crawl list");
   console.log(`${passed} isolated runtime checks passed against ${base}; real Auth delivery and production role grants were not performed.`);

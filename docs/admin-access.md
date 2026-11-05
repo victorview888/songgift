@@ -86,3 +86,41 @@ script, never in the production app routes.
 Checks cover signed-out redirects, ordinary users with forged admin metadata,
 Owner SSR, private cache headers, noindex, live revocation, missing membership
 schema, sign-out and robots. Stop both the site and fixture processes afterwards.
+
+## Read-only order list
+
+`/admin/orders` checks `getAdminPageAccess` before querying orders;
+`GET /api/admin/orders` enters through `adminRoute` before parsing filters or
+querying customer data. Membership revocation and unavailable configuration keep
+the existing fail-closed behavior. There are no order mutation endpoints in this
+feature, no new production migration and no automatic Owner grants.
+
+The page and API share `src/lib/admin/orders.ts`. Query parameters:
+
+| Parameter | Values / meaning |
+| --- | --- |
+| `searchBy`, `q` | `id` (default), `email`, `paypal`; full exact value. Email is case-insensitive; `%`, `_` and backslashes are escaped, not treated as wildcards. Email is the order's recorded email, not a live Auth profile lookup. |
+| `from`, `to` | `YYYY-MM-DD` creation dates in Asia/Shanghai (UTC+8), both dates inclusive; converted to a UTC half-open interval. |
+| `payment` | `all`, `recorded` (`paid_at` exists), `unrecorded` (`paid_at` absent). This is local evidence, not PayPal reconciliation. |
+| `delivery` | `all`, `delivered` (final asset exists), `undelivered` (none), `generating` / `failed` (raw status plus no final asset). Asset existence does not probe Storage or prove email delivery. |
+| `provider` | Recorded music provider: `fal`, `musicapi`, `mureka_cn`, `google_lyria`, `mock`; omitted means all. |
+| `page` | Positive integer, maximum 999999, default 1. Fixed 20-row server pagination, ordered by `created_at DESC, id DESC`, with exact filtered count. |
+
+Filters are combined on the server before pagination. Invalid or duplicate known
+parameters return API 400; the page shows a recoverable error. Empty and
+out-of-range pages show an empty state and a first-page link. Pagination preserves
+filters; submitting the filter form starts at page 1. Search values appear in the
+URL, so avoid sharing search URLs containing customer email addresses.
+
+The summary response omits full stories, lyrics, generation errors, storage paths
+and signed audio URLs. It does not infer historical prices or payment environment
+from today's configuration; the page labels them as unrecorded. Order details,
+mutations, exports and payment reconciliation remain future work. The customer
+order API and RLS are unchanged.
+
+`npm run test:admin` includes query validation, real Supabase client URL encoding,
+summary-only projection, date boundaries, relation filters and order API access
+checks. `scripts/test-admin-runtime.mjs test` additionally checks the orders page
+and API with isolated Auth sessions and 25 synthetic orders: filters, exact email
+search, server pagination, noindex, private responses and revoked membership. The
+transport simulates PostgREST; it is not a production Supabase acceptance test.

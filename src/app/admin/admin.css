@@ -33,3 +33,31 @@
 .admin-access-message > .admin-brand { display: inline-block; margin-bottom: 72px; }
 .admin-inline-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
 @media (max-width: 760px) { .admin-shell { grid-template-columns: minmax(0, 1fr); } .admin-sidebar { padding: 22px; gap: 20px; border-right: 0; border-bottom: 1px solid var(--admin-border); } .admin-brand span { display: inline; margin-left: 14px; } .admin-sidebar nav { display: flex; flex-wrap: wrap; gap: 6px; } .admin-sidebar nav a { padding: 10px 12px; } .admin-sidebar-note { display: none; } .admin-main { padding: 16px 22px 50px; } .admin-welcome { margin: 35px 0 26px; } .admin-identity-card { flex-wrap: wrap; padding: 22px; gap: 15px; } .admin-identity-card h2 { font-size: 16px; } .admin-status { margin-left: 0; } .admin-next-card { padding: 22px; } }
+
+.admin-orders-main { max-width: 1680px; }
+.admin-order-filters { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; padding: 24px; border: 1px solid var(--admin-border); border-radius: 16px; background: #fff; }
+.admin-order-filters label { display: grid; gap: 8px; color: var(--admin-muted); font-size: 13px; }
+.admin-order-filters input, .admin-order-filters select { min-height: 42px; max-width: 100%; padding: 8px 10px; border: 1px solid #c6d2c5; border-radius: 8px; background: #fff; color: var(--admin-ink); font: inherit; }
+.admin-search-field { flex: 1 1 280px; }
+.admin-filter-actions { display: flex; gap: 10px; }
+.admin-order-note { color: var(--admin-muted); font-size: 12px; line-height: 1.9; margin: 20px 0; }
+.admin-order-count { font-size: 14px; margin: 24px 0 14px; }
+.admin-order-table-wrap { overflow-x: auto; border: 1px solid var(--admin-border); border-radius: 14px; background: #fff; }
+.admin-order-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+.admin-order-table th { padding: 16px; background: #edf2e9; font-weight: 500; white-space: nowrap; }
+.admin-order-table td { padding: 18px 16px; border-top: 1px solid var(--admin-border); vertical-align: top; min-width: 150px; max-width: 260px; overflow-wrap: anywhere; line-height: 1.7; }
+.admin-order-table code, .admin-order-table small { display: block; margin-top: 6px; color: var(--admin-muted); font-size: 12px; }
+.admin-order-badge { display: inline-block; background: #edf4e9; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.admin-order-message { padding: 32px; border: 1px solid var(--admin-border); border-radius: 14px; background: #fff; line-height: 1.8; }
+.admin-pagination { display: flex; gap: 12px; justify-content: end; margin-top: 22px; }
+.admin-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.admin-root input:focus-visible, .admin-root select:focus-visible { outline: 3px solid #779a6b; outline-offset: 3px; }
+@media (max-width: 760px) {
+  .admin-order-filters { padding: 18px; }
+  .admin-order-filters label { flex: 1 1 140px; min-width: 0; }
+  .admin-order-table, .admin-order-table tbody { display: block; }
+  .admin-order-table thead { display: none; }
+  .admin-order-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; border-bottom: 1px solid var(--admin-border); }
+  .admin-order-table td { display: block; min-width: 0; max-width: none; border: 0; padding: 10px; }
+  .admin-order-table td:first-child { grid-column: 1 / -1; }
+}

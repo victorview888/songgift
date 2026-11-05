@@ -12,7 +12,7 @@ const verified = (extra = {}) => ({ id: "a3f10454-1234-4234-8234-012345678901", 
 const member = (extra = {}) => ({ user_id: verified().id, role: "owner", active: true, ...extra });
 
 function fixture(options = {}) {
-  const state = { user: verified(), membership: member(), dbError: null, authError: null, reads: [], handlers: 0, ...options };
+  const state = { user: verified(), membership: member(), dbError: null, authError: null, reads: [], handlers: 0, orderReads: 0, ...options };
   const modules = new Map();
   const context = vm.createContext({ URL, Request, Response, Headers, Map, console: { error() {} }, process: { env: { SUPABASE_URL: "https://test-project.supabase.invalid", SUPABASE_PUBLISHABLE_KEY: "test-public-key", ...options.env } } });
   const db = { from(table) {
@@ -40,6 +40,7 @@ function fixture(options = {}) {
       if(name==="next/headers")return {cookies:async()=>({getAll:()=>[]})};
       if(name==="@supabase/ssr")return {createServerClient};
       if(name==="@/lib/supabase/admin")return {getSupabaseAdmin:()=>db};
+      if(name==="@/lib/admin/orders")return {parseOrderFilters:()=>({}),listAdminOrders:async()=>{state.orderReads++;return {orders:[],total:0,page:1,pageSize:20,totalPages:0};}};
       if(name==="@/lib/auth/admin")return load("src/lib/auth/admin.ts");
       if(name==="./server")return load("src/lib/auth/server.ts");
       if(name==="./redirect")return load("src/lib/auth/redirect.ts");
@@ -133,4 +134,18 @@ test("login return path permits /admin but rejects external and privileged API d
   const {safeNext}=fixture().load("src/lib/auth/redirect.ts");
   assert.equal(safeNext("/admin"),"/admin");assert.equal(safeNext("/admin/orders?page=2"),"/admin/orders?page=2");
   for(const value of ["https://evil.example","//evil.example","/\\evil.example","/api/admin/session","/auth/callback","/admin\nLocation: evil"]){assert.equal(safeNext(value),"/my-songs");}
+});
+
+
+test("orders API checks current membership before any customer query",async()=>{
+  for(const options of [{user:null},{membership:null},{membership:member({active:false})},{dbError:{message:"missing table"}}]) {
+    const f=fixture(options);
+    const response=await f.load("src/app/api/admin/orders/route.ts").GET(new Request("https://songgift.example/api/admin/orders?q=private"));
+    assert.ok([401,403,503].includes(response.status));assert.equal(f.state.orderReads,0);
+    assert.match(response.headers.get("cache-control"),/private.*no-store/);
+  }
+  const f=fixture();
+  const request=()=>f.load("src/app/api/admin/orders/route.ts").GET(new Request("https://songgift.example/api/admin/orders"));
+  assert.equal((await request()).status,200);assert.equal(f.state.orderReads,1);
+  f.state.membership=null;assert.equal((await request()).status,403);assert.equal(f.state.orderReads,1);
 });
