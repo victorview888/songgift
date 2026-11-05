@@ -1,17 +1,24 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
+function paypalIsLive() {
+  return (process.env.PAYPAL_ENVIRONMENT || "sandbox").toLowerCase() === "live";
+}
+
 function paypalBaseUrl() {
-  return (process.env.PAYPAL_ENVIRONMENT || "sandbox").toLowerCase() === "live"
+  return paypalIsLive()
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com";
 }
 
 function paypalCredentials() {
-  const clientId = process.env.PAYPAL_CLIENT_ID;
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+  const live = paypalIsLive();
+  const clientId = live ? process.env.PAYPAL_LIVE_CLIENT_ID : process.env.PAYPAL_CLIENT_ID;
+  const clientSecret = live ? process.env.PAYPAL_LIVE_CLIENT_SECRET : process.env.PAYPAL_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
     const error = new Error(
-      "PayPal needs PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET on the server.",
+      live
+        ? "PayPal Live needs PAYPAL_LIVE_CLIENT_ID and PAYPAL_LIVE_CLIENT_SECRET on the server."
+        : "PayPal Sandbox needs PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET on the server.",
     );
     error.name = "ProviderConfigurationError";
     throw error;

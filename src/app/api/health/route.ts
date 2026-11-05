@@ -4,6 +4,7 @@ import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/admin";
 export const runtime = "nodejs";
 
 export async function GET() {
+  const paypalLive = (process.env.PAYPAL_ENVIRONMENT || "sandbox").toLowerCase() === "live";
   const providerConfig = {
     lyricsProvider: process.env.LYRICS_PROVIDER || "deepseek",
     musicProvider: process.env.MUSIC_PROVIDER || "musicapi",
@@ -17,8 +18,11 @@ export async function GET() {
     hasMurekaKey: Boolean(process.env.MUREKA_API_KEY),
     hasMusicApiKey: Boolean(process.env.MUSICAPI_KEY),
     hasFalKey: Boolean(process.env.FAL_KEY?.trim()),
+    paypalEnvironment: paypalLive ? "live" : "sandbox",
     hasPayPalCredentials: Boolean(
-      process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET,
+      paypalLive
+        ? process.env.PAYPAL_LIVE_CLIENT_ID && process.env.PAYPAL_LIVE_CLIENT_SECRET
+        : process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET,
     ),
     hasEmailCredentials: Boolean(
       process.env.RESEND_API_KEY && process.env.SONGGIFT_FROM_EMAIL,

@@ -4,12 +4,12 @@ import test from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
 
-function fixture(orderResponses) {
+function fixture(orderResponses, envOverrides={}) {
   const calls = [], writes = [], filters = [];
   const payloads = [{ access_token: "test-access-token" }, ...orderResponses];
   const query = { eq: (key, value) => { filters.push([key, value]); return query; }, is: (key, value) => { filters.push([key, value]); return Promise.resolve({ error: null }); } };
   const db = { from: () => ({ update: (data) => { writes.push(data); return query; } }) };
-  const context = vm.createContext({ Buffer, process: { env: { PAYPAL_CLIENT_ID:"test-id", PAYPAL_CLIENT_SECRET:"test-secret", PAYPAL_ENVIRONMENT:"sandbox", SONG_PRICE_USD:"9.99", PAYPAL_CURRENCY:"USD" } }, fetch: async (url, init) => { calls.push({url,init}); const next=payloads.shift(); assert.ok(next,"Unexpected provider call"); return new Response(JSON.stringify(next.body || next),{status:next.httpStatus || 200}); } });
+  const context = vm.createContext({ Buffer, process: { env: { PAYPAL_CLIENT_ID:"test-id", PAYPAL_CLIENT_SECRET:"test-secret", PAYPAL_ENVIRONMENT:"sandbox", SONG_PRICE_USD:"9.99", PAYPAL_CURRENCY:"USD", ...envOverrides } }, fetch: async (url, init) => { calls.push({url,init}); const next=payloads.shift(); assert.ok(next,"Unexpected provider call"); return new Response(JSON.stringify(next.body || next),{status:next.httpStatus || 200}); } });
   const source = readFileSync("src/lib/paypal.ts", "utf8");
   const compiled = ts.transpileModule(source, { compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022} }).outputText;
   const exports={};vm.runInContext(`(function(exports,require){${compiled}\n})`,context)(exports,()=>({getSupabaseAdmin:()=>db}));
@@ -17,6 +17,28 @@ function fixture(orderResponses) {
 }
 const owner={orderId:"song-order-a",userId:"customer-a"};
 const paypalOrder=(status="APPROVED",extra={})=>({id:"paypal-order-a",status,purchase_units:[{custom_id:owner.orderId,amount:{currency_code:"USD",value:"9.99"}}],...extra});
+
+test("Sandbox checkout ignores Live credentials staged ahead of cutover",async()=>{
+  const f=fixture([{id:"paypal-order-a",links:[{rel:"approve",href:"https://www.sandbox.paypal.com/checkoutnow"}]}],{PAYPAL_LIVE_CLIENT_ID:"live-id",PAYPAL_LIVE_CLIENT_SECRET:"live-secret"});
+  await f.createPayPalOrder(owner.orderId,{returnUrl:"https://www.songforalways.com/lyrics/song-order-a",cancelUrl:"https://www.songforalways.com/lyrics/song-order-a"});
+  assert.equal(f.calls[0].url,"https://api-m.sandbox.paypal.com/v1/oauth2/token");
+  assert.equal(f.calls[0].init.headers.Authorization,"Basic "+Buffer.from("test-id:test-secret").toString("base64"));
+});
+
+test("Live checkout uses the Live endpoint and credential pair",async()=>{
+  const f=fixture([{id:"paypal-order-a",links:[{rel:"approve",href:"https://www.paypal.com/checkoutnow"}]}],{PAYPAL_ENVIRONMENT:"live",PAYPAL_LIVE_CLIENT_ID:"live-id",PAYPAL_LIVE_CLIENT_SECRET:"live-secret"});
+  await f.createPayPalOrder(owner.orderId,{returnUrl:"https://www.songforalways.com/lyrics/song-order-a",cancelUrl:"https://www.songforalways.com/lyrics/song-order-a"});
+  assert.equal(f.calls[0].url,"https://api-m.paypal.com/v1/oauth2/token");
+  assert.equal(f.calls[0].init.headers.Authorization,"Basic "+Buffer.from("live-id:live-secret").toString("base64"));
+  assert.equal(f.calls[1].url,"https://api-m.paypal.com/v2/checkout/orders");
+  assert.equal(JSON.parse(f.calls[1].init.body).purchase_units[0].amount.value,"9.99");
+});
+
+test("Live mode never falls back to Sandbox credentials",async()=>{
+  const f=fixture([],{PAYPAL_ENVIRONMENT:"live"});
+  await assert.rejects(f.createPayPalOrder(owner.orderId),/PAYPAL_LIVE_CLIENT_ID and PAYPAL_LIVE_CLIENT_SECRET/);
+  assert.equal(f.calls.length,0);
+});
 
 test("rejects a different song binding before capture or payment writes",async()=>{
   const f=fixture([paypalOrder("APPROVED",{purchase_units:[{custom_id:"someone-else",amount:{currency_code:"USD",value:"9.99"}}]})]);

@@ -31,8 +31,8 @@ Worker, not as public vars or browser-side VITE_ variables:
 - DEEPSEEK_API_KEY
 - FAL_KEY
 - SUPABASE_SERVICE_ROLE_KEY
-- PAYPAL_CLIENT_ID
-- PAYPAL_CLIENT_SECRET
+- PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET (Sandbox)
+- PAYPAL_LIVE_CLIENT_ID and PAYPAL_LIVE_CLIENT_SECRET (before the Live cutover)
 
 Optional email delivery uses RESEND_API_KEY and SONGGIFT_FROM_EMAIL.
 For local Workers testing, copy .dev.vars.example to .dev.vars and fill only
@@ -58,11 +58,13 @@ of a successful local build.
 
 The PayPal Live cutover sets `PAYPAL_ENVIRONMENT=live` in `wrangler.jsonc`.
 Merge it into `master` only after the Live credentials are installed on the
-production Worker. In Cloudflare Dashboard,
-open Workers & Pages → songgift → Settings → Variables and Secrets. Replace
-`PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` with the Client ID and Secret
-from the same PayPal Live app. Save both as encrypted Secrets, never as public
-variables or repository files. Keep `PAYPAL_REQUIRED=true`,
+production Worker. In Cloudflare Dashboard, open Workers & Pages → songgift →
+Settings → Variables and Secrets. Add `PAYPAL_LIVE_CLIENT_ID` and
+`PAYPAL_LIVE_CLIENT_SECRET` from the same PayPal Live app as new encrypted
+Secrets. Keep the existing Sandbox `PAYPAL_CLIENT_ID` and
+`PAYPAL_CLIENT_SECRET` unchanged so the current deployment keeps working and
+rollback remains possible. Never add credentials as public variables or to the
+repository. Keep `PAYPAL_REQUIRED=true`,
 `PAYPAL_CURRENCY=USD`, and the intended `SONG_PRICE_USD` (currently `9.99`).
 The Live PayPal app must belong to the merchant account that should receive
 the funds.
@@ -72,7 +74,8 @@ such as `https://www.songforalways.com/lyrics/<order-id>`. The current route
 does not read `PAYPAL_RETURN_URL` or `PAYPAL_CANCEL_URL`; they can remain unset.
 Do not use localhost URLs for production checkout. After saving the Live
 secrets, merge the cutover branch into `master` to trigger the connected deployment.
-Check `/api/health` for `hasPayPalCredentials: true`, then make one controlled
+Check `/api/health` for `paypalEnvironment: "live"` and
+`hasPayPalCredentials: true`, then make one controlled
 Live payment and verify the amount, captured order, song creation, storage,
 re-login, and download. A healthy credential flag alone does not prove that
 the credentials belong to the Live API. Do not submit additional paid song
