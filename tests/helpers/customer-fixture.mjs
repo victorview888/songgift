@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
+import {createHash} from 'node:crypto';
 import ts from 'typescript';
 import { PGlite } from '@electric-sql/pglite';
 import { createClient } from '@supabase/supabase-js';
@@ -21,7 +22,7 @@ export async function fixture() {
  await db.query('insert into auth.users values ($1,\'owner@isolated.example\',now()),($2,\'other@isolated.example\',now())',[userId,otherId]);
  await db.exec('grant select,insert,update on public.song_orders,public.song_assets to service_role;set role service_role;');
  const env={SONG_PRICE_USD:'9.99',PAYPAL_CURRENCY:'USD',PAYPAL_ENVIRONMENT:'sandbox',PAYPAL_CLIENT_ID:'test-id',PAYPAL_CLIENT_SECRET:'test-secret',PAYPAL_LIVE_CLIENT_ID:'live-test-id',PAYPAL_LIVE_CLIENT_SECRET:'live-test-secret',MUSIC_PROVIDER:'fal',SUPABASE_STORAGE_BUCKET:'songs'};
- const calls=[],objects=new Map(),paypal=new Map(),sentEmails=new Map();let generateCalls=0,pollCalls=0,mode='queued',fail={};
+ const calls=[],objects=new Map(),paypal=new Map(),sentEmails=new Map();let generateCalls=0,pollCalls=0,mode='queued',fail={},lyricsCalls=0;
  const identity={provider:'fal',model:'fal-ai/lyria3/pro',environment:'production'};
  const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json'}});
  function matches(p) {
@@ -88,7 +89,7 @@ export async function fixture() {
     if(!objects.has(key))return json({message:'Object not found',statusCode:'404'},404);
     return new Response(objects.get(key),{headers:{'Content-Type':'audio/wav'}});
    }
-   const table=url.pathname.split('/').at(-1);assert.ok(['song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs'].includes(table),table);
+   const table=url.pathname.split('/').at(-1);assert.ok(['song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests'].includes(table),table);
    const cond=matches(url.searchParams);
    if(method==='GET') {
     const order=url.searchParams.get('order');let suffix='';
@@ -136,7 +137,7 @@ export async function fixture() {
  const client=createClient('https://isolated.supabase.invalid','isolated-service-role',{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:fetcher}});
  class HttpError extends Error {constructor(status,message){super(message);this.status=status;}}
  const cache=new Map();
- const providerFactory={getMusicIdentity:()=>({...identity}),getPinnedMusicProvider:(pinned)=>{
+ const providerFactory={getLyricsProvider:()=>({async generateLyrics(input){lyricsCalls++;calls.push({lyricInput:input});await new Promise(resolve=>setTimeout(resolve,10));if(fail.lyrics)throw new Error('Isolated lyric failure');return {provider:'mock',model:'isolated-lyrics',status:'mock',title:'For '+input.recipientName,lyricsText:'[Verse] A private original song for '+input.recipientName+'. '+input.story,factsUsed:[],pronunciationNotes:[]};}}),getMusicIdentity:()=>({...identity}),getPinnedMusicProvider:(pinned)=>{
   assert.equal(pinned.provider,identity.provider==='fal'?'fal':pinned.provider);
   return {
    async generateSong(input){generateCalls++;calls.push({generationInput:input,pinned:{provider:pinned.provider,model:pinned.model}});if(mode==='unknown')throw new Error('private provider response');
@@ -153,6 +154,7 @@ export async function fixture() {
   const globals={Buffer,process:{env},crypto,fetch:fetcher,URL,Response,Request,AbortSignal,console};
   const requireModule=name=>{
    if(name==='server-only')return {};
+   if(name==='node:crypto')return {createHash};
    if(name==='next/server')return {NextResponse:Response};
    if((name==='@/lib/auth/server' || name==='@/lib/http-error' || name==='./server'))return {HttpError,authRoute:async(request,handler)=>{
     const id=request.headers.get('x-fixture-user');if(!id)return json({error:'Please sign in.'},401);
@@ -177,5 +179,5 @@ export async function fixture() {
   const request=new Request('http://localhost'+query,{method,headers:{'Content-Type':'application/json',...(id?{'x-fixture-user':id}:{})},...(method!=='GET'?{body:JSON.stringify(body)}:{})});
   return load(file)[method](request,{params:Promise.resolve(params)});
  }
- return {db,env,calls,objects,paypal,sentEmails,identity,load,order,rpc,request,transport:fetcher,setMode:value=>{mode=value;},setFail:value=>{fail=value;},get generateCalls(){return generateCalls;},get pollCalls(){return pollCalls;},close:()=>db.close()};
+ return {db,env,calls,objects,paypal,sentEmails,identity,load,order,rpc,request,transport:fetcher,setMode:value=>{mode=value;},setFail:value=>{fail=value;},get lyricsCalls(){return lyricsCalls;},get generateCalls(){return generateCalls;},get pollCalls(){return pollCalls;},close:()=>db.close()};
 }

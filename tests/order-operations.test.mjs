@@ -207,3 +207,11 @@ test('delivery upgrade preserves existing jobs/assets and never queues historica
   await assert.rejects(db.exec('select public.begin_songgift_maintenance()'),e=>e.code==='42501');
  });
 });
+
+test('story-draft upgrade preserves existing orders and creates no inferred requests',async()=>{
+ const before=(await db.query('select id,status,paid_at,lyrics_text from public.song_orders order by id')).rows;
+ const next=readFileSync('supabase/migrations/20261106_story_drafts.sql','utf8');await db.exec(next);await db.exec(next);
+ assert.deepEqual((await db.query('select id,status,paid_at,lyrics_text from public.song_orders order by id')).rows,before);
+ assert.equal((await db.query('select count(*)::int n from public.song_story_requests')).rows[0].n,0);
+ for(const role of ['anon','authenticated'])await asRole(role,async()=>{await assert.rejects(db.exec('select * from public.song_story_requests'),e=>e.code==='42501');});
+});

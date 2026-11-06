@@ -51,3 +51,11 @@ AdminPage/AdminCard/LoadState/AdminShell，新增手动刷新组件。独立 Sup
 `src/lib/services/maintenance.ts`、`src/lib/services/notifications.ts`、`workers/maintenance.ts`
 及交付迁移；数据库、供应商和付款规则全部按 SongGift 实现。保留完整 MIT 许可及来源
 标记，不引入 D1、R2、视频清理、积分或模板支付渠道。细节见 `docs/delivery-operations.md`。
+
+
+## 文本故事草稿（T07）
+
+src/lib/drafts/story.ts 参考同一固定版本的 src/lib/photo-draft.ts，复用有效期、恢复、
+清理和存储异常降级思路。故事为文本，保留 SongGift 的同标签页 sessionStorage，加入
+结构校验、账户边界、退出清理及订单续接。私有写入租约/内容指纹服务为 SongGift 独立
+实现，未引入照片、IndexedDB 或模板支付体系。完整 MIT 许可继续保留；T08 分享暂停。

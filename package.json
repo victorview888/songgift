@@ -15,7 +15,8 @@
     "test:customer": "node --test tests/customer-operations.test.mjs tests/paypal-ownership.test.mjs tests/fal-lyria-provider.test.mjs tests/music-routing.test.mjs",
     "build:maintenance": "wrangler deploy --config wrangler.maintenance.jsonc --dry-run --outdir dist/maintenance",
     "deploy:maintenance": "wrangler deploy --config wrangler.maintenance.jsonc",
-    "test:delivery": "node --test tests/delivery-operations.test.mjs"
+    "test:delivery": "node --test tests/delivery-operations.test.mjs",
+    "test:drafts": "node --test tests/story-drafts.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

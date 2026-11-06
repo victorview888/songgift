@@ -21,6 +21,7 @@ async function serve() {
    if(url.pathname==='/__fixture__/seed'&&req.method==='POST') {
     const draft=await f.order(),paid=await f.order({paid:true}),foreign=await f.order({owner:otherId,paid:true});if(body.admin)await f.db.query('insert into public.admin_members(user_id) values($1) on conflict(user_id) do update set active=true',[userId]);return json(200,{draft,paid,foreign});
    }
+   if(url.pathname==='/__fixture__/stories'){const requestId=url.searchParams.get('requestId');const rows=(await f.db.query('select request_id,order_id,state from public.song_story_requests where request_id=$1',[requestId])).rows;return json(200,{requests:rows});}
    if(url.pathname==='/__fixture__/fault'&&req.method==='POST'){f.setFail(body);return json(200,{ok:true});}
    if(url.pathname==='/__fixture__/due'&&req.method==='POST'){await f.db.query("update public.generation_jobs set next_check_at=now()-interval '1 second' where id=$1",[body.jobId]);return json(200,{ok:true});}
    if(url.pathname==='/__fixture__/inspect'){
