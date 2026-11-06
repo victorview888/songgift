@@ -153,7 +153,7 @@ export default function Home() {
       <footer className="site-footer">
         <div className="footer-main">
           <div><Link className="brand-link footer-brand-link" href="/"><Brand /></Link><p>Turn the moments that matter into music.</p></div>
-          <div className="footer-links"><Link href="/my-songs">My Songs</Link><Link href="/create">Create a song</Link><Link href="/occasions/birthday">Birthday songs</Link><Link href="/occasions/wedding">Wedding songs</Link><Link href="/occasions/anniversary">Anniversary songs</Link><a href="#faq">FAQ</a></div>
+          <div className="footer-links"><Link href="/my-songs">My Songs</Link><Link href="/create">Create a song</Link><Link href="/occasions/birthday">Birthday songs</Link><Link href="/occasions/wedding">Wedding songs</Link><Link href="/occasions/anniversary">Anniversary songs</Link><Link href="/help">Help</Link><Link href="/contact">Contact</Link><Link href="/policies/refunds">Payments & refunds</Link><Link href="/policies/audio-storage">Keeping your audio</Link></div>
         </div>
         <div className="footer-bottom"><span>© 2026 SongGift</span><span>Made for meaningful moments</span></div>
       </footer>

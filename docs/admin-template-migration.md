@@ -59,3 +59,18 @@ src/lib/drafts/story.ts 参考同一固定版本的 src/lib/photo-draft.ts，复
 清理和存储异常降级思路。故事为文本，保留 SongGift 的同标签页 sessionStorage，加入
 结构校验、账户边界、退出清理及订单续接。私有写入租约/内容指纹服务为 SongGift 独立
 实现，未引入照片、IndexedDB 或模板支付体系。完整 MIT 许可继续保留；T08 分享暂停。
+
+
+## 用户中心与客服（T11 第一版）
+
+来源仍为 e1447714d61eb67af653c931e917dce7b63012b0：
+
+- src/routes/{-$locale}/dashboard/billing.tsx：复用账单卡片、订单详情入口、分页/空态思路；
+  适配 Next.js、已验证账户和 Supabase 只读交易投影，没有引入积分/订阅。
+- src/routes/{-$locale}/contact.tsx：复用主题/正文表单及反馈结构；首版改为准备邮件草稿，
+  不迁入模板 API、Turnstile 或发信链路，不显示服务器已收到的成功提示。
+- src/components/LegalPage.tsx 及 refund-policy.tsx：复用独立文档的标题/分节结构，
+  改写为歌曲付款与音频保存说明，不采用模板退款额度、视频清理或商业承诺。
+
+来源标记保留在适配文件，完整 MIT 许可见 third-party/shrimpreel/LICENSE。
+详情见 docs/customer-account-support.md；T06/T08/T09/T10 保持暂停。

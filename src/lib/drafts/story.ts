@@ -18,7 +18,7 @@ export function newStoryDraft(ownerId: string | null, now = Date.now()): StoryDr
   return { version: 1, ownerId, requestId: crypto.randomUUID(), savedAt: now, form: { ...initialStory } };
 }
 export function clearStoryDraft(store = storage()) {
-  try { store?.removeItem(STORY_DRAFT_KEY); store?.removeItem("songgift-draft-story"); } catch { /* Restricted storage must not block sign-out. */ }
+  try { if (!store) return false; store.removeItem(STORY_DRAFT_KEY); store.removeItem("songgift-draft-story"); return true; } catch { return false; /* Restricted storage must not block sign-out. */ }
 }
 export function saveStoryDraft(draft: StoryDraft, store = storage()) {
   try { if (!store) return false; store.setItem(STORY_DRAFT_KEY, JSON.stringify(draft)); return true; } catch { return false; }

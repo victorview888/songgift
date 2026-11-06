@@ -24,11 +24,12 @@ export async function fixture() {
  const env={SONG_PRICE_USD:'9.99',PAYPAL_CURRENCY:'USD',PAYPAL_ENVIRONMENT:'sandbox',PAYPAL_CLIENT_ID:'test-id',PAYPAL_CLIENT_SECRET:'test-secret',PAYPAL_LIVE_CLIENT_ID:'live-test-id',PAYPAL_LIVE_CLIENT_SECRET:'live-test-secret',MUSIC_PROVIDER:'fal',SUPABASE_STORAGE_BUCKET:'songs'};
  const calls=[],objects=new Map(),paypal=new Map(),sentEmails=new Map();let generateCalls=0,pollCalls=0,mode='queued',fail={},lyricsCalls=0;
  const identity={provider:'fal',model:'fal-ai/lyria3/pro',environment:'production'};
- const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json'}});
+ const json=(body,status=200,headers={})=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json',...headers}});
  function matches(p) {
   const values=[],where=[];
   for(const [key,filter] of p) {
    if(['select','order','limit','offset'].includes(key)||/\.(order|limit)$/.test(key)||key==='final_assets.is_final')continue;
+   if(key==='or'){assert.equal(filter,'(paid_at.not.is.null,quoted_at.not.is.null)');where.push('(paid_at is not null or quoted_at is not null)');continue;}
    assert.match(key,/^[a-z_]+$/);
    if(filter.startsWith('eq.')){values.push(filter.slice(3));where.push('"'+key+'"=$'+values.length);}
    else if(filter==='is.null')where.push('"'+key+'" is null');
@@ -89,12 +90,15 @@ export async function fixture() {
     if(!objects.has(key))return json({message:'Object not found',statusCode:'404'},404);
     return new Response(objects.get(key),{headers:{'Content-Type':'audio/wav'}});
    }
-   const table=url.pathname.split('/').at(-1);assert.ok(['song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests'].includes(table),table);
+   const table=url.pathname.split('/').at(-1);assert.ok(['song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests','payment_transactions'].includes(table),table);
    const cond=matches(url.searchParams);
    if(method==='GET') {
+    if(fail.paymentHistory&&table==='song_orders'&&url.searchParams.get('select')?.includes('payment_transactions'))return json({message:'isolated history failure'},503);
     const order=url.searchParams.get('order');let suffix='';
     if(order){const parts=order.split(',');parts.forEach(part=>assert.match(part,/^[a-z_]+\.(asc|desc)$/));suffix=' order by '+parts.map(part=>part.replace('.',' ')).join(',');}
     const limit=url.searchParams.get('limit');if(limit){assert.match(limit,/^\d+$/);suffix+=' limit '+limit;}
+    const offset=url.searchParams.get('offset');if(offset){assert.match(offset,/^\d+$/);suffix+=' offset '+offset;}
+    const total=(await db.query('select count(*)::int n from public.'+table+cond.sql,cond.values)).rows[0].n;
     const rows=(await db.query('select * from public.'+table+cond.sql+suffix,cond.values)).rows;
     const select=url.searchParams.get('select')||'*';
     const split=columns=>{const parts=[];let depth=0,start=0;for(let i=0;i<columns.length;i++){if(columns[i]==='(')depth++;if(columns[i]===')')depth--;if(columns[i]===','&&depth===0){parts.push(columns.slice(start,i));start=i+1;}}parts.push(columns.slice(start));return parts;};
@@ -104,11 +108,14 @@ export async function fixture() {
      if(table==='song_orders') {
       if(select.includes('song_assets('))row.song_assets=(await db.query('select * from public.song_assets where order_id=$1',[row.id])).rows;
       if(select.includes('final_assets:'))row.final_assets=row.song_assets.filter(asset=>asset.is_final).slice(0,1);
-      for(const relation of ['payment_transactions','generation_jobs','order_events'])if(select.includes(relation+'('))row[relation]=(await db.query('select * from public.'+relation+' where order_id=$1 limit 51',[row.id])).rows;
+      for(const relation of ['payment_transactions','generation_jobs','order_events'])if(select.includes(relation+'(')){
+       const order=url.searchParams.get(relation+'.order');let sort='';if(order){const parts=order.split(',');parts.forEach(part=>assert.match(part,/^[a-z_]+\.(asc|desc)$/));sort=' order by '+parts.map(part=>part.replace('.',' ')).join(',');}
+       const limit=url.searchParams.get(relation+'.limit')||'51';assert.match(limit,/^\d+$/);row[relation]=(await db.query('select * from public.'+relation+' where order_id=$1'+sort+' limit '+limit,[row.id])).rows;
+      }
      }
      selected.push(project(row,select));
     }
-    return json(selected);
+    return json(selected,200,{'Content-Range':selected.length?(offset||0)+'-'+(Number(offset||0)+selected.length-1)+'/'+total:'*/'+total});
    }
    if(method==='POST') {
     if(table==='song_assets'&&fail.insert)return json({message:'fixture metadata unavailable',code:'08006'},503);

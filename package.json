@@ -16,7 +16,8 @@
     "build:maintenance": "wrangler deploy --config wrangler.maintenance.jsonc --dry-run --outdir dist/maintenance",
     "deploy:maintenance": "wrangler deploy --config wrangler.maintenance.jsonc",
     "test:delivery": "node --test tests/delivery-operations.test.mjs",
-    "test:drafts": "node --test tests/story-drafts.test.mjs"
+    "test:drafts": "node --test tests/story-drafts.test.mjs",
+    "test:account": "node --test tests/customer-account.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

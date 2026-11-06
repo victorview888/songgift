@@ -19,7 +19,13 @@ async function serve() {
    const body=raw.length&&req.headers['content-type']?.includes('json')?JSON.parse(raw.toString()):{};
    if(url.pathname==='/__fixture__/health')return json(200,{fixture:'songgift-customer-loopback',submissions,queries});
    if(url.pathname==='/__fixture__/seed'&&req.method==='POST') {
-    const draft=await f.order(),paid=await f.order({paid:true}),foreign=await f.order({owner:otherId,paid:true});if(body.admin)await f.db.query('insert into public.admin_members(user_id) values($1) on conflict(user_id) do update set active=true',[userId]);return json(200,{draft,paid,foreign});
+    const draft=await f.order(),paid=await f.order({paid:true}),foreign=await f.order({owner:otherId,paid:true});
+    if(body.account){
+     const legacy=await f.order({legacy:true}),quoted=await f.order();await f.rpc('prepare_songgift_checkout',{p_order_id:quoted,p_user_id:userId,p_amount_minor:1299,p_environment:'live',p_price_version:'isolated-old-price'});
+     await f.db.query("insert into public.payment_transactions(order_id,provider,environment,transaction_type,external_id,amount_minor,currency,occurred_at) values($1,'paypal','sandbox','refund',$2,400,'USD',now())",[paid,'REF-'+crypto.randomUUID()]);
+     for(let i=0;i<11;i++)await f.order({legacy:true});return json(200,{draft,paid,foreign,legacy,quoted});
+    }
+    if(body.admin)await f.db.query('insert into public.admin_members(user_id) values($1) on conflict(user_id) do update set active=true',[userId]);return json(200,{draft,paid,foreign});
    }
    if(url.pathname==='/__fixture__/stories'){const requestId=url.searchParams.get('requestId');const rows=(await f.db.query('select request_id,order_id,state from public.song_story_requests where request_id=$1',[requestId])).rows;return json(200,{requests:rows});}
    if(url.pathname==='/__fixture__/fault'&&req.method==='POST'){f.setFail(body);return json(200,{ok:true});}
