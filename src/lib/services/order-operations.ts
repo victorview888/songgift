@@ -1,6 +1,6 @@
 import "server-only";
 import type { User } from "@supabase/supabase-js";
-import { HttpError } from "@/lib/auth/server";
+import { HttpError } from "@/lib/http-error";
 import type { AdminIdentity } from "@/lib/auth/admin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { songPriceUsdForEmail } from "@/lib/pricing";

@@ -1,8 +1,8 @@
 # Administrator access
 
 The console currently includes server-verified Owner access, a first-edition
-business overview, read-only order and generation-task lists, and order details. Paid generation, payment reconciliation, refunds
-and exports are not administrator actions in this implementation.
+business overview, read-only order and generation-task lists, and order details. Audited payment reconciliation and existing-task sync/storage recovery are available. Paid generation, refunds
+and exports remain outside these administrator actions.
 
 ## Authorization boundary
 
@@ -229,3 +229,14 @@ Summaries omit processing leases, submission keys, audio capabilities, full orde
 content and raw generation errors. No provider-status query or mutation action
 was added. Order details may return to the local `/admin/jobs` list as well as
 `/admin/orders`, retaining the existing external/API-path rejection rules.
+
+
+## Audited existing-order operations (T03)
+
+POST /api/admin/orders/[id]/operations uses adminRoute before parsing actions.
+The transaction rechecks the active Owner and target, records the request, and
+returns an existing audit on replay without repeating execution. Existing payment
+verification never captures; task actions never reserve/submit generation. Role
+checks repeat before external steps; revocation blocks subsequent administrator
+I/O. Audit completion for an already started request may still be recorded.
+See [delivery operations](delivery-operations.md) for scope and verification.

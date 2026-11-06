@@ -24,8 +24,8 @@ export function AdminShell({ current, children }: { current: "home" | "orders" |
   </div>;
 }
 
-export function AdminPage({ title, description, actions, children }: { title: string; description?: string; actions?: ReactNode; children: ReactNode }) {
-  return <><header className="admin-page-heading"><div><p className="admin-eyebrow">管理工作区 · 只读</p><h1>{title}</h1>{description && <p>{description}</p>}</div>{actions}</header>{children}</>;
+export function AdminPage({ title, description, actions, children, readOnly = true }: { title: string; description?: string; actions?: ReactNode; children: ReactNode; readOnly?: boolean }) {
+  return <><header className="admin-page-heading"><div><p className="admin-eyebrow">管理工作区{readOnly ? " · 只读" : " · 订单处理"}</p><h1>{title}</h1>{description && <p>{description}</p>}</div>{actions}</header>{children}</>;
 }
 
 export function AdminCard({ title, children }: { title: string; children: ReactNode }) {

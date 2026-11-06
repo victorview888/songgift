@@ -192,3 +192,18 @@ test('customer integration upgrade preserves legacy facts and requires verified 
   await rpc('record_songgift_capture',[current,user,'UPGRADE-CHECKOUT','UPGRADE-CAPTURE','live',999,'USD','2026-11-06T00:00:00Z']);
   const {job}=await reserve(current);assert.equal(job.input_snapshot.lyricsText,'Isolated lyrics');assert.equal((await db.query('select active_generation_job_id from public.song_orders where id=$1',[current])).rows[0].active_generation_job_id,job.id);
 });
+
+test('delivery upgrade preserves existing jobs/assets and never queues historical completions',async()=>{
+ const before=(await db.query('select id,provider_job_id,state from public.generation_jobs order by id')).rows;
+ const assets=(await db.query('select id,storage_path from public.song_assets order by id')).rows;
+ const next=readFileSync('supabase/migrations/20261106_delivery_operations.sql','utf8');await db.exec(next);
+ assert.deepEqual((await db.query('select id,provider_job_id,state from public.generation_jobs order by id')).rows,before);
+ assert.deepEqual((await db.query('select id,storage_path from public.song_assets order by id')).rows,assets);
+ const candidates=await rpc('list_songgift_notification_candidates',[20]);assert.deepEqual(candidates,[]);
+ const cutoff=(await db.query('select notification_cutoff from public.songgift_maintenance')).rows[0].notification_cutoff;await db.exec(next);
+ assert.equal(String((await db.query('select notification_cutoff from public.songgift_maintenance')).rows[0].notification_cutoff),String(cutoff));
+ for(const role of ['anon','authenticated'])await asRole(role,async()=>{
+  await assert.rejects(db.exec('select * from public.song_notification_outbox'),e=>e.code==='42501');
+  await assert.rejects(db.exec('select public.begin_songgift_maintenance()'),e=>e.code==='42501');
+ });
+});

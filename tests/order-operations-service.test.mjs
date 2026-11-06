@@ -12,7 +12,7 @@ function module(file,imports={},globals={}){
   const exports={},compiled=ts.transpileModule(readFileSync(file,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
   vm.runInNewContext(`(function(exports,require){${compiled}\n})`,globals)(exports,name=>{
     if(name==="server-only")return {};
-    if(name==="@/lib/auth/server")return {HttpError};
+    if((name==="@/lib/auth/server" || name==="@/lib/http-error"))return {HttpError};
     if(name==="@/lib/admin/order-detail"||name==="./order-detail")return {assertAdminOrderId:assertId};
     if(imports[name])return imports[name];throw new Error("Unexpected import: "+name);
   });return exports;

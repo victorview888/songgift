@@ -39,3 +39,15 @@ AdminPage/AdminCard/LoadState/AdminShell，新增手动刷新组件。独立 Sup
 落在 `src/app/admin/jobs/page.tsx`，复用已迁移的后台共用组件。查询改为独立 Supabase
 服务及 `GET /api/admin/jobs`，按来源区分订单最新引用和结构化任务记录。
 没有引入模板视频、积分、成本/毛利或标记失败操作。完整范围见 `docs/admin-jobs.md`。
+
+
+## 受控恢复、定时交付与通知（T03–T05）
+
+订单操作区沿用已适配的详情卡片/动作反馈结构，新增 SongGift 独立的付款核实、原任务
+同步和恢复保存；没有迁入模板手动标记付款、退款或退积分。
+
+处理流程参考同一固定版本的 `src/server/jobs.ts`（定时维护、退避及异常兜底）和
+`src/server/email.ts`（发件箱、发送租约、事件去重和重试）。适配位置为
+`src/lib/services/maintenance.ts`、`src/lib/services/notifications.ts`、`workers/maintenance.ts`
+及交付迁移；数据库、供应商和付款规则全部按 SongGift 实现。保留完整 MIT 许可及来源
+标记，不引入 D1、R2、视频清理、积分或模板支付渠道。细节见 `docs/delivery-operations.md`。

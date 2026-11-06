@@ -1,6 +1,6 @@
 import "server-only";
 import type { User } from "@supabase/supabase-js";
-import { HttpError } from "@/lib/auth/server";
+import { HttpError } from "@/lib/http-error";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isOrderId } from "@/lib/supabase/orders";
 import { prepareOrderQuote, type Quote } from "./order-operations";

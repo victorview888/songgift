@@ -2,9 +2,8 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
-export class HttpError extends Error {
-  constructor(public status: number, message: string) { super(message); }
-}
+import { HttpError } from "@/lib/http-error";
+export { HttpError } from "@/lib/http-error";
 
 export { safeNext } from "./redirect";
 

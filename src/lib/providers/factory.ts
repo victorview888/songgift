@@ -8,7 +8,7 @@ import { MusicApiProvider } from "./musicapi-provider";
 import { MurekaCnProvider } from "./mureka-cn-provider";
 import type { LyricsProvider } from "./lyrics-provider";
 import type { MusicProvider } from "./music-provider";
-import { HttpError } from "@/lib/auth/server";
+import { HttpError } from "@/lib/http-error";
 
 function canUseMockFallback() {
   return process.env.ALLOW_MOCK_FALLBACK === "true";

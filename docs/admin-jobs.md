@@ -1,5 +1,8 @@
 # 生成任务查询页（第一版）
 
+后续 T03–T05 已在订单详情加入受控同步/保存，并新增自动交付与通知，见
+[交付处理](delivery-operations.md)。下文记录原只读查询页范围，查询页仍保持只读。
+
 `/admin/jobs` 和 `GET /api/admin/jobs` 已实现只读查询，沿用服务端 Owner 检查、
 private/no-store、noindex，以及现有后台布局、筛选、分页、状态和刷新组件。
 界面组合改编自 ShrimpReel `e1447714d61eb67af653c931e917dce7b63012b0` 的

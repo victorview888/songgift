@@ -20,7 +20,7 @@ function fixture({ rows = [], total = 0, failure = false } = {}) {
       const out={},code=ts.transpileModule(readFileSync("src/lib/admin/order-metrics.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
       vm.runInNewContext(`(function(exports){${code}\n})`)(out);return out;
     }
-    if(name==="@/lib/auth/server")return {HttpError};
+    if((name==="@/lib/auth/server" || name==="@/lib/http-error"))return {HttpError};
     if(name==="@/lib/supabase/admin")return {getSupabaseAdmin:()=>db};
     throw new Error(name);
   });

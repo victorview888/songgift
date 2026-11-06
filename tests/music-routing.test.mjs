@@ -10,7 +10,7 @@ function factory() {
  function load(file){const key=path.resolve(file);if(cache.has(key))return cache.get(key);const out={};cache.set(key,out);
   const compiled=ts.transpileModule(readFileSync(key,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
   vm.runInNewContext('(function(exports,require){'+compiled+'\n})',{process:{env},AbortSignal,fetch:async(url,init)=>{calls.push({url,init});return new Response(JSON.stringify({task_id:'task',id:'task',status:'processing'}),{headers:{'Content-Type':'application/json'}});}})(out,name=>{
-   if(name==='@/lib/auth/server')return {HttpError};if(name.startsWith('@/'))return load('src/'+name.slice(2)+'.ts');return load(path.resolve(path.dirname(key),name+'.ts'));
+   if((name==='@/lib/auth/server' || name==='@/lib/http-error'))return {HttpError};if(name.startsWith('@/'))return load('src/'+name.slice(2)+'.ts');return load(path.resolve(path.dirname(key),name+'.ts'));
   });return out;
  }
  return {api:load('src/lib/providers/factory.ts'),env,calls};

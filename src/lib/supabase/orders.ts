@@ -1,4 +1,4 @@
-import { HttpError } from "@/lib/auth/server";
+import { HttpError } from "@/lib/http-error";
 import type { AccountOrder } from "@/lib/types/account";
 import { getSupabaseAdmin } from "./admin";
 

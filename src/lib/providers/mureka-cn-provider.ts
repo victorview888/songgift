@@ -108,12 +108,12 @@ export class MurekaCnProvider implements MusicProvider {
   private async request(path: string, init?: RequestInit) {
     const response = await fetch(this.baseUrl + path, {
       ...init,
+      cache: "no-store", signal: AbortSignal.timeout(30_000),
       headers: {
         Authorization: "Bearer " + this.apiKey,
         "Content-Type": "application/json",
         ...(init?.headers || {}),
       },
-      cache: "no-store",
     });
 
     const text = await response.text();

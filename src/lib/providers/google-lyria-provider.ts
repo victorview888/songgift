@@ -90,6 +90,7 @@ export class GoogleLyriaProvider implements MusicProvider {
     this.assertConfigured();
     const response = await fetch(this.getEndpoint(), {
       method: "POST",
+      cache: "no-store", signal: AbortSignal.timeout(30_000),
       headers: {
         Authorization: "Bearer " + this.accessToken,
         "Content-Type": "application/json",
@@ -123,6 +124,7 @@ export class GoogleLyriaProvider implements MusicProvider {
   async getStatus(jobId: string): Promise<MusicGenerationResult> {
     this.assertConfigured();
     const response = await fetch(this.getEndpoint(jobId), {
+      cache: "no-store", signal: AbortSignal.timeout(30_000),
       headers: { Authorization: "Bearer " + this.accessToken },
     });
     if (!response.ok) {

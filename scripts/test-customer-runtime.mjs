@@ -19,7 +19,16 @@ async function serve() {
    const body=raw.length&&req.headers['content-type']?.includes('json')?JSON.parse(raw.toString()):{};
    if(url.pathname==='/__fixture__/health')return json(200,{fixture:'songgift-customer-loopback',submissions,queries});
    if(url.pathname==='/__fixture__/seed'&&req.method==='POST') {
-    const draft=await f.order(),paid=await f.order({paid:true}),foreign=await f.order({owner:otherId,paid:true});return json(200,{draft,paid,foreign});
+    const draft=await f.order(),paid=await f.order({paid:true}),foreign=await f.order({owner:otherId,paid:true});if(body.admin)await f.db.query('insert into public.admin_members(user_id) values($1) on conflict(user_id) do update set active=true',[userId]);return json(200,{draft,paid,foreign});
+   }
+   if(url.pathname==='/__fixture__/fault'&&req.method==='POST'){f.setFail(body);return json(200,{ok:true});}
+   if(url.pathname==='/__fixture__/due'&&req.method==='POST'){await f.db.query("update public.generation_jobs set next_check_at=now()-interval '1 second' where id=$1",[body.jobId]);return json(200,{ok:true});}
+   if(url.pathname==='/__fixture__/inspect'){
+    const orderId=url.searchParams.get('orderId');
+    const order=(await f.db.query('select status,active_generation_job_id from public.song_orders where id=$1',[orderId])).rows[0];
+    const notices=(await f.db.query('select status,attempts from public.song_notification_outbox where order_id=$1',[orderId])).rows;
+    const audit=(await f.db.query('select action,result from public.admin_audit_logs where order_id=$1 order by created_at',[orderId])).rows;
+    return json(200,{order,notices,audit,submissions,queries});
    }
    if(url.pathname==='/auth/v1/otp')return json(200,{});
    if(url.pathname==='/auth/v1/verify') {

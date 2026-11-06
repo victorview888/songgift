@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "songgift-maintenance",
+  "account_id": "c3a074fb2cf5be667cf6f5e939c96c7e",
+  "workers_dev": false,
+  "main": "workers/maintenance.ts",
+  "compatibility_date": "2026-11-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "keep_vars": true,
+  "alias": { "server-only": "./workers/server-only.ts" },
+  "triggers": { "crons": ["* * * * *"] },
+  "observability": { "enabled": true },
+  "vars": {
+    "SONGGIFT_MAINTENANCE_ENABLED": "true",
+    "SUPABASE_URL": "https://ngggfgfpaxzwjphkwmpy.supabase.co",
+    "SUPABASE_STORAGE_BUCKET": "songs",
+    "SONGGIFT_SITE_URL": "https://www.songforalways.com"
+  }
+}

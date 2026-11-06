@@ -21,7 +21,7 @@ function fixture({rows,total=21,failure=false}={}){
     const exports={},compiled=ts.transpileModule(readFileSync(file,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;modules.set(file,exports);
     vm.runInNewContext(`(function(exports,require){${compiled}\n})`,{Date,URL,URLSearchParams})(exports,name=>{
       if(name==="server-only")return {};
-      if(name==="@/lib/auth/server")return {HttpError};
+      if((name==="@/lib/auth/server" || name==="@/lib/http-error"))return {HttpError};
       if(name==="@/lib/supabase/admin")return {getSupabaseAdmin:()=>db};
       if(name==="./order-metrics")return load("src/lib/admin/order-metrics.ts");
       throw new Error(name);

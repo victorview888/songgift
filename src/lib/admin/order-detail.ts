@@ -1,5 +1,5 @@
 import "server-only";
-import { HttpError } from "@/lib/auth/server";
+import { HttpError } from "@/lib/http-error";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isOrderId } from "@/lib/supabase/orders";
 
@@ -43,7 +43,7 @@ export async function getAdminOrderDetail(id: string): Promise<AdminOrderDetail>
   // Evidence only: these timestamps do not establish lyric approval, provider
   // completion, capture amount, delivery email, or a full generation history.
   const timeline = [{ key: "created", at: order.created_at, title: "订单创建", detail: "来源：订单创建时间" }];
-  if (order.paid_at) timeline.push({ key: "paid", at: order.paid_at, title: "本地记录付款", detail: "来源：paid_at；尚未向 PayPal 核实金额与捕获流水" });
+  if (order.paid_at) timeline.push({ key: "paid", at: order.paid_at, title: "本地记录付款", detail: "来源：paid_at；核实结果见已登记支付流水" });
   for (const asset of assets) timeline.push({ key: asset.id, at: asset.created_at, title: asset.is_final ? "最终音频资产登记" : "音频资产登记", detail: `来源：资产 ${asset.id}；不代表已实时检查 Storage 文件` });
   timeline.sort((a, b) => Date.parse(a.at) - Date.parse(b.at) || a.key.localeCompare(b.key));
   return { order, assets, assetsTruncated: song_assets.length > 100, hasFinalAudio: final_assets.length > 0, timeline };

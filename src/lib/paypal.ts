@@ -1,4 +1,4 @@
-import { HttpError } from "@/lib/auth/server";
+import { HttpError } from "@/lib/http-error";
 import { recordVerifiedCapture, usdMinor, type Quote } from "@/lib/services/order-operations";
 
 type Environment = Quote["payment_environment"];
@@ -84,6 +84,19 @@ export async function capturePayPalOrder(paypalOrderId: string, owner: { userId:
     } catch { /* Read the authoritative order after an uncertain network result. */ }
     payload = await readOrder(paypalOrderId, quote, token);
   }
+  return recordCaptureEvidence(payload, paypalOrderId, owner);
+}
+// Administrator reconciliation only reads existing facts. It never captures.
+export async function reconcilePayPalOrder(paypalOrderId: string, owner: { userId: string; quote: Quote }, authorize?: () => Promise<void>) {
+  await authorize?.();
+  const token = await accessToken(owner.quote.payment_environment);
+  await authorize?.();
+  const payload = await readOrder(paypalOrderId, owner.quote, token);
+  await authorize?.();
+  return recordCaptureEvidence(payload, paypalOrderId, owner);
+}
+async function recordCaptureEvidence(payload: Payload, paypalOrderId: string, owner: { userId: string; quote: Quote }) {
+  const { quote } = owner;
   const captures = payload.purchase_units?.[0]?.payments?.captures;
   const capture = captures?.[0];
   if (payload.status !== "COMPLETED" || captures?.length !== 1 || capture?.status !== "COMPLETED" || capture.final_capture !== true || !capture.id || capture.id.length > 128 ||

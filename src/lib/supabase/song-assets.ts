@@ -55,31 +55,34 @@ async function sourceBytes(source: CachedAudio) {
   } finally { await reader.cancel().catch(() => {}); }
   return Buffer.concat(chunks);
 }
-async function storedBytes(asset: Pick<JobAsset, "storage_bucket" | "storage_path">) {
+async function storedBytes(asset: Pick<JobAsset, "storage_bucket" | "storage_path">, authorize?: () => Promise<void>) {
+  await authorize?.();
   const { data, error } = await getSupabaseAdmin().storage.from(asset.storage_bucket).download(asset.storage_path);
   if (error || !data || data.size > MAX_AUDIO_BYTES) throw new Error("Stored audio is temporarily unavailable.");
   const bytes = Buffer.from(await data.arrayBuffer());
   audioMime(bytes);
   return bytes;
 }
-export async function persistJobAudio(job: GenerationJob): Promise<JobAsset> {
+export async function persistJobAudio(job: GenerationJob, authorize?: () => Promise<void>): Promise<JobAsset> {
   const existing = await getJobAsset(job);
   if (existing) {
-    await storedBytes(existing); // A metadata row alone is not proof of a durable file.
+    await storedBytes(existing, authorize); // A metadata row alone is not proof of a durable file.
     return existing;
   }
   const source = await getJobOutput(job.id);
   if (!source) throw new Error("This task has no saved audio source.");
+  await authorize?.();
   const bytes = await sourceBytes(source);
   const mime = audioMime(bytes);
   const storageBucket = process.env.SUPABASE_STORAGE_BUCKET || "songs";
   const path = generationStoragePath(job.order_id, job.id, mime);
   const db = getSupabaseAdmin();
+  await authorize?.();
   const upload = await db.storage.from(storageBucket).upload(path, bytes, { contentType: mime, upsert: false, cacheControl: "3600" });
   if (upload.error) {
     // Only a confirmed duplicate may be reused. Never overwrite or delete on errors.
     if (String(upload.error.statusCode) !== "409" && upload.error.message !== "The resource already exists") throw new Error("Could not save generated audio.");
-    const saved = await storedBytes({ storage_bucket: storageBucket, storage_path: path });
+    const saved = await storedBytes({ storage_bucket: storageBucket, storage_path: path }, authorize);
     if (!saved.equals(bytes)) throw new Error("Stored audio does not match the original result.");
   }
   // Metadata registration and completion happen in one lease-checked transaction.

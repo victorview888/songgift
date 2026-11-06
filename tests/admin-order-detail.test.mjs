@@ -37,7 +37,7 @@ function fixture(options={}) {
     const compiled=ts.transpileModule(readFileSync(file,"utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
     vm.runInNewContext(`(function(exports,require){${compiled}\n})`,{URL,crypto})(exports,name=>{
       if(name==="server-only")return {};
-      if(name==="@/lib/auth/server")return {HttpError};
+      if((name==="@/lib/auth/server" || name==="@/lib/http-error"))return {HttpError};
       if(name==="@/lib/supabase/admin" || name==="./admin")return {getSupabaseAdmin:()=>db};
       if(name==="@/lib/supabase/orders")return load("src/lib/supabase/orders.ts");
       if(name==="./order-detail")return load("src/lib/admin/order-detail.ts");
