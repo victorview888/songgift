@@ -53,10 +53,10 @@ export class GoogleLyriaProvider implements MusicProvider {
   private readonly model: string;
   private readonly accessToken: string;
 
-  constructor() {
+  constructor(model?: string) {
     this.projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || "";
     this.location = process.env.GOOGLE_CLOUD_LOCATION || "global";
-    this.model = process.env.GOOGLE_LYRIA_MODEL || "lyria-3-pro-preview";
+    this.model = model || process.env.GOOGLE_LYRIA_MODEL || "lyria-3-pro-preview";
     this.accessToken =
       process.env.GOOGLE_LYRIA_ACCESS_TOKEN ||
       process.env.GOOGLE_ACCESS_TOKEN ||

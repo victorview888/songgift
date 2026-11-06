@@ -13,7 +13,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     if (!data) throw new HttpError(404, "Your song is not ready to download yet.");
     const download = new URL(request.url).searchParams.get("download") === "1";
     const name = (order.title || "Song for " + order.recipient_name).normalize("NFKD").replace(/[^a-zA-Z0-9 _-]/g, "").trim().slice(0, 90) || "SongGift";
-    const extension = data.mime_type.includes("wav") ? "wav" : "mp3";
+    const extension = ({ "audio/wav": "wav", "audio/ogg": "ogg", "audio/flac": "flac", "audio/mp4": "m4a" } as Record<string, string>)[data.mime_type] || "mp3";
     const signed = await getSupabaseAdmin().storage.from(data.storage_bucket).createSignedUrl(data.storage_path, 60, download ? { download: name + "." + extension } : undefined);
     if (signed.error || !signed.data?.signedUrl) throw new Error("Could not create private audio link.");
     const response = NextResponse.redirect(signed.data.signedUrl, 302);

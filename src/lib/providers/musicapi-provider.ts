@@ -27,7 +27,7 @@ export class MusicApiProvider implements MusicProvider {
   private readonly baseUrl = (
     process.env.MUSICAPI_BASE_URL || "https://api.musicapi.ai/api/v1"
   ).replace(/\/$/, "");
-  private readonly model = process.env.MUSICAPI_MODEL || "sonic-v5";
+  constructor(private readonly model = process.env.MUSICAPI_MODEL || "sonic-v5") {}
 
   private assertConfigured() {
     if (this.apiKey) return;

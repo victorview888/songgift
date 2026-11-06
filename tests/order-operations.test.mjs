@@ -180,3 +180,15 @@ test("fresh-install schema creates the same empty operations structures with ser
     assert.equal((await fresh.query("select has_table_privilege('authenticated','public.payment_transactions','select') allowed")).rows[0].allowed,false);
   } finally {await fresh.close();}
 });
+
+// Upgrade an existing installation, rather than relying only on fresh schema.
+test('customer integration upgrade preserves legacy facts and requires verified payment for new production jobs',async()=>{
+  const legacy=await order({paid:true}),oldAsset=await asset(legacy);
+  const next=readFileSync('supabase/migrations/20261106_customer_order_operations.sql','utf8');await db.exec(next);await db.exec(next);
+  const original=(await db.query('select active_generation_job_id,quoted_at from public.song_orders where id=$1',[legacy])).rows[0];assert.equal(original.active_generation_job_id,null);assert.equal(original.quoted_at,null);
+  assert.equal((await db.query('select generation_job_id from public.song_assets where id=$1',[oldAsset])).rows[0].generation_job_id,null);
+  const unverified=await order({paid:true});await assert.rejects(reserve(unverified),/legacy_payment_needs_review/);
+  const current=await order();await quote(current);await db.query("update public.song_orders set paypal_order_id='UPGRADE-CHECKOUT' where id=$1",[current]);
+  await rpc('record_songgift_capture',[current,user,'UPGRADE-CHECKOUT','UPGRADE-CAPTURE','live',999,'USD','2026-11-06T00:00:00Z']);
+  const {job}=await reserve(current);assert.equal(job.input_snapshot.lyricsText,'Isolated lyrics');assert.equal((await db.query('select active_generation_job_id from public.song_orders where id=$1',[current])).rows[0].active_generation_job_id,job.id);
+});

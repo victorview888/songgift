@@ -1,243 +1,87 @@
+import "server-only";
 import { getSupabaseAdmin } from "./admin";
-import type { MusicGenerationResult } from "@/lib/types/song";
+import { generationStoragePath, type GenerationJob } from "@/lib/services/order-operations";
 
-const bucket = () => process.env.SUPABASE_STORAGE_BUCKET || "songs";
-const signedUrlSeconds = () =>
-  Number.parseInt(process.env.SUPABASE_SIGNED_URL_SECONDS || "3600", 10);
-
-export type SongOrderRecord = {
-  id: string;
-  recipientName: string;
-  relationship: string;
-  occasion: string;
-  story: string;
-  mood: string;
-  style: string;
-  email?: string;
-};
-
-function normalizeOrderId(orderId?: string) {
-  if (
-    orderId &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      orderId,
-    )
-  ) {
-    return orderId;
-  }
-  return crypto.randomUUID();
+export type CachedAudio = { audio_url: string | null; audio_base64: string | null; mime_type: string };
+export type JobAsset = { id: string; storage_bucket: string; storage_path: string; mime_type: string };
+export const MAX_AUDIO_BYTES = 32 * 1024 * 1024;
+export function canonicalMime(value?: string) {
+  const mime = value?.split(";")[0].trim().toLowerCase() || "audio/mpeg";
+  if (["audio/wave", "audio/x-wav"].includes(mime)) return "audio/wav";
+  if (["audio/mp3", "audio/x-mpeg"].includes(mime)) return "audio/mpeg";
+  if (!["audio/mpeg", "audio/wav", "audio/ogg", "audio/flac", "audio/mp4"].includes(mime)) throw new Error("Unsupported audio format.");
+  return mime;
 }
-
-function decodeAudio(audioBase64: string) {
-  const raw = audioBase64.includes(",")
-    ? audioBase64.split(",")[1]
-    : audioBase64;
-  const normalized = raw.replace(/-/g, "+").replace(/_/g, "/");
-  return Buffer.from(normalized, "base64");
+export function audioMime(bytes: Uint8Array): string {
+  const head = Buffer.from(bytes.subarray(0, 16));
+  if (!bytes.length || bytes.length > MAX_AUDIO_BYTES) throw new Error("Invalid audio size.");
+  if (head.toString("ascii", 0, 4) === "RIFF" && head.toString("ascii", 8, 12) === "WAVE" && bytes.length >= 44) return "audio/wav";
+  if (head.toString("ascii", 0, 3) === "ID3" || (head[0] === 0xff && (head[1] & 0xe0) === 0xe0)) return "audio/mpeg";
+  if (head.toString("ascii", 0, 4) === "OggS") return "audio/ogg";
+  if (head.toString("ascii", 0, 4) === "fLaC") return "audio/flac";
+  if (head.toString("ascii", 4, 8) === "ftyp") return "audio/mp4";
+  throw new Error("The music service did not return recognizable audio.");
 }
-
-export async function createSongOrder(
-  input: SongOrderRecord,
-): Promise<string> {
-  const supabase = getSupabaseAdmin();
-  const orderId = normalizeOrderId(input.id);
-  const { error } = await supabase.from("song_orders").upsert(
-    {
-      id: orderId,
-      recipient_name: input.recipientName,
-      relationship: input.relationship,
-      occasion: input.occasion,
-      story: input.story,
-      mood: input.mood,
-      style: input.style,
-      email: input.email || null,
-      status: "lyrics_ready",
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "id" },
-  );
-
-  if (error) {
-    throw new Error("Could not create song order: " + error.message);
-  }
-
-  return orderId;
+export async function getJobOutput(jobId: string): Promise<CachedAudio | null> {
+  const { data, error } = await getSupabaseAdmin().from("generation_job_outputs").select("audio_url,audio_base64,mime_type").eq("job_id", jobId).maybeSingle();
+  if (error) throw new Error("Audio recovery source is temporarily unavailable.");
+  return data as CachedAudio | null;
 }
-
-export async function persistAudioAsset(input: {
-  orderId: string;
-  provider: string;
-  model: string;
-  providerJobId?: string;
-  mimeType: string;
-  audioBase64?: string;
-  audioUrl?: string;
-}): Promise<{
-  assetId: string;
-  storagePath: string;
-  audioUrl: string;
-}> {
-  const supabase = getSupabaseAdmin();
-  const storageBucket = bucket();
-  const assetId = crypto.randomUUID();
-  const extension = input.mimeType.includes("wav") ? "wav" : "mp3";
-  const storagePath = input.orderId + "/" + assetId + "." + extension;
-  let audio: Buffer;
-  let mimeType = input.mimeType;
-
-  if (input.audioBase64) {
-    audio = decodeAudio(input.audioBase64);
-  } else if (input.audioUrl) {
-    let remoteUrl: URL;
-    try {
-      remoteUrl = new URL(input.audioUrl);
-    } catch {
-      throw new Error("The music provider returned an invalid audio URL.");
-    }
-    if (remoteUrl.protocol !== "https:") {
-      throw new Error("The music provider returned a non-HTTPS audio URL.");
-    }
-
-    const response = await fetch(remoteUrl, { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error("Could not download generated audio: HTTP " + response.status + ".");
-    }
-    const responseType = response.headers.get("content-type")?.split(";")[0]?.trim();
-    if (responseType?.startsWith("audio/")) mimeType = responseType;
-    audio = Buffer.from(await response.arrayBuffer());
-  } else {
-    throw new Error("No generated audio was returned by the music provider.");
+export async function getJobAsset(job: GenerationJob): Promise<JobAsset | null> {
+  const { data, error } = await getSupabaseAdmin().from("song_assets").select("id,storage_bucket,storage_path,mime_type").eq("order_id", job.order_id).eq("generation_job_id", job.id).eq("is_final", true).maybeSingle();
+  if (error) throw new Error("Saved audio metadata is temporarily unavailable.");
+  return data as JobAsset | null;
+}
+async function sourceBytes(source: CachedAudio) {
+  if (source.audio_base64) {
+    if (source.audio_base64.length > Math.ceil(MAX_AUDIO_BYTES / 3) * 4) throw new Error("Audio is too large.");
+    return Buffer.from(source.audio_base64, "base64");
   }
-
-  const upload = await supabase.storage.from(storageBucket).upload(
-    storagePath,
-    audio,
-    {
-      contentType: mimeType,
-      cacheControl: "3600",
-      upsert: false,
-    },
-  );
-
+  const url = new URL(source.audio_url || "");
+  if (url.protocol !== "https:" || url.username || url.password) throw new Error("Invalid audio source.");
+  const response = await fetch(url, { cache: "no-store", redirect: "error", signal: AbortSignal.timeout(25_000) });
+  if (!response.ok || !response.body || Number(response.headers.get("content-length") || 0) > MAX_AUDIO_BYTES) throw new Error("Could not download generated audio.");
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_AUDIO_BYTES) throw new Error("Audio is too large.");
+      chunks.push(value);
+    }
+  } finally { await reader.cancel().catch(() => {}); }
+  return Buffer.concat(chunks);
+}
+async function storedBytes(asset: Pick<JobAsset, "storage_bucket" | "storage_path">) {
+  const { data, error } = await getSupabaseAdmin().storage.from(asset.storage_bucket).download(asset.storage_path);
+  if (error || !data || data.size > MAX_AUDIO_BYTES) throw new Error("Stored audio is temporarily unavailable.");
+  const bytes = Buffer.from(await data.arrayBuffer());
+  audioMime(bytes);
+  return bytes;
+}
+export async function persistJobAudio(job: GenerationJob): Promise<JobAsset> {
+  const existing = await getJobAsset(job);
+  if (existing) {
+    await storedBytes(existing); // A metadata row alone is not proof of a durable file.
+    return existing;
+  }
+  const source = await getJobOutput(job.id);
+  if (!source) throw new Error("This task has no saved audio source.");
+  const bytes = await sourceBytes(source);
+  const mime = audioMime(bytes);
+  const storageBucket = process.env.SUPABASE_STORAGE_BUCKET || "songs";
+  const path = generationStoragePath(job.order_id, job.id, mime);
+  const db = getSupabaseAdmin();
+  const upload = await db.storage.from(storageBucket).upload(path, bytes, { contentType: mime, upsert: false, cacheControl: "3600" });
   if (upload.error) {
-    throw new Error("Could not upload audio to Supabase Storage: " + upload.error.message);
+    // Only a confirmed duplicate may be reused. Never overwrite or delete on errors.
+    if (String(upload.error.statusCode) !== "409" && upload.error.message !== "The resource already exists") throw new Error("Could not save generated audio.");
+    const saved = await storedBytes({ storage_bucket: storageBucket, storage_path: path });
+    if (!saved.equals(bytes)) throw new Error("Stored audio does not match the original result.");
   }
-
-  const { error: assetError } = await supabase.from("song_assets").insert({
-    id: assetId,
-    order_id: input.orderId,
-    asset_type: "final",
-    storage_bucket: storageBucket,
-    storage_path: storagePath,
-    mime_type: mimeType,
-    provider: input.provider,
-    model_id: input.model,
-    provider_job_id: input.providerJobId || null,
-    is_final: true,
-  });
-
-  if (assetError) {
-    await supabase.storage.from(storageBucket).remove([storagePath]);
-    throw new Error("Could not record song asset: " + assetError.message);
-  }
-
-  const signed = await supabase.storage
-    .from(storageBucket)
-    .createSignedUrl(storagePath, signedUrlSeconds());
-
-  if (signed.error || !signed.data?.signedUrl) {
-    throw new Error(
-      "Audio was stored, but a signed URL could not be created: " +
-        (signed.error?.message || "unknown error"),
-    );
-  }
-
-  return {
-    assetId,
-    storagePath,
-    audioUrl: signed.data.signedUrl,
-  };
-}
-
-export async function persistGeneratedAudio(
-  orderId: string,
-  result: MusicGenerationResult,
-): Promise<MusicGenerationResult> {
-  if (!result.audioBase64 && !result.audioUrl) return result;
-
-  if (result.providerJobId) {
-    const existing = await getPersistedAudioForJob(orderId, result.providerJobId);
-    if (existing) return existing;
-  }
-  const asset = await persistAudioAsset({
-    orderId,
-    provider: result.provider,
-    model: result.model,
-    providerJobId: result.providerJobId,
-    mimeType: result.mimeType || "audio/mpeg",
-    audioBase64: result.audioBase64,
-    audioUrl: result.audioUrl,
-  });
-
-  const completed = await getSupabaseAdmin().from("song_orders").update({ status: "completed", generation_error: null, updated_at: new Date().toISOString() }).eq("id", orderId);
-  if (completed.error) throw new Error("Could not mark song completed: " + completed.error.message);
-
-  return {
-    ...result,
-    audioBase64: undefined,
-    audioUrl: asset.audioUrl,
-    assetId: asset.assetId,
-    storagePath: asset.storagePath,
-    persistenceStatus: "saved",
-    message: "Audio uploaded to Supabase Storage and recorded in song_assets.",
-  };
-}
-
-export async function getSongOrder(orderId: string) {
-  const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("song_orders")
-    .select("id,email,recipient_name,status")
-    .eq("id", orderId)
-    .maybeSingle();
-  if (error) throw new Error("Could not look up the song order: " + error.message);
-  return data as { id: string; email: string | null; recipient_name: string; status: string } | null;
-}
-
-export async function getPersistedAudioForJob(
-  orderId: string,
-  providerJobId: string,
-): Promise<MusicGenerationResult | null> {
-  const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("song_assets")
-    .select("id, storage_bucket, storage_path, mime_type, provider, model_id")
-    .eq("order_id", orderId)
-    .eq("provider_job_id", providerJobId)
-    .eq("is_final", true)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error("Could not look up the saved song: " + error.message);
-  if (!data) return null;
-
-  const signed = await supabase.storage
-    .from(data.storage_bucket)
-    .createSignedUrl(data.storage_path, signedUrlSeconds());
-  if (signed.error || !signed.data?.signedUrl) {
-    throw new Error("Could not create a playback URL for the saved song.");
-  }
-
-  return {
-    provider: data.provider,
-    model: data.model_id,
-    status: "completed",
-    providerJobId,
-    audioUrl: signed.data.signedUrl,
-    mimeType: data.mime_type,
-    assetId: data.id,
-    storagePath: data.storage_path,
-    persistenceStatus: "saved",
-    message: "Your saved song is ready.",
-  };
+  // Metadata registration and completion happen in one lease-checked transaction.
+  return { id: crypto.randomUUID(), storage_bucket: storageBucket, storage_path: path, mime_type: mime };
 }

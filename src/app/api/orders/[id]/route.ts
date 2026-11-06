@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import { authRoute } from "@/lib/auth/server";
-import { songPriceUsdForEmail } from "@/lib/pricing";
+import { getPaymentOrder, publicPrice, storedQuote } from "@/lib/services/checkout";
 import { getOwnedOrder, saveApprovedLyrics } from "@/lib/supabase/orders";
 
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ id: string }> };
 export async function GET(request: Request, context: Context) {
-  return authRoute(request, async ({ user }) => NextResponse.json({
-    order: await getOwnedOrder((await context.params).id, user!.id),
-    checkoutPrice: { currencyCode: process.env.PAYPAL_CURRENCY || "USD", value: songPriceUsdForEmail(user!.email) },
-  }));
+  return authRoute(request, async ({ user }) => {
+    const id = (await context.params).id;
+    const order = await getOwnedOrder(id, user!.id);
+    const payment = await getPaymentOrder(id, user!.id);
+    return NextResponse.json({ order, checkoutPrice: payment.quoted_at ? publicPrice(storedQuote(payment)) : null });
+  });
 }
 export async function PATCH(request: Request, context: Context) {
   return authRoute(request, async ({ user }) => {

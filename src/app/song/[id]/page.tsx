@@ -29,10 +29,11 @@ export default function SongPage() {
         const current = data.order as AccountOrder;
         setOrder(current); setLoading(false); setError("");
         if (current.status === "generating" && !current.song_assets.length) {
-          if (current.provider_job_id) {
-            const status = await fetch(`/api/music/status/${encodeURIComponent(current.provider_job_id)}?orderId=${id}`, { cache: "no-store" });
+          if (current.active_generation_job_id || current.provider_job_id) {
+            const status = await fetch(`/api/music/status/${encodeURIComponent(current.active_generation_job_id || current.provider_job_id!)}?orderId=${id}`, { cache: "no-store" });
             const result = await status.json();
             if (!status.ok) throw new Error(result.error || "We couldn't check your song. Please try again.");
+            if (result.status === "needs_review") { setError(result.message || "Your song needs assistance. Your order is saved."); return; }
           }
           if (active) timer = window.setTimeout(update, 8000);
         }

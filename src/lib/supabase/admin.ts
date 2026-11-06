@@ -23,6 +23,7 @@ export function getSupabaseAdmin() {
 
   if (!adminClient) {
     adminClient = createClient(url, serviceRoleKey, {
+      global: { fetch: (input, init) => fetch(input, { ...init, signal: init?.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(25_000)]) : AbortSignal.timeout(25_000) }) },
       auth: {
         autoRefreshToken: false,
         persistSession: false,

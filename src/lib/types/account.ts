@@ -5,5 +5,5 @@ export type AccountOrder = {
   occasion: string; story: string; mood: string | null; style: string | null;
   title: string | null; lyrics_text: string | null; paid_at: string | null;
   created_at: string; updated_at: string; provider_job_id: string | null;
-  generation_error: string | null; song_assets: AccountAsset[];
+  active_generation_job_id?: string | null; generation_error: string | null; song_assets: AccountAsset[];
 };

@@ -28,7 +28,7 @@ export default function MySongsPage() {
   useEffect(() => { if (!authLoading && !user) window.location.replace("/login?next=/my-songs"); }, [user, authLoading]);
   useEffect(() => { void Promise.resolve().then(load); }, [load]);
   useEffect(() => {
-    const pending = orders.filter((order) => order.status === "generating" && order.provider_job_id && !order.song_assets.length);
+    const pending = orders.filter((order) => order.status === "generating" && (order.active_generation_job_id || order.provider_job_id) && !order.song_assets.length);
     if (!pending.length || !user) return;
     let active = true;
     let inFlight = false;
@@ -38,7 +38,7 @@ export default function MySongsPage() {
       inFlight = true;
       try {
         const results = await Promise.all(pending.slice(0, 3).map(async (order) => {
-          const response = await fetch("/api/music/status/" + encodeURIComponent(order.provider_job_id!) + "?orderId=" + order.id, {cache:"no-store", signal:controller.signal});
+          const response = await fetch("/api/music/status/" + encodeURIComponent(order.active_generation_job_id || order.provider_job_id!) + "?orderId=" + order.id, {cache:"no-store", signal:controller.signal});
           if (!response.ok) return false;
           const data = await response.json();
           return data.status === "completed" || data.status === "failed";
