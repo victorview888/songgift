@@ -1,7 +1,7 @@
 # Administrator access
 
 The console currently includes server-verified Owner access, a first-edition
-business overview, a read-only order list and read-only order details. Paid generation, payment reconciliation, refunds
+business overview, read-only order and generation-task lists, and order details. Paid generation, payment reconciliation, refunds
 and exports are not administrator actions in this implementation.
 
 ## Authorization boundary
@@ -140,7 +140,7 @@ transport simulates PostgREST; it is not a production Supabase acceptance test.
   checked independently, so an older final asset is not hidden by this limit.
   The timeline is derived only from creation, local `paid_at` and asset timestamps.
 - A `back` parameter may preserve the order list's filters/page. It is restricted
-  to the local `/admin/orders` path. No customer URL or arbitrary redirect is used.
+  to the local `/admin/orders` or `/admin/jobs` path. No customer URL or arbitrary redirect is used.
 - `GET /api/admin/orders/[id]/audio/[assetId]` rechecks membership, binds both IDs
   and `is_final=true`, then records the access before issuing a 60-second link.
   `download=1` changes the download disposition and audit action. Invalid modes
@@ -216,3 +216,16 @@ Failed/missing counts return API 503 and a generic page message, never placehold
 zeros or partial metrics. Manual refresh rechecks current access. No income or
 provider-health claim is inferred. Definitions, links, limitations and provenance
 are recorded in `docs/admin-overview.md`.
+
+## Generation job queries
+
+`/admin/jobs` and `/api/admin/jobs` protect both order-reference and structured-job
+sources before parsing/querying. The default reads existing order references;
+structured rows require the operations migration, and a missing table is reported
+as unavailable rather than empty. Per-source exact search, state/provider/date
+filters and fixed 20-row server pagination are documented in `docs/admin-jobs.md`.
+
+Summaries omit processing leases, submission keys, audio capabilities, full order
+content and raw generation errors. No provider-status query or mutation action
+was added. Order details may return to the local `/admin/jobs` list as well as
+`/admin/orders`, retaining the existing external/API-path rejection rules.

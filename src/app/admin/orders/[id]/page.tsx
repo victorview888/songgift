@@ -24,6 +24,7 @@ export default async function AdminOrderDetailPage({ params, searchParams }: {
   if (access.status === 503) return <main className="admin-access-message"><h1>暂时无法验证后台访问权限</h1><p>请稍后重试。</p><Link href="/admin/orders">返回订单列表</Link></main>;
   const { id } = await params;
   const back = adminOrdersBackLink((await searchParams).back);
+  const backLabel = back.startsWith("/admin/jobs") ? "返回任务列表" : "返回订单列表";
   let data: AdminOrderDetail | undefined;
   let unavailable = false;
   try { data = await getAdminOrderDetail(id); }
@@ -31,12 +32,12 @@ export default async function AdminOrderDetailPage({ params, searchParams }: {
     if (error instanceof HttpError && error.status === 404) notFound();
     unavailable = true;
   }
-  if (unavailable || !data) return <AdminShell current="orders"><AdminPage title="订单详情"><LoadState error="订单详情暂时不可用，请稍后重试。"><Link href={back}>返回订单列表</Link></LoadState></AdminPage></AdminShell>;
+  if (unavailable || !data) return <AdminShell current="orders"><AdminPage title="订单详情"><LoadState error="订单详情暂时不可用，请稍后重试。"><Link href={back}>{backLabel}</Link></LoadState></AdminPage></AdminShell>;
   let history: OrderHistory | undefined;
   try { history = await getAdminOrderHistory(id); } catch { /* Existing details stay available while the operations schema is unavailable. */ }
   const { order, assets, timeline } = data;
   const captured = history?.payments.find(payment => payment.transaction_type === "capture");
-  return <AdminShell current="orders"><AdminPage title="订单详情" description="时间均为北京时间（UTC+8）。本页展示现有记录，不执行支付核对或生成任务查询。" actions={<Link className="admin-button admin-button-quiet" href={back}>← 返回订单列表</Link>}>
+  return <AdminShell current="orders"><AdminPage title="订单详情" description="时间均为北京时间（UTC+8）。本页展示现有记录，不执行支付核对或生成任务查询。" actions={<Link className="admin-button admin-button-quiet" href={back}>← {backLabel}</Link>}>
     <div className="admin-detail-heading"><code>{order.id}</code><Status value={order.paid_at ? "recorded" : "unrecorded"} /><Status value={data.hasFinalAudio ? "delivered" : "undelivered"} /></div>
     <div className="admin-detail-grid">
       <div className="admin-detail-column">

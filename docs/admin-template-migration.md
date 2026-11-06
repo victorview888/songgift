@@ -32,3 +32,10 @@ D1、lucide 或模板支付依赖。SongGift 保留 Next.js 服务端页面与�
 AdminPage/AdminCard/LoadState/AdminShell，新增手动刷新组件。独立 Supabase 统计服务
 为 `src/lib/admin/overview.ts`，指标口径见 `docs/admin-overview.md`。没有移植上游积分、
 视频成本、毛利、配置检测、用户数量及尚无对应功能的待处理链接。
+
+## 生成任务查询页（第一版）
+
+适配上游 `src/routes/admin/generations.tsx` 的筛选、分页、状态/异常列及刷新布局，
+落在 `src/app/admin/jobs/page.tsx`，复用已迁移的后台共用组件。查询改为独立 Supabase
+服务及 `GET /api/admin/jobs`，按来源区分订单最新引用和结构化任务记录。
+没有引入模板视频、积分、成本/毛利或标记失败操作。完整范围见 `docs/admin-jobs.md`。

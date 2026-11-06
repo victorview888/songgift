@@ -26,6 +26,7 @@ async function serve() {
   await db.exec(auditMigration);
   let signingCalls=0;
   let historyAvailable=true;
+  let jobsAvailable=true;
   let overviewAvailable=true, extraOrder=false;
   const restore=async()=>{await db.exec(migration);await db.query("insert into public.admin_members(user_id,active) values ($1,true) on conflict(user_id) do update set active=true",[ownerId]);};
   await restore();
@@ -44,6 +45,7 @@ async function serve() {
       let body={};
       if(req.method!=="GET"&&req.method!=="HEAD") {let text="";for await(const chunk of req){text+=chunk;if(text.length>10000){json(413,{error:"Fixture request too large"});return;}}if(text)body=JSON.parse(text);}
       if(url.pathname==="/__fixture__/health")return json(200,{fixture:"songgift-admin-loopback",owner:identities[0].email,customer:identities[1].email});
+      if(url.pathname==="/__fixture__/jobs" && req.method==="POST") {jobsAvailable=body.available!==false;return json(200,{ok:true});}
       if(url.pathname==="/__fixture__/overview" && req.method==="POST") {overviewAvailable=body.available!==false;extraOrder=body.extraOrder===true;return json(200,{ok:true});}
       if(url.pathname==="/__fixture__/history" && req.method==="POST") {historyAvailable=body.available!==false;return json(200,{ok:true});}
       if(url.pathname==="/__fixture__/audit" && req.method==="POST") {
@@ -108,6 +110,21 @@ async function serve() {
         try {const data=await db.query("select user_id,role,active from public.admin_members where user_id=$1",[id]);return json(200,data.rows);}
         catch {return json(404,{code:"PGRST205",message:"Fixture membership table unavailable"});}
       }
+      if(url.pathname==="/rest/v1/generation_jobs" && req.method==="GET") {
+        if(req.headers.authorization!=="Bearer isolated-service-role")return json(403,{message:"Fixture jobs require service role"});
+        if(!jobsAvailable)return json(404,{message:"Fixture generation jobs schema missing"});
+        const states=["submitting","queued","processing","storing","needs_review","completed","failed"];
+        let rows=Array.from({length:27},(_,i)=>({id:`e3f10454-1234-4234-8234-${String(i+1).padStart(12,"0")}`,order_id:`c3f10454-1234-4234-8234-${String(i%25+1).padStart(12,"0")}`,attempt_no:Math.floor(i/25)+1,environment:i%3===0?"test":"production",provider:i%2===0?"fal":"musicapi",model:"isolated-fixed-model",provider_job_id:i%7===0?null:"recorded-task-"+(i+1),state:i<2?"failed":states[i%7],error_code:i<2?"provider_failed":i%7===3?"storage_failed":i%7===4?"submission_unknown":i%7===6?"provider_failed":null,final_asset_id:i%7===5?`d3f10454-1234-4234-8234-${String(i+1).padStart(12,"0")}`:null,started_at:`2026-11-05T01:${String(i).padStart(2,"0")}:00Z`,updated_at:`2026-11-05T02:${String(i).padStart(2,"0")}:00Z`,completed_at:i%7===5?"2026-11-05T02:30:00Z":null,order:{email:i%25===0?"buyer_one@admin-test.example":"buyer@admin-test.example",recipient_name:"Fixture recipient "+(i%25+1)}}));
+        for(const [key,value] of url.searchParams){
+          if(["id","order_id","provider_job_id","state","provider","environment"].includes(key))rows=rows.filter(row=>row[key]===value.replace(/^eq\./,""));
+          if(key==="order.email")rows=rows.filter(row=>row.order.email.toLowerCase()===value.replace(/^ilike\./,"").replace(/\\([_%\\])/g,"$1").toLowerCase());
+          if(key==="started_at")rows=rows.filter(row=>value.startsWith("gte.")?row.started_at>=value.slice(4):row.started_at<value.slice(3));
+          if(key==="or"){assert.equal(value,"(state.in.(failed,needs_review),error_code.not.is.null)");rows=rows.filter(row=>["failed","needs_review"].includes(row.state)||row.error_code!==null);}
+        }
+        rows.sort((a,b)=>b.started_at.localeCompare(a.started_at)||b.id.localeCompare(a.id));
+        const total=rows.length,offset=Number(url.searchParams.get("offset")||0),limit=Number(url.searchParams.get("limit")||20);rows=rows.slice(offset,offset+limit);
+        res.setHeader("Content-Range",`${offset}-${offset+rows.length-1}/${total}`);return json(200,rows);
+      }
       if(url.pathname==="/rest/v1/song_orders" && ["GET","HEAD"].includes(req.method)) {
         if(req.headers.authorization!=="Bearer isolated-service-role")return json(403,{message:"Fixture orders require service role"});
         if(req.method==="HEAD"&&!overviewAvailable){res.writeHead(403);return res.end();}
@@ -116,7 +133,7 @@ async function serve() {
           email:i===0?"buyer_one@admin-test.example":"buyer@admin-test.example",
           recipient_name:"Fixture recipient "+(i+1),occasion:"birthday",status:i%2===0?"completed":"generating",
           paid_at:i%2===0?"2026-11-05T01:00:00Z":null,created_at:`2026-11-05T00:${String(i).padStart(2,"0")}:00Z`,
-          paypal_order_id:"FIXTURE"+i,music_provider:"fal",music_model:"isolated-model",final_assets:i%2===0?[{id:"fixture-asset-"+i}]:[]
+          paypal_order_id:"FIXTURE"+i,music_provider:"fal",music_model:"isolated-model",provider_job_id:"fixture-job-"+(i+1),generation_error:i===1?"PRIVATE FIXTURE PROVIDER TOKEN":null,updated_at:`2026-11-05T01:${String(i).padStart(2,"0")}:00Z`,final_assets:i%2===0?[{id:"fixture-asset-"+i}]:[]
         }));
         if(extraOrder)rows.push({id:"c3f10454-1234-4234-8234-000000000026",user_id:customerId,email:"buyer@admin-test.example",recipient_name:"Fixture added order",occasion:"birthday",status:"draft",paid_at:null,created_at:new Date().toISOString(),paypal_order_id:null,music_provider:null,music_model:null,final_assets:[]});
         if(url.searchParams.get("select")?.includes(",story,"))rows=rows.map(row=>({...row,
@@ -137,13 +154,19 @@ async function serve() {
           if(key==="paid_at")rows=rows.filter(r=>value==="is.null"?!r.paid_at:!!r.paid_at);
           if(key==="created_at")rows=rows.filter(r=>value.startsWith("gte.")?r.created_at>=value.slice(4):r.created_at<value.slice(3));
           if(key==="final_assets")rows=rows.filter(r=>r.final_assets.length===0);
-          if(key==="or") {assert.equal(value,"(status.eq.failed,status.eq.completed,generation_error.not.is.null)");rows=rows.filter(r=>["failed","completed"].includes(r.status)||r.id==="c3f10454-1234-4234-8234-000000000002");}
+          if(key==="or") {
+            const candidate="(provider_job_id.not.is.null,status.in.(generating,failed,completed))",review="(status.eq.failed,status.eq.completed,generation_error.not.is.null)",combined="(and(or(provider_job_id.not.is.null,status.in.(generating,failed,completed)),or(status.eq.failed,status.eq.completed,generation_error.not.is.null)))";
+            assert.ok([candidate,review,combined].includes(value));
+            if(value===candidate||value===combined)rows=rows.filter(r=>r.provider_job_id!=null||["generating","failed","completed"].includes(r.status));
+            if(value===review||value===combined)rows=rows.filter(r=>["failed","completed"].includes(r.status)||r.generation_error!=null);
+          }
         }
         if(url.searchParams.get("select")?.includes("!inner"))rows=rows.filter(r=>r.final_assets.length>0);
         rows.sort((a,b)=>b.created_at.localeCompare(a.created_at)||b.id.localeCompare(a.id));
         const total=rows.length,offset=Number(url.searchParams.get("offset")||0),limit=Number(url.searchParams.get("limit")||20);
         rows=rows.slice(offset,offset+limit);
         res.setHeader("Content-Range",`${offset}-${offset+rows.length-1}/${total}`);
+        for(const row of rows)for(const field of ["generation_error","provider_job_id","updated_at"])if(!url.searchParams.get("select")?.includes(field))delete row[field];
         if(req.method==="HEAD"){res.writeHead(200);return res.end();}
         return json(200,rows);
       }
@@ -202,6 +225,22 @@ async function checks() {
   response=await owner("/api/admin/orders?page=0");assert.equal(response.status,400);
   response=await owner("/admin/orders?page=2");html=await response.text();assert.equal(response.status,200);assert.match(html,/Fixture recipient/);assert.match(html,/noindex/);assert.match(response.headers.get("cache-control"),/private|no-store/);
   pass("owner order list filters, exact search, server pagination and private SSR work");
+  for(const [request,status] of [[anonymous,401],[customer,403]])for(const source of ["legacy","recorded"]){
+    assert.equal((await request("/api/admin/jobs?source="+source)).status,status);
+    response=await request("/admin/jobs?source="+source);assert.doesNotMatch(await response.text(),/Fixture recipient|isolated-fixed-model/);
+  }
+  response=await owner("/api/admin/jobs?page=2");let jobs=await response.json();assert.equal(response.status,200);assert.equal(jobs.total,25);assert.equal(jobs.jobs.length,5);assert.ok(jobs.jobs.every(j=>j.id===null&&j.environment===null&&j.attemptNo===null));assert.doesNotMatch(JSON.stringify(jobs),/PRIVATE|generation_error|storage_path|lease_token|submission_key/);assert.match(response.headers.get("cache-control"),/private.*no-store/);
+  response=await owner("/api/admin/jobs?attention=1");jobs=await response.json();assert.equal(jobs.total,1);assert.equal(jobs.jobs[0].errorCode,"legacy_error");
+  response=await owner("/api/admin/jobs?source=recorded&page=2");jobs=await response.json();assert.equal(jobs.total,27);assert.equal(jobs.jobs.length,7);assert.ok(jobs.jobs.every(j=>j.model==="isolated-fixed-model"));
+  response=await owner("/api/admin/jobs?source=recorded&searchBy=jobId&q=e3f10454-1234-4234-8234-000000000001");jobs=await response.json();assert.equal(jobs.total,1);assert.equal(jobs.jobs[0].orderId,detailOrderId);
+  response=await owner("/api/admin/jobs?source=recorded&attention=1&provider=musicapi&environment=production");jobs=await response.json();assert.ok(jobs.jobs.length>0);assert.ok(jobs.jobs.every(j=>j.errorCode&&j.provider==="musicapi"&&j.environment==="production"));
+  assert.equal((await owner("/api/admin/jobs?searchBy=jobId")).status,400);
+  response=await owner("/admin/jobs?source=recorded&page=2");html=await response.text();assert.match(html,/isolated-fixed-model/);assert.match(html,/noindex/);assert.match(response.headers.get("cache-control"),/private|no-store/);
+  await fetch(fixtureOrigin+"/__fixture__/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({available:false})});
+  assert.equal((await owner("/api/admin/jobs?source=recorded")).status,503);assert.equal((await owner("/api/admin/jobs")).status,200);
+  response=await owner("/admin/jobs?source=recorded");html=await response.text();assert.match(html,/任务记录暂时不可用/);assert.doesNotMatch(html,/isolated-fixed-model/);
+  await fetch(fixtureOrigin+"/__fixture__/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
+  pass("job sources are read-only, scoped, paginated, private and migration failures do not hide legacy references");
   const detailPath="/api/admin/orders/"+detailOrderId;
   const audioPath=detailPath+"/audio/"+detailAssetId;
   for(const [request,status] of [[anonymous,401],[customer,403]]) {
@@ -232,6 +271,8 @@ async function checks() {
   audit=await (await fetch(fixtureOrigin+"/__fixture__/audit")).json();assert.equal(audit.signingCalls,2);
   pass("audio access is bound to the order, durably audited and fails closed when audit is missing");
   await change({active:false});response=await owner("/api/admin/session");assert.equal(response.status,403);response=await owner("/admin");html=await response.text();assert.doesNotMatch(html,/admin-overview-stats/);pass("revoking membership blocks the next request with the same session");
+  assert.equal((await owner("/api/admin/jobs")).status,403);assert.equal((await owner("/api/admin/jobs?source=recorded")).status,403);
+  response=await owner("/admin/jobs");assert.doesNotMatch(await response.text(),/Fixture recipient|isolated-fixed-model/);
   assert.equal((await owner("/api/admin/overview")).status,403);
   assert.equal((await owner(historyPath)).status,403);
   assert.equal((await owner(detailPath)).status,403);assert.equal((await owner(audioPath)).status,403);
@@ -239,6 +280,7 @@ async function checks() {
   assert.equal((await owner("/api/admin/orders")).status,403);
   response=await owner("/admin/orders");assert.doesNotMatch(await response.text(),/Fixture recipient|buyer@admin-test/);
   await change({mode:"missing"});response=await owner("/api/admin/session");assert.equal(response.status,503);assert.doesNotMatch(await response.text(),/PGRST|service_role|isolated-service-role/);response=await owner("/admin");html=await response.text();assert.doesNotMatch(html,/admin-overview-stats/);assert.ok(html.includes("暂时无法验证后台访问权限"));pass("missing membership migration fails closed in API and page");
+  assert.equal((await owner("/api/admin/jobs")).status,503);
   assert.equal((await owner("/api/admin/overview")).status,503);
   assert.equal((await owner(historyPath)).status,503);
   assert.equal((await owner(detailPath)).status,503);assert.equal((await owner(audioPath)).status,503);

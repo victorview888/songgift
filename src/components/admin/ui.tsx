@@ -5,13 +5,14 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { AdminSignOut } from "@/components/admin-sign-out";
 
-export function AdminShell({ current, children }: { current: "home" | "orders"; children: ReactNode }) {
+export function AdminShell({ current, children }: { current: "home" | "orders" | "jobs"; children: ReactNode }) {
   return <div className="admin-shell">
     <aside className="admin-sidebar">
       <Link href="/" className="admin-brand">♪ songgift<span>管理后台</span></Link>
       <nav aria-label="后台导航">
         <Link href="/admin" aria-current={current === "home" ? "page" : undefined}>经营概览</Link>
         <Link href="/admin/orders" aria-current={current === "orders" ? "page" : undefined}>订单列表</Link>
+        <Link href="/admin/jobs" aria-current={current === "jobs" ? "page" : undefined}>生成任务</Link>
         <Link href="/my-songs">我的歌曲</Link><Link href="/">返回网站</Link>
       </nav>
       <p className="admin-sidebar-note">为每一首歌，<br />做好交付的最后一步。</p>
@@ -42,8 +43,8 @@ export function FilterSelect({ name, value, options, label }: { name: string; va
   return <label>{label}<select name={name} aria-label={label} defaultValue={value}>{options.map(([v, text]) => <option key={v} value={v}>{text}</option>)}</select></label>;
 }
 
-export function Pager({ page, totalPages, href }: { page: number; totalPages: number; href: (page: number) => string }) {
-  return <nav className="admin-pagination" aria-label="订单分页">
+export function Pager({ page, totalPages, href, label = "订单分页" }: { page: number; totalPages: number; href: (page: number) => string; label?: string }) {
+  return <nav className="admin-pagination" aria-label={label}>
     {page > 1 ? <Link className="admin-button admin-button-quiet" href={href(page - 1)}>上一页</Link> : <span className="admin-button admin-button-quiet" aria-disabled="true">上一页</span>}
     <span>第 {page} 页 / {Math.max(1, totalPages)} 页</span>
     {page < totalPages ? <Link className="admin-button admin-button-quiet" href={href(page + 1)}>下一页</Link> : <span className="admin-button admin-button-quiet" aria-disabled="true">下一页</span>}

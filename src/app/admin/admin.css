@@ -123,3 +123,9 @@
 .admin-overview-notes li + li { margin-top: 8px; }
 @media (max-width: 1100px) { .admin-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-overview-panels { grid-template-columns: minmax(0, 1fr); gap: 0; } }
 @media (max-width: 500px) { .admin-overview-grid, .admin-overview-job-grid { gap: 12px; } .admin-stat-card, .admin-overview-job-grid .admin-stat-card { padding: 18px 14px; } .admin-stat-value { font-size: 30px; } }
+
+.admin-job-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 12px; }
+.admin-job-tabs a { color: var(--admin-green); border: 1px solid var(--admin-border); border-radius: 10px; padding: 10px 16px; text-decoration: none; font-size: 13px; }
+.admin-job-tabs a[aria-current] { color: #fff; background: var(--admin-green); border-color: var(--admin-green); }
+.admin-order-filters .admin-job-attention { display: flex; gap: 8px; align-items: center; min-height: 42px; }
+.admin-order-filters .admin-job-attention input { width: 16px; min-height: 16px; flex: 0 0 16px; }

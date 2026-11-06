@@ -12,7 +12,7 @@ const verified = (extra = {}) => ({ id: "a3f10454-1234-4234-8234-012345678901", 
 const member = (extra = {}) => ({ user_id: verified().id, role: "owner", active: true, ...extra });
 
 function fixture(options = {}) {
-  const state = { user: verified(), membership: member(), dbError: null, authError: null, reads: [], handlers: 0, orderReads: 0, detailReads: 0, historyReads: 0, overviewReads: 0, audioReads: 0, ...options };
+  const state = { user: verified(), membership: member(), dbError: null, authError: null, reads: [], handlers: 0, orderReads: 0, detailReads: 0, historyReads: 0, overviewReads: 0, jobReads: 0, audioReads: 0, ...options };
   const modules = new Map();
   const context = vm.createContext({ URL, Request, Response, Headers, Map, console: { error() {} }, process: { env: { SUPABASE_URL: "https://test-project.supabase.invalid", SUPABASE_PUBLISHABLE_KEY: "test-public-key", ...options.env } } });
   const db = { from(table) {
@@ -41,6 +41,7 @@ function fixture(options = {}) {
       if(name==="@supabase/ssr")return {createServerClient};
       if(name==="@/lib/supabase/admin")return {getSupabaseAdmin:()=>db};
       if(name==="@/lib/admin/orders")return {parseOrderFilters:()=>({}),listAdminOrders:async()=>{state.orderReads++;return {orders:[],total:0,page:1,pageSize:20,totalPages:0};}};
+      if(name==="@/lib/admin/jobs")return {parseJobFilters:()=>({}),listAdminJobs:async()=>{state.jobReads++;return {jobs:[],total:0,page:1,pageSize:20,totalPages:0};}};
       if(name==="@/lib/admin/overview")return {getAdminOverview:async()=>{state.overviewReads++;return {counts:{orders:0}};}};
       if(name==="@/lib/admin/order-history")return {getAdminOrderHistory:async()=>{state.historyReads++;return {quote:null,payments:[],jobs:[],events:[],audit:[]};}};
       if(name==="@/lib/admin/order-detail")return {getAdminOrderDetail:async()=>{state.detailReads++;return {order:{id:"isolated-order"}};}};
@@ -202,4 +203,15 @@ test("overview API denies customers and revoked owners before any order count",a
   const f=fixture();const get=()=>f.load(file).GET(new Request("https://songgift.example/api/admin/overview"));
   const response=await get();assert.equal(response.status,200);assert.equal(response.headers.get("vary"),"Cookie");assert.equal(f.state.overviewReads,1);
   f.state.membership.active=false;assert.equal((await get()).status,403);assert.equal(f.state.overviewReads,1);
+});
+
+
+test("job list API checks membership before reading either source and observes revocation",async()=>{
+  const file="src/app/api/admin/jobs/route.ts";
+  for(const [options,status] of [[{user:null},401],[{membership:null},403],[{membership:member({active:false})},403],[{dbError:{message:"missing"}},503]])for(const source of ["legacy","recorded"]) {
+    const f=fixture(options);const response=await f.load(file).GET(new Request("https://songgift.example/api/admin/jobs?source="+source));assert.equal(response.status,status);assert.equal(f.state.jobReads,0);assert.match(response.headers.get("cache-control"),/private.*no-store/);
+  }
+  const f=fixture(),get=()=>f.load(file).GET(new Request("https://songgift.example/api/admin/jobs"));
+  assert.equal((await get()).status,200);assert.equal(f.state.jobReads,1);
+  f.state.membership.active=false;assert.equal((await get()).status,403);assert.equal(f.state.jobReads,1);
 });
