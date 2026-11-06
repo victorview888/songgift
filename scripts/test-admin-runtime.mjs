@@ -26,6 +26,7 @@ async function serve() {
   await db.exec(auditMigration);
   let signingCalls=0;
   let historyAvailable=true;
+  let overviewAvailable=true, extraOrder=false;
   const restore=async()=>{await db.exec(migration);await db.query("insert into public.admin_members(user_id,active) values ($1,true) on conflict(user_id) do update set active=true",[ownerId]);};
   await restore();
   const tokens = new Map();
@@ -43,6 +44,7 @@ async function serve() {
       let body={};
       if(req.method!=="GET"&&req.method!=="HEAD") {let text="";for await(const chunk of req){text+=chunk;if(text.length>10000){json(413,{error:"Fixture request too large"});return;}}if(text)body=JSON.parse(text);}
       if(url.pathname==="/__fixture__/health")return json(200,{fixture:"songgift-admin-loopback",owner:identities[0].email,customer:identities[1].email});
+      if(url.pathname==="/__fixture__/overview" && req.method==="POST") {overviewAvailable=body.available!==false;extraOrder=body.extraOrder===true;return json(200,{ok:true});}
       if(url.pathname==="/__fixture__/history" && req.method==="POST") {historyAvailable=body.available!==false;return json(200,{ok:true});}
       if(url.pathname==="/__fixture__/audit" && req.method==="POST") {
         if(body.mode==="missing")await db.exec("drop table public.admin_audit_logs");
@@ -106,8 +108,9 @@ async function serve() {
         try {const data=await db.query("select user_id,role,active from public.admin_members where user_id=$1",[id]);return json(200,data.rows);}
         catch {return json(404,{code:"PGRST205",message:"Fixture membership table unavailable"});}
       }
-      if(url.pathname==="/rest/v1/song_orders" && req.method==="GET") {
+      if(url.pathname==="/rest/v1/song_orders" && ["GET","HEAD"].includes(req.method)) {
         if(req.headers.authorization!=="Bearer isolated-service-role")return json(403,{message:"Fixture orders require service role"});
+        if(req.method==="HEAD"&&!overviewAvailable){res.writeHead(403);return res.end();}
         let rows=Array.from({length:25},(_,i)=>({
           id:`c3f10454-1234-4234-8234-${String(i+1).padStart(12,"0")}`,user_id:customerId,
           email:i===0?"buyer_one@admin-test.example":"buyer@admin-test.example",
@@ -115,6 +118,7 @@ async function serve() {
           paid_at:i%2===0?"2026-11-05T01:00:00Z":null,created_at:`2026-11-05T00:${String(i).padStart(2,"0")}:00Z`,
           paypal_order_id:"FIXTURE"+i,music_provider:"fal",music_model:"isolated-model",final_assets:i%2===0?[{id:"fixture-asset-"+i}]:[]
         }));
+        if(extraOrder)rows.push({id:"c3f10454-1234-4234-8234-000000000026",user_id:customerId,email:"buyer@admin-test.example",recipient_name:"Fixture added order",occasion:"birthday",status:"draft",paid_at:null,created_at:new Date().toISOString(),paypal_order_id:null,music_provider:null,music_model:null,final_assets:[]});
         if(url.searchParams.get("select")?.includes(",story,"))rows=rows.map(row=>({...row,
           relationship:"friend",story:"Fixture private story <script>test</script>",mood:"warm",style:"pop",title:"Fixture song",lyrics_text:"Fixture private lyrics\nSecond line",provider_job_id:"fixture-job-1",updated_at:row.created_at,
           song_assets:row.id===detailOrderId?[{id:detailAssetId,asset_type:"final",mime_type:"audio/mpeg",duration_seconds:null,provider:"fal",model_id:"isolated-model",provider_job_id:"fixture-job-1",is_final:true,created_at:"2026-11-05T01:20:00Z"}]:[]
@@ -133,12 +137,14 @@ async function serve() {
           if(key==="paid_at")rows=rows.filter(r=>value==="is.null"?!r.paid_at:!!r.paid_at);
           if(key==="created_at")rows=rows.filter(r=>value.startsWith("gte.")?r.created_at>=value.slice(4):r.created_at<value.slice(3));
           if(key==="final_assets")rows=rows.filter(r=>r.final_assets.length===0);
+          if(key==="or") {assert.equal(value,"(status.eq.failed,status.eq.completed,generation_error.not.is.null)");rows=rows.filter(r=>["failed","completed"].includes(r.status)||r.id==="c3f10454-1234-4234-8234-000000000002");}
         }
         if(url.searchParams.get("select")?.includes("!inner"))rows=rows.filter(r=>r.final_assets.length>0);
         rows.sort((a,b)=>b.created_at.localeCompare(a.created_at)||b.id.localeCompare(a.id));
         const total=rows.length,offset=Number(url.searchParams.get("offset")||0),limit=Number(url.searchParams.get("limit")||20);
         rows=rows.slice(offset,offset+limit);
         res.setHeader("Content-Range",`${offset}-${offset+rows.length-1}/${total}`);
+        if(req.method==="HEAD"){res.writeHead(200);return res.end();}
         return json(200,rows);
       }
       return json(404,{error:"Unexpected isolated transport request",path:url.pathname});
@@ -155,6 +161,7 @@ async function checks() {
   const health=await fetch(fixtureOrigin+"/__fixture__/health");assert.equal((await health.json()).fixture,"songgift-admin-loopback");
   const change=(body)=>fetch(fixtureOrigin+"/__fixture__/membership",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
   await change({active:true});
+  await fetch(fixtureOrigin+"/__fixture__/overview",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
   await fetch(fixtureOrigin+"/__fixture__/audit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"reset"})});
   let passed=0;const pass=(label)=>{passed++;console.log("PASS "+label);};
   function client(){const jar={};return async(path,method="GET",body,origin=base)=>{
@@ -171,7 +178,19 @@ async function checks() {
   await signIn(customer,identities[1].email);response=await customer("/api/admin/session");assert.equal(response.status,403);pass("verified customer cannot grant access with forged Auth metadata");
   response=await customer("/admin");html=await response.text();assert.doesNotMatch(html,/owner@admin-test.example/);assert.ok(html.includes("无法访问这个后台页面")||response.status===404);pass("ordinary user cannot render the administrator shell");
   await signIn(owner,identities[0].email);response=await owner("/api/admin/session");assert.equal(response.status,200,await response.clone().text());assert.equal((await response.json()).admin.userId,ownerId);pass("active owner receives server-checked identity");
-  response=await owner("/admin");html=await response.text();assert.equal(response.status,200);assert.ok(html.includes("后台访问已开启"));assert.ok(html.includes(identities[0].email));assert.match(html,/noindex/);assert.match(response.headers.get("cache-control"),/private|no-store/);pass("owner page is dynamic, private, non-indexable and server-rendered");
+  response=await owner("/admin");html=await response.text();assert.equal(response.status,200);assert.ok(html.includes("经营概览"));assert.ok(html.includes(identities[0].email));assert.match(html,/noindex/);assert.match(response.headers.get("cache-control"),/private|no-store/);pass("owner page is dynamic, private, non-indexable and server-rendered");
+  const setOverview=body=>fetch(fixtureOrigin+"/__fixture__/overview",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  await setOverview({available:true});
+  for(const [request,status] of [[anonymous,401],[customer,403]])assert.equal((await request("/api/admin/overview")).status,status);
+  response=await owner("/api/admin/overview");const overview=await response.json();assert.equal(response.status,200);assert.equal(overview.counts.orders,25);assert.equal(overview.counts.paid,13);assert.equal(overview.counts.withFinalAudio,13);assert.equal(overview.counts.generating,12);assert.equal(overview.counts.needsReview,1);assert.equal(overview.counts.createdToday,overview.day==="2026-11-05"?25:0);assert.match(response.headers.get("cache-control"),/private.*no-store/);assert.doesNotMatch(JSON.stringify(overview),/buyer@|Fixture recipient|story|signed|storage_path/);
+  for(const metric of ["orders","createdToday","paid","withFinalAudio","generating","needsReview"]){
+    response=await owner(overview.links[metric].replace("/admin/orders","/api/admin/orders"));const list=await response.json();assert.equal(response.status,200);assert.equal(list.total,overview.counts[metric],metric);
+  }
+  await setOverview({available:false});assert.equal((await owner("/api/admin/overview")).status,503);
+  response=await owner("/admin");html=await response.text();assert.match(html,/经营统计暂时不可用/);assert.doesNotMatch(html,/admin-overview-stats/);
+  await setOverview({available:true,extraOrder:true});response=await owner("/api/admin/overview");assert.equal((await response.json()).counts.orders,26);
+  await setOverview({available:true});
+  pass("overview counts and drill-down totals match, refresh reads changes, and count failures never become zero");
   for(const [request,status] of [[anonymous,401],[customer,403]]) {
     response=await request("/api/admin/orders");assert.equal(response.status,status);
     response=await request("/admin/orders");html=await response.text();assert.doesNotMatch(html,/Fixture recipient|buyer@admin-test/);
@@ -212,13 +231,15 @@ async function checks() {
   await fetch(fixtureOrigin+"/__fixture__/audit",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
   audit=await (await fetch(fixtureOrigin+"/__fixture__/audit")).json();assert.equal(audit.signingCalls,2);
   pass("audio access is bound to the order, durably audited and fails closed when audit is missing");
-  await change({active:false});response=await owner("/api/admin/session");assert.equal(response.status,403);response=await owner("/admin");html=await response.text();assert.doesNotMatch(html,/后台访问已开启/);pass("revoking membership blocks the next request with the same session");
+  await change({active:false});response=await owner("/api/admin/session");assert.equal(response.status,403);response=await owner("/admin");html=await response.text();assert.doesNotMatch(html,/admin-overview-stats/);pass("revoking membership blocks the next request with the same session");
+  assert.equal((await owner("/api/admin/overview")).status,403);
   assert.equal((await owner(historyPath)).status,403);
   assert.equal((await owner(detailPath)).status,403);assert.equal((await owner(audioPath)).status,403);
   response=await owner("/admin/orders/"+detailOrderId);assert.doesNotMatch(await response.text(),/Fixture private story|Fixture private lyrics/);
   assert.equal((await owner("/api/admin/orders")).status,403);
   response=await owner("/admin/orders");assert.doesNotMatch(await response.text(),/Fixture recipient|buyer@admin-test/);
-  await change({mode:"missing"});response=await owner("/api/admin/session");assert.equal(response.status,503);assert.doesNotMatch(await response.text(),/PGRST|service_role|isolated-service-role/);response=await owner("/admin");html=await response.text();assert.doesNotMatch(html,/后台访问已开启/);assert.ok(html.includes("暂时无法验证后台访问权限"));pass("missing membership migration fails closed in API and page");
+  await change({mode:"missing"});response=await owner("/api/admin/session");assert.equal(response.status,503);assert.doesNotMatch(await response.text(),/PGRST|service_role|isolated-service-role/);response=await owner("/admin");html=await response.text();assert.doesNotMatch(html,/admin-overview-stats/);assert.ok(html.includes("暂时无法验证后台访问权限"));pass("missing membership migration fails closed in API and page");
+  assert.equal((await owner("/api/admin/overview")).status,503);
   assert.equal((await owner(historyPath)).status,503);
   assert.equal((await owner(detailPath)).status,503);assert.equal((await owner(audioPath)).status,503);
   response=await owner("/admin/orders/"+detailOrderId);assert.doesNotMatch(await response.text(),/Fixture private story|Fixture private lyrics/);

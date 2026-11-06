@@ -11,7 +11,7 @@
     "build:vinext": "vite build",
     "start:vinext": "wrangler dev --config dist/server/wrangler.json",
     "deploy:vinext": "wrangler deploy --config dist/server/wrangler.json",
-    "test:admin": "node --test tests/admin-permissions.test.mjs tests/admin-migration.test.mjs tests/admin-owner-tool.test.mjs tests/admin-orders.test.mjs tests/admin-order-detail.test.mjs tests/order-operations.test.mjs tests/order-operations-service.test.mjs"
+    "test:admin": "node --test tests/admin-permissions.test.mjs tests/admin-migration.test.mjs tests/admin-owner-tool.test.mjs tests/admin-orders.test.mjs tests/admin-order-detail.test.mjs tests/order-operations.test.mjs tests/order-operations-service.test.mjs tests/admin-overview.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

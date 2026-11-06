@@ -10,7 +10,7 @@ export function AdminShell({ current, children }: { current: "home" | "orders"; 
     <aside className="admin-sidebar">
       <Link href="/" className="admin-brand">♪ songgift<span>管理后台</span></Link>
       <nav aria-label="后台导航">
-        <Link href="/admin" aria-current={current === "home" ? "page" : undefined}>后台入口</Link>
+        <Link href="/admin" aria-current={current === "home" ? "page" : undefined}>经营概览</Link>
         <Link href="/admin/orders" aria-current={current === "orders" ? "page" : undefined}>订单列表</Link>
         <Link href="/my-songs">我的歌曲</Link><Link href="/">返回网站</Link>
       </nav>

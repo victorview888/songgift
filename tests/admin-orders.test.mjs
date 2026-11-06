@@ -16,6 +16,10 @@ function fixture({ rows = [], total = 0, failure = false } = {}) {
   const exports={};
   vm.runInNewContext(`(function(exports,require){${source}\n})`,{URLSearchParams,Date})(exports,(name)=>{
     if(name==="server-only")return {};
+    if(name==="./order-metrics"){
+      const out={},code=ts.transpileModule(readFileSync("src/lib/admin/order-metrics.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+      vm.runInNewContext(`(function(exports){${code}\n})`)(out);return out;
+    }
     if(name==="@/lib/auth/server")return {HttpError};
     if(name==="@/lib/supabase/admin")return {getSupabaseAdmin:()=>db};
     throw new Error(name);
@@ -82,4 +86,13 @@ test("empty pages keep the requested page and failures reveal no database detail
   const result=await f.listAdminOrders(f.filters("page=7"));assert.equal(result.orders.length,0);assert.equal(result.page,7);assert.equal(result.totalPages,0);
   const broken=fixture({failure:true});
   await assert.rejects(broken.listAdminOrders(broken.filters()),e=>e.status===503&&!e.message.includes("PRIVATE"));
+});
+
+
+test("review filter includes only undelivered failed/completed/error records using a fixed predicate",async()=>{
+  const f=fixture();await f.listAdminOrders(f.filters("delivery=review"));
+  const p=f.calls[0].url.searchParams;
+  assert.equal(p.get("final_assets"),"is.null");assert.equal(p.get("final_assets.is_final"),"eq.true");
+  assert.equal(p.get("or"),"(status.eq.failed,status.eq.completed,generation_error.not.is.null)");
+  assert.equal(p.get("status"),null);
 });

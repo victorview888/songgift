@@ -24,3 +24,11 @@ D1、lucide 或模板支付依赖。SongGift 保留 Next.js 服务端页面与�
 按订单和资产共同定位最终音频，签发 60 秒链接，数据库审计成功后才返回。
 生产需在原管理员迁移之后执行 `20261105_admin_audio_audit.sql`；本次仅隔离测试，
 不执行生产迁移、不授予真实账号权限。审计缺表不影响只读详情，但音频访问拒绝签发。
+
+## 经营概览（第一版）
+
+新增适配上游 `src/routes/admin/index.tsx` 的 Stat/Todo、统计卡片网格和双栏任务/待处理
+布局，落在 `src/components/admin/overview.tsx`、`src/app/admin/page.tsx`。沿用已有
+AdminPage/AdminCard/LoadState/AdminShell，新增手动刷新组件。独立 Supabase 统计服务
+为 `src/lib/admin/overview.ts`，指标口径见 `docs/admin-overview.md`。没有移植上游积分、
+视频成本、毛利、配置检测、用户数量及尚无对应功能的待处理链接。

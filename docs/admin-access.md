@@ -1,7 +1,7 @@
 # Administrator access
 
-The console currently includes server-verified Owner access, a read-only order
-list and read-only order details. Paid generation, payment reconciliation, refunds
+The console currently includes server-verified Owner access, a first-edition
+business overview, a read-only order list and read-only order details. Paid generation, payment reconciliation, refunds
 and exports are not administrator actions in this implementation.
 
 ## Authorization boundary
@@ -201,3 +201,18 @@ integration steps are documented in `docs/order-operations.md`. The expanded
 in-memory PostgreSQL tests exercise the actual migration and transaction
 functions. HTTP runtime checks simulate financial/job records; they are not proof
 of real PayPal captures, real task execution or production migration readiness.
+
+## Business overview, first edition
+
+`/admin` now renders the business overview instead of the access-verification
+landing page. `/api/admin/overview` uses adminRoute; the SSR page checks
+getAdminPageAccess before counts. All count queries are read-only HEAD requests
+against existing order/asset tables, so no new migration is required for this page.
+Counts cover all orders, today's creations in Asia/Shanghai, local paid_at evidence,
+final-asset evidence per order, generating orders and undelivered review candidates.
+`delivery=review` is a new list filter shared with the overview predicate.
+
+Failed/missing counts return API 503 and a generic page message, never placeholder
+zeros or partial metrics. Manual refresh rechecks current access. No income or
+provider-health claim is inferred. Definitions, links, limitations and provenance
+are recorded in `docs/admin-overview.md`.

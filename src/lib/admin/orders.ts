@@ -1,10 +1,11 @@
 import "server-only";
 import { HttpError } from "@/lib/auth/server";
+import { REVIEW_FILTER } from "./order-metrics";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export const PAGE_SIZE = 20;
 export const paymentLabels = { all: "全部", recorded: "已记录付款", unrecorded: "未记录付款" };
-export const deliveryLabels = { all: "全部", delivered: "已有最终音频", undelivered: "无最终音频记录", generating: "生成中（未入库）", failed: "失败（未入库）" };
+export const deliveryLabels = { all: "全部", delivered: "已有最终音频", undelivered: "无最终音频记录", generating: "生成中（未入库）", failed: "失败（未入库）", review: "异常待核查（未入库）" };
 export const providers = ["fal", "musicapi", "mureka_cn", "google_lyria", "mock"] as const;
 export type OrderFilters = {
   searchBy: "id" | "email" | "paypal";
@@ -65,8 +66,9 @@ export async function listAdminOrders(filters: OrderFilters): Promise<AdminOrder
   if (filters.to) query = query.lt("created_at", new Date(Date.parse(`${filters.to}T00:00:00+08:00`) + 86400000).toISOString());
   if (filters.payment === "recorded") query = query.not("paid_at", "is", null);
   if (filters.payment === "unrecorded") query = query.is("paid_at", null);
-  if (["undelivered", "generating", "failed"].includes(filters.delivery)) query = query.is("final_assets", null);
+  if (["undelivered", "generating", "failed", "review"].includes(filters.delivery)) query = query.is("final_assets", null);
   if (["generating", "failed"].includes(filters.delivery)) query = query.eq("status", filters.delivery);
+  if (filters.delivery === "review") query = query.or(REVIEW_FILTER);
   if (filters.provider) query = query.eq("music_provider", filters.provider);
   const start = (filters.page - 1) * PAGE_SIZE;
   const { data, error, count } = await query.order("created_at", { ascending: false }).order("id", { ascending: false }).range(start, start + PAGE_SIZE - 1);
