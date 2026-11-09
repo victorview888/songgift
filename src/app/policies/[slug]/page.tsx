@@ -13,6 +13,7 @@ const documents = {
     ["Your rights", "This guidance does not limit any consumer rights that apply to your purchase."],
   ] },
   "audio-storage": { title: "Keeping your audio", description: "Access your private SongGift audio and keep a downloaded backup.", sections: [
+    ["Long-term storage", "We currently keep purchased songs in your account long term, without a scheduled expiry for the finished audio. We still recommend downloading your song and keeping your own backup."],
     ["Download your finished song", "When your song is ready, open My Songs and download the audio. Keep a copy in a location you control and back it up, especially before the occasion you are planning."],
     ["Account access and playback links", "Your saved songs are private to your SongGift account. Playback and download links can expire. Reopen the song from My Songs to request a fresh link to the stored audio; an expired link alone does not mean the song has been deleted."],
     ["Browser drafts and saved orders", "An unfinished browser draft can be restored in the same tab for up to 24 hours. It is separate from an order saved to your account. Clearing a browser draft or logging out does not delete your saved songs."],

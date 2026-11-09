@@ -11,7 +11,7 @@
   "triggers": { "crons": ["* * * * *"] },
   "observability": { "enabled": true },
   "vars": {
-    "SONGGIFT_MAINTENANCE_ENABLED": "true",
+    "SONGGIFT_MAINTENANCE_ENABLED": "false",
     "SUPABASE_URL": "https://ngggfgfpaxzwjphkwmpy.supabase.co",
     "SUPABASE_STORAGE_BUCKET": "songs",
     "SONGGIFT_SITE_URL": "https://www.songforalways.com"

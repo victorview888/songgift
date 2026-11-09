@@ -118,3 +118,12 @@ Rollback: the previous Vercel CNAME target for both @ and www was
 79f0b83b9d974619.vercel-dns-017.com, DNS only, TTL Auto. Keep the Vercel project as
 a fallback. Remove the custom Worker domain and disable the apex redirect before
 restoring those two records. Supabase data does not need to be moved or restored.
+
+
+## 2026-11-09 功能版本发布与回退
+
+当前管理后台分支同时包含客户支付/生成和自动交付变更；按
+[本次发布说明](release-2026-11-09.md) 先完成数据库备份、增量迁移与 Owner 初始化，
+再合并触发网站部署。上述旧 Vercel DNS 恢复步骤是主机迁移时的历史回退方案，
+不作为这次功能发布的默认回退方式。本次优先保留 Cloudflare 的原 Worker 版本，
+关闭独立定时处理、控制新写入后再切换兼容版本；不删除新增数据和音频。
