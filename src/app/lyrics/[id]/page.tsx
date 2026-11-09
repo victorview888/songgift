@@ -15,6 +15,7 @@ export default function LyricsPage() {
   const [lyrics, setLyrics] = useState("");
   const [savedLyrics, setSavedLyrics] = useState("");
   const [busy, setBusy] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const captureStarted = useRef(false);
@@ -72,10 +73,17 @@ export default function LyricsPage() {
   async function save() {
     const response = await fetch("/api/orders/" + id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lyricsText: lyrics }) });
     const data = await response.json(); if (!response.ok) throw new Error(data.error || "We couldn't save your lyrics.");
-    setSavedLyrics(lyrics); setMessage("Your lyrics are saved to your account.");
+    setSavedLyrics(lyrics);
+  }
+  async function saveLyrics() {
+    if (busy) return;
+    setBusy(true); setSaveStatus("saving"); setError(""); setMessage("");
+    try { await save(); setSaveStatus("saved"); }
+    catch (caught) { setSaveStatus("idle"); setError(caught instanceof Error ? caught.message : "Please try again."); }
+    finally { setBusy(false); }
   }
   async function submit(event: FormEvent) {
-    event.preventDefault(); setBusy(true); setError(""); setMessage(order?.paid_at ? "Starting your song…" : "Opening secure PayPal checkout…");
+    event.preventDefault(); setBusy(true); setSaveStatus("idle"); setError(""); setMessage(order?.paid_at ? "Starting your song…" : "Opening secure PayPal checkout…");
     try {
       await save();
       if (order?.paid_at) { await generate(); return; }
@@ -86,5 +94,5 @@ export default function LyricsPage() {
       window.location.assign(data.approvalUrl);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Please try again."); setBusy(false); setMessage(""); }
   }
-  return <main className="form-page"><AccountHeader step="Step 2 of 3" /><section className="form-shell lyrics-shell"><div className="form-intro"><p className="section-kicker">Your personal lyrics</p><h1>{order ? `A song for ${order.recipient_name} starts here.` : "Finding your lyrics…"}</h1><p>Read through the lyrics and make any changes you like. Your story is saved to your account.</p></div>{order && <form className="story-form lyrics-form" onSubmit={submit}><div className="lyrics-toolbar"><span>{order.title || "Your song"}</span><small>{lyrics === savedLyrics ? "Saved to your account" : "Unsaved changes"}</small></div><textarea className="lyrics-editor" aria-label="Song lyrics" value={lyrics} maxLength={12000} minLength={20} required disabled={busy} onChange={(event) => setLyrics(event.target.value)} /><div className="form-submit-row"><button className="text-button" type="button" disabled={busy || lyrics === savedLyrics} onClick={async () => { setBusy(true); setError(""); try { await save(); } catch (caught) { setError(caught instanceof Error ? caught.message : "Please try again."); } finally { setBusy(false); } }}>Save lyrics</button><button className="primary-button" type="submit" disabled={busy || (!order.paid_at && !checkoutPrice)}>{busy ? "Please wait…" : order.paid_at ? "Create my song" : checkoutPrice ? `Pay ${checkoutPrice} · Create song` : "Pay and create song"}<span aria-hidden="true">↗</span></button></div></form>}{message && <p className="form-note" role="status">{message}</p>}{error && <p className="form-error" role="alert">{error}</p>}<Link className="text-link back-to-library" href="/my-songs">← My Songs</Link></section></main>;
+  return <main className="form-page"><AccountHeader step="Step 2 of 3" /><section className="form-shell lyrics-shell"><div className="form-intro"><p className="section-kicker">Your personal lyrics</p><h1>{order ? `A song for ${order.recipient_name} starts here.` : "Finding your lyrics…"}</h1><p>Read through the lyrics and make any changes you like. Your story is saved to your account.</p></div>{order && <form className="story-form lyrics-form" onSubmit={submit}><div className="lyrics-toolbar"><span>{order.title || "Your song"}</span><small>{lyrics === savedLyrics ? "Saved to your account" : "Unsaved changes"}</small></div><textarea className="lyrics-editor" aria-label="Song lyrics" value={lyrics} maxLength={12000} minLength={20} required disabled={busy} onChange={(event) => { setLyrics(event.target.value); setSaveStatus("idle"); }} /><div className="form-submit-row"><div className="lyrics-save-actions"><button className="text-button" type="button" disabled={busy || lyrics === savedLyrics} onClick={() => void saveLyrics()}>{saveStatus === "saving" ? "Saving…" : "Save lyrics"}</button><p className="lyrics-save-feedback" data-state={saveStatus} role="status" aria-live="polite" aria-atomic="true">{saveStatus === "saved" ? <><span aria-hidden="true">✓</span> Lyrics saved successfully.</> : saveStatus === "saving" ? "Saving your lyrics…" : ""}</p></div><button className="primary-button" type="submit" disabled={busy || (!order.paid_at && !checkoutPrice)}>{busy && saveStatus !== "saving" ? "Please wait…" : order.paid_at ? "Create my song" : checkoutPrice ? `Pay ${checkoutPrice} · Create song` : "Pay and create song"}<span aria-hidden="true">↗</span></button></div></form>}{message && <p className="form-note" role="status">{message}</p>}{error && <p className="form-error" role="alert">{error}</p>}<Link className="text-link back-to-library" href="/my-songs">← My Songs</Link></section></main>;
 }

@@ -114,3 +114,8 @@
 .policy-document { max-width: 800px; }
 @media(max-width:600px) { .customer-shell { width: calc(100% - 32px); }.customer-links { gap: 10px 20px; }.customer-card { padding: 22px; }.payment-card { grid-template-columns: 1fr; gap: 12px; }.payment-card-value { align-items: flex-start; }.payment-card-value strong { text-align: left; }.receipt-fields { grid-template-columns: 1fr; gap: 4px; }.receipt-fields dd { margin-bottom: 14px; } }
 @media print { .site-header, .customer-links, .receipt-actions, .library-footnote { display: none !important; } body { background: white !important; color: black !important; }.customer-shell { width: 100%; margin: 0; }.customer-title { font-size: 28px; }.customer-card { border-radius: 0; padding: 20px; box-shadow: none; }.receipt-transaction, .receipt-summary { break-inside: avoid; } }
+
+.lyrics-save-actions { display: grid; gap: 5px; min-width: 0; justify-items: start; }
+.lyrics-form .lyrics-save-feedback { display: flex; align-items: center; gap: 6px; min-height: 20px; margin: 0; color: #315b40; font-size: 13px; line-height: 1.5; }
+.lyrics-form .lyrics-save-feedback span { color: inherit; font-weight: 700; }
+.lyrics-save-feedback[data-state="saving"] { color: var(--muted); }
