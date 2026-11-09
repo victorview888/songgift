@@ -11,7 +11,7 @@ export function paymentSummary(record: CustomerPayment) {
   const captures = record.transactions.filter(t => t.type === "capture"), capture = captures[0];
   const refunds = record.transactions.filter(t => t.type === "refund");
   const test = record.transactions.length ? record.transactions.every(t => t.environment === "sandbox") : record.quote?.environment === "sandbox";
-  if (record.historyTruncated || captures.length > 1 || (!capture && refunds.length) || refunds.some(t => t.currency !== capture?.currency || t.environment !== capture?.environment)) return { label: "Payment record needs review", amount: "Amount unverified", test };
+  if (record.historyTruncated || captures.length > 1 || (!capture && refunds.length) || refunds.some(t => t.provider !== capture?.provider || t.currency !== capture?.currency || t.environment !== capture?.environment)) return { label: "Payment record needs review", amount: "Amount unverified", test };
   if (!capture) return { label: record.paidAt ? "Historical payment · amount unverified" : "No verified payment recorded", amount: record.paidAt ? "Amount unverified" : "Not recorded", test: record.quote?.environment === "sandbox" };
   const refunded = refunds.reduce((total, t) => total + t.amountMinor, 0);
   if (refunded > capture.amountMinor) return { label: "Payment record needs review", amount: "Amount unverified", test: capture.environment === "sandbox" };

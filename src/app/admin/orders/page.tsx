@@ -43,7 +43,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
         <FilterSelect name="provider" label="音乐供应商" value={filters?.provider ?? ""} options={[["", "全部"], ...providers.map(provider => [provider, provider] as [string, string])]} />
         <div className="admin-filter-actions"><button className="admin-button" type="submit">查询</button><Link className="admin-button admin-button-quiet" href="/admin/orders">重置</Link></div>
       </form>
-      <p className="admin-order-note">支付状态仅依据本地 paid_at，不代表已向 PayPal 对账。最终音频依据资产入库记录，不探测实际文件。历史金额及支付环境尚未记录，均不推算。邮箱为订单记录邮箱。</p>
+      <p className="admin-order-note">支付状态仅依据本地 paid_at，不代表已向支付平台对账。最终音频依据资产入库记录，不探测实际文件。历史金额及支付环境尚未记录，均不推算。邮箱为订单记录邮箱。</p>
       <LoadState error={errorMessage}><Link href="/admin/orders">返回订单列表</Link></LoadState>
       {result && <>
         <div className="admin-order-count" role="status">共 {result.total} 笔订单 · 第 {result.page} 页 / {Math.max(1, result.totalPages)} 页</div>

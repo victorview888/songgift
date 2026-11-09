@@ -4,7 +4,7 @@ import { AdminCard, AdminTimeline, shortDate, Status } from "./ui";
 export function recordedMoney(amount: number, currency: string) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount / 100);
 }
-const eventLabels: Record<string, string> = { "quote.created": "订单报价已保存", "payment.captured": "收款流水已登记", "generation.reserved": "生成任务已预留", "generation.bound": "供应商任务引用已保存", "generation.state": "生成任务状态已记录", "generation.completed": "生成任务已完成入库", "admin.requested": "管理员处理请求已记录", "admin.finished": "管理员处理结果已记录" };
+const eventLabels: Record<string, string> = { "quote.created": "订单报价已保存", "payment.captured": "收款流水已登记", "payment.refunded": "退款流水已登记", "payment.review": "付款异常待人工核查", "generation.reserved": "生成任务已预留", "generation.bound": "供应商任务引用已保存", "generation.state": "生成任务状态已记录", "generation.completed": "生成任务已完成入库", "admin.requested": "管理员处理请求已记录", "admin.finished": "管理员处理结果已记录" };
 const errorLabels: Record<string, string> = { submission_unknown: "提交结果待确认", provider_failed: "供应商报告失败", query_failed: "状态查询失败", storage_failed: "音频保存失败，需恢复保存" };
 
 export function AdminOrderHistory({ history }: { history: OrderHistory }) {

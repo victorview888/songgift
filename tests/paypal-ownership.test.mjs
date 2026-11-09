@@ -13,7 +13,7 @@ function fixture(responses,envOverrides={}) {
  const calls=[],writes=[],queue=[{access_token:'test-token'},...responses];
  const env={PAYPAL_CLIENT_ID:'test-id',PAYPAL_CLIENT_SECRET:'test-secret',PAYPAL_LIVE_CLIENT_ID:'live-id',PAYPAL_LIVE_CLIENT_SECRET:'live-secret',PAYPAL_ENVIRONMENT:'sandbox',...envOverrides};
  const usdMinor=value=>{if(!/^(0|[1-9]\d*)(\.\d{1,2})?$/.test(value))throw new Error('invalid');const [whole,decimal='']=value.split('.');return Number(whole)*100+Number(decimal.padEnd(2,'0'));};
- const imports={'@/lib/auth/server':{HttpError},'@/lib/http-error':{HttpError},'@/lib/services/order-operations':{usdMinor,recordVerifiedCapture:async data=>{writes.push(data);}}};
+ const imports={'@/lib/auth/server':{HttpError},'@/lib/http-error':{HttpError},'@/lib/payments/capture-guard':{assertPayPalCaptureAllowed:async()=>{}},'@/lib/services/order-operations':{usdMinor,recordVerifiedCapture:async data=>{writes.push(data);}}};
  const globals={Buffer,URL,AbortSignal,process:{env},fetch:async(url,init)=>{calls.push({url,init});const next=queue.shift();assert.ok(next,'Unexpected provider request');if(next instanceof Error)throw next;return new Response(JSON.stringify(next.body||next),{status:next.httpStatus||200});}};
  const compiled=ts.transpileModule(readFileSync('src/lib/paypal.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
  const api={};vm.runInNewContext('(function(exports,require){'+compiled+'\n})',globals)(api,id=>{assert.ok(imports[id],id);return imports[id];});

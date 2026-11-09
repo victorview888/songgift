@@ -4,17 +4,17 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isOrderId } from "@/lib/supabase/orders";
 import type { CustomerPayment, CustomerPaymentsPage } from "@/lib/types/payments";
 
-const columns = "id,title,recipient_name,created_at,paid_at,quoted_amount_minor,currency,payment_environment,quoted_at,payment_transactions(id,transaction_type,external_id,environment,amount_minor,currency,occurred_at)";
+const columns = "id,title,recipient_name,created_at,paid_at,quoted_amount_minor,currency,payment_environment,quoted_at,payment_transactions(id,provider,transaction_type,external_id,environment,amount_minor,currency,occurred_at)";
 type Row = {
   id: string; title: string | null; recipient_name: string; created_at: string; paid_at: string | null;
   quoted_amount_minor: number | null; currency: string | null; payment_environment: "sandbox" | "live" | null; quoted_at: string | null;
-  payment_transactions: { id: string; transaction_type: "capture" | "refund"; external_id: string; environment: "sandbox" | "live"; amount_minor: number; currency: string; occurred_at: string }[];
+  payment_transactions: { id: string; provider: "paypal" | "waffo"; transaction_type: "capture" | "refund"; external_id: string; environment: "sandbox" | "live"; amount_minor: number; currency: string; occurred_at: string }[];
 };
 function project(row: Row): CustomerPayment {
   return {
     orderId: row.id, title: row.title, recipientName: row.recipient_name, createdAt: row.created_at, paidAt: row.paid_at,
     quote: row.quoted_amount_minor !== null && row.currency && row.payment_environment && row.quoted_at ? { amountMinor: row.quoted_amount_minor, currency: row.currency, environment: row.payment_environment, quotedAt: row.quoted_at } : null,
-    transactions: row.payment_transactions.slice(0, 50).map(t => ({ id: t.id, type: t.transaction_type, externalId: t.external_id, environment: t.environment, amountMinor: t.amount_minor, currency: t.currency, occurredAt: t.occurred_at })),
+    transactions: row.payment_transactions.slice(0, 50).map(t => ({ id: t.id, provider: t.provider, type: t.transaction_type, externalId: t.external_id, environment: t.environment, amountMinor: t.amount_minor, currency: t.currency, occurredAt: t.occurred_at })),
     historyTruncated: row.payment_transactions.length > 50,
   };
 }

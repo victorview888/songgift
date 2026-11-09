@@ -1,5 +1,6 @@
 import { HttpError } from "@/lib/http-error";
 import { recordVerifiedCapture, usdMinor, type Quote } from "@/lib/services/order-operations";
+import { assertPayPalCaptureAllowed } from "@/lib/payments/capture-guard";
 
 type Environment = Quote["payment_environment"];
 type Payload = {
@@ -75,6 +76,9 @@ export async function capturePayPalOrder(paypalOrderId: string, owner: { userId:
   const token = await accessToken(quote.payment_environment);
   let payload = await readOrder(paypalOrderId, quote, token);
   if (payload.status !== "COMPLETED") {
+    // A customer can return to an old PayPal tab after paying through Waffo.
+    // Check the existing ledger before requesting any new capture.
+    await assertPayPalCaptureAllowed(quote.id, owner.userId);
     if (payload.status !== "APPROVED") throw new HttpError(409, "Please approve this payment in PayPal first.");
     try {
       await fetch(base(quote.payment_environment) + "/v2/checkout/orders/" + encodeURIComponent(paypalOrderId) + "/capture", {

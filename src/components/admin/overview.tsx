@@ -29,7 +29,7 @@ export function Overview({ data }: { data: AdminOverview }) {
     </div>
     <AdminCard title="统计口径"><ul className="admin-overview-notes">
       <li>除“今日新订单”外均为全部历史记录；今日按北京时间（UTC+8）的自然日计算。</li>
-      <li>付款数来自本地付款时间，不代表实时 PayPal 对账；最终音频数不验证文件可用性或邮件送达。</li>
+      <li>付款数来自本地付款时间，不代表实时支付平台对账；最终音频数不验证文件可用性或邮件送达。</li>
       <li>待核查异常：没有最终音频，且本地标记失败、标记完成或留有生成错误。</li>
       <li>页面只读取本地记录。统计不自动刷新，可用“刷新统计”重新读取。</li>
     </ul><p className="admin-order-note">最近读取：<time dateTime={data.generatedAt}>{shortDate(data.generatedAt)}</time>（UTC+8）。各项独立查询，记录变化时可能有短暂差异。</p></AdminCard>

@@ -19,7 +19,7 @@ export type AdminOperationAction = "payment.reconcile" | "generation.sync" | "ge
 export type AuditResult = "requested" | "succeeded" | "failed" | "needs_review";
 type Operation = { id: string; request_id: string; result: AuditResult };
 
-const conflicts = new Set(["quote_immutable", "legacy_payment_needs_review", "payment_mismatch", "capture_conflict", "submission_conflict", "generation_needs_review", "stale_lease", "job_busy", "job_not_recoverable", "storage_must_resume", "asset_mismatch", "operation_conflict", "operation_already_finished", "output_conflict", "generation_input_immutable"]);
+const conflicts = new Set(["payment_needs_review", "quote_immutable", "legacy_payment_needs_review", "payment_mismatch", "capture_conflict", "submission_conflict", "generation_needs_review", "stale_lease", "job_busy", "job_not_recoverable", "storage_must_resume", "asset_mismatch", "operation_conflict", "operation_already_finished", "output_conflict", "generation_input_immutable"]);
 async function operationRpc<T>(name: string, params: Record<string, unknown>): Promise<T> {
   const { data, error } = await getSupabaseAdmin().rpc(name, params);
   if (error || !data) {
@@ -54,8 +54,10 @@ export async function prepareOrderQuote(orderId: string, user: Pick<User, "id" |
   return { id: row.id, quoted_amount_minor: row.quoted_amount_minor, currency: row.currency, payment_environment: row.payment_environment, price_version: row.price_version, quoted_at: row.quoted_at };
 }
 
-export function recordVerifiedCapture(input: { orderId: string; userId: string; paypalOrderId: string; captureId: string; environment: "sandbox" | "live"; amountMinor: number; currency: "USD"; occurredAt: string }) {
-  return operationRpc<{ id: string }>("record_songgift_capture", { p_order_id: input.orderId, p_user_id: input.userId, p_paypal_order_id: input.paypalOrderId, p_capture_id: input.captureId, p_environment: input.environment, p_amount_minor: input.amountMinor, p_currency: input.currency, p_occurred_at: input.occurredAt });
+export async function recordVerifiedCapture(input: { orderId: string; userId: string; paypalOrderId: string; captureId: string; environment: "sandbox" | "live"; amountMinor: number; currency: "USD"; occurredAt: string }) {
+  const recorded = await operationRpc<{ id: string; review_required?: boolean }>("record_songgift_paypal_capture_checked", { p_order_id: input.orderId, p_user_id: input.userId, p_paypal_order_id: input.paypalOrderId, p_capture_id: input.captureId, p_environment: input.environment, p_amount_minor: input.amountMinor, p_currency: input.currency, p_occurred_at: input.occurredAt });
+  if (recorded.review_required) throw new HttpError(409, "Another payment is already recorded. This additional payment is saved for review; please contact support.");
+  return recorded;
 }
 export function reserveGeneration(input: { orderId: string; userId: string; requestId: string; provider: string; model: string; environment: "production" | "test" }) {
   return operationRpc<{ created: boolean; job: GenerationJob }>("reserve_songgift_generation", { p_order_id: input.orderId, p_user_id: input.userId, p_request_id: input.requestId, p_provider: input.provider, p_model: input.model, p_environment: input.environment });
