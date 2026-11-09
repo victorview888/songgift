@@ -10,7 +10,14 @@
     "dev:vinext": "vite dev --port 3001",
     "build:vinext": "vite build",
     "start:vinext": "wrangler dev --config dist/server/wrangler.json",
-    "deploy:vinext": "wrangler deploy --config dist/server/wrangler.json"
+    "deploy:vinext": "wrangler deploy --config dist/server/wrangler.json",
+    "test:admin": "node --test tests/admin-permissions.test.mjs tests/admin-migration.test.mjs tests/admin-owner-tool.test.mjs tests/admin-orders.test.mjs tests/admin-order-detail.test.mjs tests/order-operations.test.mjs tests/order-operations-service.test.mjs tests/admin-overview.test.mjs tests/admin-jobs.test.mjs",
+    "test:customer": "node --test tests/customer-operations.test.mjs tests/paypal-ownership.test.mjs tests/fal-lyria-provider.test.mjs tests/music-routing.test.mjs",
+    "build:maintenance": "wrangler deploy --config wrangler.maintenance.jsonc --dry-run --outdir dist/maintenance",
+    "deploy:maintenance": "wrangler deploy --config wrangler.maintenance.jsonc",
+    "test:delivery": "node --test tests/delivery-operations.test.mjs",
+    "test:drafts": "node --test tests/story-drafts.test.mjs",
+    "test:account": "node --test tests/customer-account.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -24,6 +31,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.67.0",
+    "@electric-sql/pglite": "0.5.15",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

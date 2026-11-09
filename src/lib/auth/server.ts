@@ -2,16 +2,10 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
-export class HttpError extends Error {
-  constructor(public status: number, message: string) { super(message); }
-}
+import { HttpError } from "@/lib/http-error";
+export { HttpError } from "@/lib/http-error";
 
-export function safeNext(value: unknown, fallback = "/my-songs") {
-  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || /[\\\r\n]/.test(value)) return fallback;
-  const url = new URL(value, "https://songgift.invalid");
-  if (url.origin !== "https://songgift.invalid" || url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/")) return fallback;
-  return url.pathname + url.search + url.hash;
-}
+export { safeNext } from "./redirect";
 
 export type AuthContext = { supabase: SupabaseClient; user: User | null };
 

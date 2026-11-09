@@ -14,6 +14,6 @@ export async function GET(request: Request) {
     if (filter === "draft") query = query.in("status", ["draft", "lyrics_ready", "paid"]);
     const { data, error, count } = await query;
     if (error) throw new Error("Could not list orders: " + error.message);
-    return NextResponse.json({ orders: data || [], total: count || 0, page, pageSize });
+    return NextResponse.json({ orders: (data || []).map(order => ({ ...order, song_assets: order.song_assets.filter((asset: { is_final: boolean }) => asset.is_final) })), total: count || 0, page, pageSize });
   });
 }

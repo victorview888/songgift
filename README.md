@@ -123,3 +123,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 Email sign-in, private My Songs library, persistent lyrics, and protected downloads
 are described in [docs/user-accounts.md](docs/user-accounts.md).
 Public authentication email delivery requires custom SMTP.
+
+
+## Administrator access
+
+The permission foundation adds a server-verified Owner entry at /admin. See [admin access](docs/admin-access.md) for the empty-table migration, reviewed Owner initialization, revocation, and isolated runtime checks. Run npm run test:admin for the permission, PostgreSQL, and bootstrap-tool tests. No production administrator is created automatically.

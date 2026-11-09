@@ -83,16 +83,8 @@ async function tests() {
   assert.equal((await a('/api/music/status/arbitrary-job?orderId='+f.otherId)).status,404);ok('Other-account reads, downloads, lyrics changes, music and payment requests are rejected before provider calls');
   assert.equal((await a('/api/music','POST',{orderId:f.draftId})).status,402);
   const completed=await a('/api/music','POST',{orderId:f.audioId});assert.equal(completed.status,200);assert.equal((await completed.json()).status,'completed');ok('Unpaid drafts are blocked and completed songs do not request another generation');
-  const ts = requireApp('typescript');
-  const source = fs.readFileSync(path.join(process.cwd(), 'src/lib/supabase/song-assets.ts'), 'utf8');
-  const compiled = ts.transpileModule(source, {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
-  const helpers = {};
-  new Function('exports', 'require', compiled)(helpers, (id) => {assert.equal(id, './admin');return {getSupabaseAdmin:()=>admin};});
-  const tone = Buffer.from(await (await admin.storage.from('songs').download(f.path)).data.arrayBuffer());
-  check(await admin.from('song_orders').update({status:'generating'}).eq('id',f.audioId), 'Set disposable fixture generating');
-  const persisted = await helpers.persistGeneratedAudio(f.audioId, {provider:'qa-test-tone',model:'not-generated',status:'completed',mimeType:'audio/wav',audioBase64:tone.toString('base64')});
-  f.extraAssets = [...(f.extraAssets||[]), {id:persisted.assetId,path:persisted.storagePath}]; save(f);
-  const state=check(await admin.from('song_orders').select('status').eq('id',f.audioId).single(),'Read completed fixture');assert.equal(state.status,'completed');ok('Real audio persistence marks the order completed and discoverable in the ready filter');
+  // Leased generation/persistence is covered by the isolated customer-operations
+  // integration tests. This account check uses its existing disposable WAV asset.
   const edit=await a('/api/orders/'+f.draftId,'PATCH',{lyricsText:'[Verse]\nA saved lyric edit for a disposable test.\n[Chorus]\nThis change must survive a fresh page load.'});assert.equal(edit.status,200);
   const fresh=await (await a('/api/orders/'+f.draftId)).json();assert.ok(fresh.order.lyrics_text.includes('survive a fresh page load'));ok('Approved lyrics persist in the database');
   response=await a(`/api/orders/${f.audioId}/audio?download=1`);assert.equal(response.status,302);assert.match(response.headers.get('cache-control'),/no-store/);

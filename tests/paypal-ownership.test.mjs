@@ -4,88 +4,55 @@ import test from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
 
-function fixture(orderResponses, envOverrides={}) {
-  const calls = [], writes = [], filters = [];
-  const payloads = [{ access_token: "test-access-token" }, ...orderResponses];
-  const query = { eq: (key, value) => { filters.push([key, value]); return query; }, is: (key, value) => { filters.push([key, value]); return Promise.resolve({ error: null }); } };
-  const db = { from: () => ({ update: (data) => { writes.push(data); return query; } }) };
-  const context = vm.createContext({ Buffer, process: { env: { PAYPAL_CLIENT_ID:"test-id", PAYPAL_CLIENT_SECRET:"test-secret", PAYPAL_ENVIRONMENT:"sandbox", SONG_PRICE_USD:"9.99", PAYPAL_CURRENCY:"USD", ...envOverrides } }, fetch: async (url, init) => { calls.push({url,init}); const next=payloads.shift(); assert.ok(next,"Unexpected provider call"); return new Response(JSON.stringify(next.body || next),{status:next.httpStatus || 200}); } });
-  const source = readFileSync("src/lib/paypal.ts", "utf8");
-  const compiled = ts.transpileModule(source, { compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022} }).outputText;
-  const exports={};vm.runInContext(`(function(exports,require){${compiled}\n})`,context)(exports,()=>({getSupabaseAdmin:()=>db}));
-  const pricingSource = readFileSync("src/lib/pricing.ts", "utf8");
-  const pricingCompiled = ts.transpileModule(pricingSource, { compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022} }).outputText;
-  const pricingExports={};vm.runInContext(`(function(exports){${pricingCompiled}\n})`,context)(pricingExports);
-  return {...exports,...pricingExports,calls,writes,filters};
+const quote={id:'c3f10454-1234-4234-8234-000000000001',quoted_amount_minor:999,currency:'USD',payment_environment:'sandbox',quoted_at:'2026-11-06T00:00:00Z',price_version:'v1'};
+const owner={userId:'customer-a',quote};
+const capture={id:'CAP-A',status:'COMPLETED',final_capture:true,create_time:'2026-11-06T01:00:00Z',amount:{currency_code:'USD',value:'9.99'}};
+const order=(status='APPROVED',extra={})=>({id:'PP-A',status,purchase_units:[{custom_id:quote.id,amount:{currency_code:'USD',value:'9.99'},...(status==='COMPLETED'?{payments:{captures:[capture]}}:{})}],links:[{rel:'approve',href:'https://www.sandbox.paypal.com/checkoutnow?token=A'}],...extra});
+class HttpError extends Error{constructor(status,message){super(message);this.status=status;}}
+function fixture(responses,envOverrides={}) {
+ const calls=[],writes=[],queue=[{access_token:'test-token'},...responses];
+ const env={PAYPAL_CLIENT_ID:'test-id',PAYPAL_CLIENT_SECRET:'test-secret',PAYPAL_LIVE_CLIENT_ID:'live-id',PAYPAL_LIVE_CLIENT_SECRET:'live-secret',PAYPAL_ENVIRONMENT:'sandbox',...envOverrides};
+ const usdMinor=value=>{if(!/^(0|[1-9]\d*)(\.\d{1,2})?$/.test(value))throw new Error('invalid');const [whole,decimal='']=value.split('.');return Number(whole)*100+Number(decimal.padEnd(2,'0'));};
+ const imports={'@/lib/auth/server':{HttpError},'@/lib/http-error':{HttpError},'@/lib/services/order-operations':{usdMinor,recordVerifiedCapture:async data=>{writes.push(data);}}};
+ const globals={Buffer,URL,AbortSignal,process:{env},fetch:async(url,init)=>{calls.push({url,init});const next=queue.shift();assert.ok(next,'Unexpected provider request');if(next instanceof Error)throw next;return new Response(JSON.stringify(next.body||next),{status:next.httpStatus||200});}};
+ const compiled=ts.transpileModule(readFileSync('src/lib/paypal.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+ const api={};vm.runInNewContext('(function(exports,require){'+compiled+'\n})',globals)(api,id=>{assert.ok(imports[id],id);return imports[id];});
+ return {...api,calls,writes};
 }
-const owner={orderId:"song-order-a",userId:"customer-a",priceUsd:"9.99"};
-const paypalOrder=(status="APPROVED",extra={})=>({id:"paypal-order-a",status,purchase_units:[{custom_id:owner.orderId,amount:{currency_code:"USD",value:"9.99"}}],...extra});
 
-test("Sandbox checkout ignores Live credentials staged ahead of cutover",async()=>{
-  const f=fixture([{id:"paypal-order-a",links:[{rel:"approve",href:"https://www.sandbox.paypal.com/checkoutnow"}]}],{PAYPAL_LIVE_CLIENT_ID:"live-id",PAYPAL_LIVE_CLIENT_SECRET:"live-secret"});
-  await f.createPayPalOrder(owner.orderId,owner.priceUsd,{returnUrl:"https://www.songforalways.com/lyrics/song-order-a",cancelUrl:"https://www.songforalways.com/lyrics/song-order-a"});
-  assert.equal(f.calls[0].url,"https://api-m.sandbox.paypal.com/v1/oauth2/token");
-  assert.equal(f.calls[0].init.headers.Authorization,"Basic "+Buffer.from("test-id:test-secret").toString("base64"));
+test('new checkout uses the snapshot amount/environment and a stable create request ID',async()=>{
+ const f=fixture([order()],{PAYPAL_ENVIRONMENT:'live',SONG_PRICE_USD:'29.99'});
+ await f.createPayPalOrder(quote,{returnUrl:'https://example.com/return',cancelUrl:'https://example.com/cancel'});
+ assert.match(f.calls[0].url,/sandbox/);const create=f.calls[1];assert.equal(create.init.headers['PayPal-Request-Id'],'sg-create-'+quote.id);
+ assert.equal(JSON.parse(create.init.body).purchase_units[0].amount.value,'9.99');
+ assert.equal(f.calls[0].init.headers.Authorization,'Basic '+Buffer.from('test-id:test-secret').toString('base64'));
 });
-
-test("Live checkout uses the Live endpoint and credential pair",async()=>{
-  const f=fixture([{id:"paypal-order-a",links:[{rel:"approve",href:"https://www.paypal.com/checkoutnow"}]}],{PAYPAL_ENVIRONMENT:"live",PAYPAL_LIVE_CLIENT_ID:"live-id",PAYPAL_LIVE_CLIENT_SECRET:"live-secret"});
-  await f.createPayPalOrder(owner.orderId,owner.priceUsd,{returnUrl:"https://www.songforalways.com/lyrics/song-order-a",cancelUrl:"https://www.songforalways.com/lyrics/song-order-a"});
-  assert.equal(f.calls[0].url,"https://api-m.paypal.com/v1/oauth2/token");
-  assert.equal(f.calls[0].init.headers.Authorization,"Basic "+Buffer.from("live-id:live-secret").toString("base64"));
-  assert.equal(f.calls[1].url,"https://api-m.paypal.com/v2/checkout/orders");
-  assert.equal(JSON.parse(f.calls[1].init.body).purchase_units[0].amount.value,"9.99");
+test('a stored Live quote selects Live credentials even after the current default changes',async()=>{
+ const live={...quote,payment_environment:'live'};const f=fixture([order('APPROVED',{links:[{rel:'approve',href:'https://www.paypal.com/checkoutnow?token=A'}]})]);
+ await f.createPayPalOrder(live,{returnUrl:'https://example.com',cancelUrl:'https://example.com'});assert.equal(new URL(f.calls[0].url).host,'api-m.paypal.com');assert.equal(f.calls[0].init.headers.Authorization,'Basic '+Buffer.from('live-id:live-secret').toString('base64'));
 });
-
-test("Live mode never falls back to Sandbox credentials",async()=>{
-  const f=fixture([],{PAYPAL_ENVIRONMENT:"live"});
-  await assert.rejects(f.createPayPalOrder(owner.orderId,owner.priceUsd),/PAYPAL_LIVE_CLIENT_ID and PAYPAL_LIVE_CLIENT_SECRET/);
-  assert.equal(f.calls.length,0);
+test('reopening an associated checkout uses GET instead of creating another payment',async()=>{
+ const f=fixture([order()]);await f.createPayPalOrder(quote,{returnUrl:'https://example.com',cancelUrl:'https://example.com'},'PP-A');assert.equal(f.calls[1].init.method,undefined);assert.equal(f.calls.length,2);
 });
-
-test("rejects a different song binding before capture or payment writes",async()=>{
-  const f=fixture([paypalOrder("APPROVED",{purchase_units:[{custom_id:"someone-else",amount:{currency_code:"USD",value:"9.99"}}]})]);
-  await assert.rejects(f.capturePayPalOrder("paypal-order-a",owner),/does not match/);
-  assert.equal(f.calls.filter(c=>c.url.endsWith("/capture")).length,0);assert.equal(f.writes.length,0);
+test('captures a matching approved order and records complete provider evidence',async()=>{
+ const f=fixture([order(),order('COMPLETED'),order('COMPLETED')]);await f.capturePayPalOrder('PP-A',owner);
+ assert.equal(f.calls.filter(c=>c.url.endsWith('/capture')).length,1);assert.equal(f.calls.find(c=>c.url.endsWith('/capture')).init.headers['PayPal-Request-Id'],'sg-capture-'+quote.id);
+ assert.deepEqual(JSON.parse(JSON.stringify(f.writes)),[{orderId:quote.id,userId:owner.userId,paypalOrderId:'PP-A',captureId:'CAP-A',environment:'sandbox',amountMinor:999,currency:'USD',occurredAt:'2026-11-06T01:00:00.000Z'}]);
 });
-test("rejects mismatched amount before capture",async()=>{
-  const f=fixture([paypalOrder("APPROVED",{purchase_units:[{custom_id:owner.orderId,amount:{currency_code:"USD",value:"0.01"}}]})]);
-  await assert.rejects(f.capturePayPalOrder("paypal-order-a",owner),/does not match/);assert.equal(f.writes.length,0);
-});
-test("verified test-account email pays $1 and other accounts pay $9.99",async()=>{
-  const f=fixture([{id:"paypal-order-a",links:[{rel:"approve",href:"https://www.sandbox.paypal.com/checkoutnow"}]}]);
-  const testPrice=f.songPriceUsdForEmail("  VictorView888@GMAIL.COM ");
-  assert.equal(testPrice,"1.00");
-  assert.equal(f.songPriceUsdForEmail("another@example.com"),"9.99");
-  assert.equal(f.songPriceUsdForEmail(undefined),"9.99");
-  await f.createPayPalOrder(owner.orderId,testPrice);
-  assert.equal(JSON.parse(f.calls[1].init.body).purchase_units[0].amount.value,"1.00");
-});
-test("a $1 checkout captures only for the test-account price",async()=>{
-  const paidOrder=paypalOrder("APPROVED",{purchase_units:[{custom_id:owner.orderId,amount:{currency_code:"USD",value:"1.00"}}]});
-  const f=fixture([paidOrder,{id:"paypal-order-a"},paypalOrder("COMPLETED",{purchase_units:paidOrder.purchase_units})]);
-  await f.capturePayPalOrder("paypal-order-a",{...owner,priceUsd:f.songPriceUsdForEmail("victorview888@gmail.com")});
-  assert.equal(f.writes.length,1);
-});
-test("a $1 checkout is rejected for an ordinary account before capture",async()=>{
-  const paidOrder=paypalOrder("APPROVED",{purchase_units:[{custom_id:owner.orderId,amount:{currency_code:"USD",value:"1.00"}}]});
-  const f=fixture([paidOrder]);
-  await assert.rejects(f.capturePayPalOrder("paypal-order-a",{...owner,priceUsd:f.songPriceUsdForEmail("another@example.com")}),/does not match/);
-  assert.equal(f.calls.filter(c=>c.url.endsWith("/capture")).length,0);
-  assert.equal(f.writes.length,0);
-});
-test("captures the matching order once and constrains writes to its owner",async()=>{
-  const f=fixture([paypalOrder(),paypalOrder("COMPLETED"),paypalOrder("COMPLETED")]);
-  const result=await f.capturePayPalOrder("paypal-order-a",owner);
-  assert.equal(result.orderId,owner.orderId);assert.equal(f.calls.filter(c=>c.url.endsWith("/capture")).length,1);
-  assert.equal(f.calls.find(c=>c.url.endsWith("/capture")).init.headers["PayPal-Request-Id"],owner.orderId);
-  assert.deepEqual(f.filters,[["id",owner.orderId],["user_id",owner.userId],["paypal_order_id","paypal-order-a"],["paid_at",null]]);
-});
-test("completed payment is idempotent and cannot reset a later generation status",async()=>{
-  const f=fixture([paypalOrder("COMPLETED")]);await f.capturePayPalOrder("paypal-order-a",owner);
-  assert.equal(f.calls.filter(c=>c.url.endsWith("/capture")).length,0);assert.ok(f.filters.some(([key,value])=>key==="paid_at"&&value===null));
-});
-test("failed capture never marks an order paid",async()=>{
-  const f=fixture([paypalOrder(),{httpStatus:422,body:{message:"Payment declined"}},paypalOrder()]);
-  await assert.rejects(f.capturePayPalOrder("paypal-order-a",owner),/not completed/);assert.equal(f.writes.length,0);
+test('completed orders are read and recorded without capturing again',async()=>{const f=fixture([order('COMPLETED')]);await f.capturePayPalOrder('PP-A',owner);assert.equal(f.calls.length,2);assert.equal(f.writes.length,1);});
+test('a lost capture response is resolved by reading the same order',async()=>{const f=fixture([order(),new Error('timeout'),order('COMPLETED')]);await f.capturePayPalOrder('PP-A',owner);assert.equal(f.writes.length,1);assert.equal(f.calls.filter(c=>c.url.endsWith('/capture')).length,1);});
+for(const [name,unit] of [
+ ['foreign custom ID',{custom_id:'OTHER',amount:{currency_code:'USD',value:'9.99'}}],
+ ['wrong currency',{custom_id:quote.id,amount:{currency_code:'EUR',value:'9.99'}}],
+ ['changed price',{custom_id:quote.id,amount:{currency_code:'USD',value:'1.00'}}],
+ ['scientific notation',{custom_id:quote.id,amount:{currency_code:'USD',value:'9.99e0'}}],
+])test('rejects '+name+' before capture',async()=>{const f=fixture([order('APPROVED',{purchase_units:[unit]})]);await assert.rejects(f.capturePayPalOrder('PP-A',owner),e=>e.status===409);assert.equal(f.writes.length,0);assert.equal(f.calls.filter(c=>c.url.endsWith('/capture')).length,0);});
+for(const [name,bad] of [
+ ['missing capture',[]],['pending capture',[{...capture,status:'PENDING'}]],['refunded capture',[{...capture,status:'REFUNDED'}]],['partial capture',[{...capture,final_capture:false}]],
+ ['mismatched capture amount',[{...capture,amount:{currency_code:'USD',value:'1.00'}}]],['invalid timestamp',[{...capture,create_time:'invalid'}]],['multiple captures',[capture,{...capture,id:'CAP-B'}]],
+])test('does not record '+name,async()=>{const f=fixture([order('COMPLETED',{purchase_units:[{custom_id:quote.id,amount:{currency_code:'USD',value:'9.99'},payments:{captures:bad}}]})]);await assert.rejects(f.capturePayPalOrder('PP-A',owner),e=>e.status===409);assert.equal(f.writes.length,0);});
+test('failed capture does not create a local payment fact',async()=>{const f=fixture([order(),{httpStatus:422,body:{message:'declined'}},order()]);await assert.rejects(f.capturePayPalOrder('PP-A',owner),e=>e.status===409);assert.equal(f.writes.length,0);});
+test('unapproved checkout and unsafe approval URL are rejected',async()=>{
+ const pending=fixture([order('CREATED')]);await assert.rejects(pending.capturePayPalOrder('PP-A',owner),e=>e.status===409);assert.equal(pending.calls.length,2);
+ const unsafe=fixture([order('APPROVED',{links:[{rel:'approve',href:'https://evil.example/steal'}]})]);await assert.rejects(unsafe.createPayPalOrder(quote,{returnUrl:'https://example.com',cancelUrl:'https://example.com'}),e=>e.status===409);
 });

@@ -92,10 +92,10 @@ export class MurekaCnProvider implements MusicProvider {
   private readonly baseUrl: string;
   private readonly model: string;
 
-  constructor() {
+  constructor(model?: string) {
     this.apiKey = process.env.MUREKA_API_KEY || "";
     this.baseUrl = (process.env.MUREKA_API_BASE_URL || "https://api.mureka.cn").replace(/\/$/, "");
-    this.model = process.env.MUREKA_MODEL || "auto";
+    this.model = model || process.env.MUREKA_MODEL || "auto";
   }
 
   private assertConfigured() {
@@ -108,12 +108,12 @@ export class MurekaCnProvider implements MusicProvider {
   private async request(path: string, init?: RequestInit) {
     const response = await fetch(this.baseUrl + path, {
       ...init,
+      cache: "no-store", signal: AbortSignal.timeout(30_000),
       headers: {
         Authorization: "Bearer " + this.apiKey,
         "Content-Type": "application/json",
         ...(init?.headers || {}),
       },
-      cache: "no-store",
     });
 
     const text = await response.text();

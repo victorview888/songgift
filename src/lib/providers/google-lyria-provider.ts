@@ -53,10 +53,10 @@ export class GoogleLyriaProvider implements MusicProvider {
   private readonly model: string;
   private readonly accessToken: string;
 
-  constructor() {
+  constructor(model?: string) {
     this.projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || "";
     this.location = process.env.GOOGLE_CLOUD_LOCATION || "global";
-    this.model = process.env.GOOGLE_LYRIA_MODEL || "lyria-3-pro-preview";
+    this.model = model || process.env.GOOGLE_LYRIA_MODEL || "lyria-3-pro-preview";
     this.accessToken =
       process.env.GOOGLE_LYRIA_ACCESS_TOKEN ||
       process.env.GOOGLE_ACCESS_TOKEN ||
@@ -90,6 +90,7 @@ export class GoogleLyriaProvider implements MusicProvider {
     this.assertConfigured();
     const response = await fetch(this.getEndpoint(), {
       method: "POST",
+      cache: "no-store", signal: AbortSignal.timeout(30_000),
       headers: {
         Authorization: "Bearer " + this.accessToken,
         "Content-Type": "application/json",
@@ -123,6 +124,7 @@ export class GoogleLyriaProvider implements MusicProvider {
   async getStatus(jobId: string): Promise<MusicGenerationResult> {
     this.assertConfigured();
     const response = await fetch(this.getEndpoint(jobId), {
+      cache: "no-store", signal: AbortSignal.timeout(30_000),
       headers: { Authorization: "Bearer " + this.accessToken },
     });
     if (!response.ok) {
