@@ -169,12 +169,12 @@ export default function LyricsPage() {
       {order && <form className="story-form lyrics-form" onSubmit={submit}>
         <div className="lyrics-toolbar"><span>{order.title || "Your song"}</span><small>{lyrics === savedLyrics ? "Saved to your account" : "Unsaved changes"}</small></div>
         <textarea className="lyrics-editor" aria-label="Song lyrics" value={lyrics} maxLength={12000} minLength={20} required disabled={busy || paymentPending} onChange={(event) => { setLyrics(event.target.value); setSaveStatus("idle"); }} />
+        <div className="lyrics-save-actions">
+          <button className="text-button" type="button" disabled={busy || paymentPending || lyrics === savedLyrics} onClick={() => void saveLyrics()}>{saveStatus === "saving" ? "Saving…" : "Save lyrics"}</button>
+          <p className="lyrics-save-feedback" data-state={saveStatus} role="status" aria-live="polite" aria-atomic="true">{saveStatus === "saved" ? <><span aria-hidden="true">✓</span> Lyrics saved successfully.</> : saveStatus === "saving" ? "Saving your lyrics…" : ""}</p>
+        </div>
         {!hasPaid && !paymentPending && <PaymentMethodSelector methods={paymentMethods} selected={paymentMethod} disabled={busy} onChange={setPaymentMethod} />}
         <div className="form-submit-row">
-          <div className="lyrics-save-actions">
-            <button className="text-button" type="button" disabled={busy || paymentPending || lyrics === savedLyrics} onClick={() => void saveLyrics()}>{saveStatus === "saving" ? "Saving…" : "Save lyrics"}</button>
-            <p className="lyrics-save-feedback" data-state={saveStatus} role="status" aria-live="polite" aria-atomic="true">{saveStatus === "saved" ? <><span aria-hidden="true">✓</span> Lyrics saved successfully.</> : saveStatus === "saving" ? "Saving your lyrics…" : ""}</p>
-          </div>
           <button className="primary-button" type="submit" disabled={busy || paymentPending || (!hasPaid && (!checkoutPrice || !canCheckout))}>
             {busy && saveStatus !== "saving" ? "Please wait…" : hasPaid ? "Create my song" : paymentPending ? "Confirming payment…" : checkoutPrice ? `Pay ${checkoutPrice} · Create song` : "Pay and create song"}<span aria-hidden="true">↗</span>
           </button>
