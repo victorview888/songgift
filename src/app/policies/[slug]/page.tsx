@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SupportShell } from "@/components/support-shell";
 import { publicPageMetadata } from "@/lib/seo";
+import { legalDetails, legalDocuments, type PolicyDocument } from "@/lib/legal/documents";
 
 const documents = {
   refunds: { title: "Payments & refund requests", description: "How to check a SongGift payment and ask for help with a refund.", sections: [
@@ -20,8 +21,13 @@ const documents = {
     ["If audio is unavailable", "If a fresh link does not play or download, contact support with the order reference. Keep your downloaded copy as your own backup rather than relying only on a hosted link."],
   ] },
 } as const;
-function document(slug: string) { return slug === "refunds" || slug === "audio-storage" ? documents[slug] : null; }
-export function generateStaticParams() { return Object.keys(documents).map(slug => ({ slug })); }
+function document(slug: string): PolicyDocument | null {
+  if (slug === "terms" || slug === "privacy") return legalDocuments[slug];
+  if (slug !== "refunds" && slug !== "audio-storage") return null;
+  const existing = documents[slug];
+  return { ...existing, sections: existing.sections.map(([title, body]) => ({ title, blocks: [{ kind: "paragraph", text: body }] })) };
+}
+export function generateStaticParams() { return [...Object.keys(documents), ...Object.keys(legalDocuments)].map(slug => ({ slug })); }
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params, doc = document(slug);
   return doc ? publicPageMetadata(doc.title + " | SongGift", doc.description, "/policies/" + slug) : { title: "Page not found", robots: { index: false } };
@@ -29,5 +35,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function PolicyPage({ params }: { params: Promise<{ slug: string }> }) {
   const doc = document((await params).slug);
   if (!doc) notFound();
-  return <SupportShell><article className="policy-document"><p className="section-kicker">SongGift guidance</p><h1 className="customer-title">{doc.title}</h1><p className="customer-intro">{doc.description}</p>{doc.sections.map(([title, body]) => <section className="customer-card" key={title}><h2>{title}</h2><p>{body}</p></section>)}<p><Link className="text-link" href="/contact">Contact support</Link> · <Link className="text-link" href="/help">Help centre</Link></p></article></SupportShell>;
+  return <SupportShell><article className="policy-document">
+    <p className="section-kicker">{doc.effectiveDate ? "SongGift policies" : "SongGift guidance"}</p>
+    <h1 className="customer-title">{doc.title}</h1>
+    <p className="customer-intro">{doc.description}</p>
+    {doc.effectiveDate && <>
+      <section className="customer-card policy-identity" aria-label="Policy details">
+        <dl>
+          <dt>Effective date</dt><dd><time dateTime={doc.effectiveDate}>10 November 2026</time></dd>
+          <dt>Operator</dt><dd lang="zh-CN">{legalDetails.operator}</dd>
+          <dt>Location</dt><dd>{legalDetails.location} <span lang="zh-CN">（中国上海）</span></dd>
+          <dt>Contact</dt><dd><a className="text-link" href={"mailto:" + legalDetails.email}>{legalDetails.email}</a></dd>
+        </dl>
+      </section>
+      <nav className="policy-toc" aria-label="On this page"><strong>On this page</strong>{doc.sections.map((section, i) => <a key={section.title} href={"#section-" + (i + 1)}>{section.title}</a>)}</nav>
+    </>}
+    {doc.sections.map((section, i) => <section className="customer-card" id={"section-" + (i + 1)} key={section.title}>
+      <h2>{section.title}</h2>
+      {section.blocks.map((block, j) => block.kind === "paragraph" ? <p key={j}>{block.text}</p> : block.kind === "list" ? <ul key={j}>{block.items.map(item => <li key={item}>{item}</li>)}</ul> : <div key={j} className="policy-provider-links">{block.links.map(link => <a className="text-link" key={link.href} href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a>)}</div>)}
+    </section>)}
+    <p><Link className="text-link" href="/contact">Contact support</Link> · <Link className="text-link" href="/help">Help centre</Link></p>
+  </article></SupportShell>;
 }
