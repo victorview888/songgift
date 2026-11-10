@@ -6,23 +6,25 @@ import {createHash} from 'node:crypto';
 import ts from 'typescript';
 import { PGlite } from '@electric-sql/pglite';
 import { createClient } from '@supabase/supabase-js';
+import * as waffoSdk from '@waffo/pancake-ts';
 
 export const userId='a3f10454-1234-4234-8234-012345678901';
 export const otherId='b3f10454-1234-4234-8234-012345678902';
 export function wav() {
   const b=Buffer.alloc(204);b.write('RIFF');b.writeUInt32LE(196,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(8000,24);b.writeUInt32LE(16000,28);b.writeUInt16LE(2,32);b.writeUInt16LE(16,34);b.write('data',36);b.writeUInt32LE(160,40);return b;
 }
-export async function fixture() {
+export async function fixture({legacyPayments=false}={}) {
  const db=new PGlite();
  await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema storage;
  create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
  create function auth.uid() returns uuid language sql as $$select null::uuid$$;
  create table storage.buckets(id text primary key,name text,public boolean);`);
- await db.exec(readFileSync('supabase/schema.sql','utf8').replace('create extension if not exists pgcrypto;',''));
+ const schema=readFileSync('supabase/schema.sql','utf8').replace('create extension if not exists pgcrypto;','');
+ await db.exec(legacyPayments ? schema.split('-- Apply after the six existing admin/customer/delivery/draft migrations.')[0] : schema);
  await db.query('insert into auth.users values ($1,\'owner@isolated.example\',now()),($2,\'other@isolated.example\',now())',[userId,otherId]);
  await db.exec('grant select,insert,update on public.song_orders,public.song_assets to service_role;set role service_role;');
  const env={SONG_PRICE_USD:'9.99',PAYPAL_CURRENCY:'USD',PAYPAL_ENVIRONMENT:'sandbox',PAYPAL_CLIENT_ID:'test-id',PAYPAL_CLIENT_SECRET:'test-secret',PAYPAL_LIVE_CLIENT_ID:'live-test-id',PAYPAL_LIVE_CLIENT_SECRET:'live-test-secret',MUSIC_PROVIDER:'fal',SUPABASE_STORAGE_BUCKET:'songs'};
- const calls=[],objects=new Map(),paypal=new Map(),sentEmails=new Map();let generateCalls=0,pollCalls=0,mode='queued',fail={},lyricsCalls=0;
+ const calls=[],objects=new Map(),paypal=new Map(),sentEmails=new Map(),waffoSessions=new Map();let generateCalls=0,pollCalls=0,mode='queued',fail={},lyricsCalls=0;
  const identity={provider:'fal',model:'fal-ai/lyria3/pro',environment:'production'};
  const json=(body,status=200,headers={})=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json',...headers}});
  function matches(p) {
@@ -41,6 +43,17 @@ export async function fixture() {
  const transport=async(input,init={})=>{
   const url=new URL(input);const method=init.method||'GET';const body=typeof init.body==='string'&&init.body.startsWith('{')?JSON.parse(init.body):{};
   calls.push({url:url.toString(),method,body,headers:init.headers});
+  if(url.hostname==='api.waffo.ai') {
+   if(url.pathname==='/v1/graphql')return json({data:{onetimeProduct:fail.waffoSubscription?null:{id:env.WAFFO_PRODUCT_ID,status:'active'}}});
+   assert.equal(url.pathname,'/v1/actions/checkout/create-session');
+   if(fail.waffoCreate)return json({errors:[{message:'Isolated Waffo unavailable',layer:'checkout'}]},503);
+   const headers=new Headers(init.headers),key=headers.get('X-Idempotency-Key');assert.ok(key);assert.ok(headers.get('X-Signature'));
+   let session=waffoSessions.get(key);
+   if(session)assert.deepEqual(session.body,body);
+   else {session={body,sessionId:'cs_'+crypto.randomUUID(),checkoutUrl:'https://pancake.waffo.ai/store/isolated/checkout/cs_'+crypto.randomUUID(),expiresAt:new Date(Date.now()+3600000).toISOString()};waffoSessions.set(key,session);}
+   if(fail.waffoTimeout)throw new Error('Isolated Waffo response lost');
+   return json({data:session});
+  }
   if(url.hostname==='audio.isolated.example')return fail.download?new Response('unavailable',{status:503}):new Response(fail.invalidAudio?'not an audio file':wav(),{headers:{'Content-Type':'audio/wav'}});
   if(url.hostname==='api.resend.com') {
    assert.equal(url.pathname,'/emails');assert.ok(body.to[0].endsWith('@isolated.example'));
@@ -75,6 +88,7 @@ export async function fixture() {
   try {
    if(url.pathname.startsWith('/rest/v1/rpc/')) {
     const name=url.pathname.split('/').at(-1);assert.match(name,/^[a-z_]+$/);
+    if(name==='record_songgift_waffo_event'&&fail.waffoRecord)return json({message:'isolated payment database unavailable',code:'08006'},503);
     if((name==='complete_songgift_audio'&&(fail.finish||fail.insert))||(name==='cache_songgift_job_output'&&fail.cache))return json({message:'fixture database unavailable',code:'08006'},503);
     const keys=Object.keys(body);keys.forEach(k=>assert.match(k,/^p_[a-z0-9_]+$/));
     const sql='select to_jsonb(public.'+name+'('+keys.map((key,i)=>key+'=>$'+(i+1)).join(',')+')) result';
@@ -90,7 +104,7 @@ export async function fixture() {
     if(!objects.has(key))return json({message:'Object not found',statusCode:'404'},404);
     return new Response(objects.get(key),{headers:{'Content-Type':'audio/wav'}});
    }
-   const table=url.pathname.split('/').at(-1);assert.ok(['song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests','payment_transactions'].includes(table),table);
+   const table=url.pathname.split('/').at(-1);assert.ok(['song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests','payment_transactions','waffo_checkouts'].includes(table),table);
    const cond=matches(url.searchParams);
    if(method==='GET') {
     if(fail.paymentHistory&&table==='song_orders'&&url.searchParams.get('select')?.includes('payment_transactions'))return json({message:'isolated history failure'},503);
@@ -161,6 +175,7 @@ export async function fixture() {
   const globals={Buffer,process:{env},crypto,fetch:fetcher,URL,Response,Request,AbortSignal,console};
   const requireModule=name=>{
    if(name==='server-only')return {};
+   if(name==='@waffo/pancake-ts')return waffoSdk;
    if(name==='node:crypto')return {createHash};
    if(name==='next/server')return {NextResponse:Response};
    if((name==='@/lib/auth/server' || name==='@/lib/http-error' || name==='./server'))return {HttpError,authRoute:async(request,handler)=>{
@@ -186,5 +201,5 @@ export async function fixture() {
   const request=new Request('http://localhost'+query,{method,headers:{'Content-Type':'application/json',...(id?{'x-fixture-user':id}:{})},...(method!=='GET'?{body:JSON.stringify(body)}:{})});
   return load(file)[method](request,{params:Promise.resolve(params)});
  }
- return {db,env,calls,objects,paypal,sentEmails,identity,load,order,rpc,request,transport:fetcher,setMode:value=>{mode=value;},setFail:value=>{fail=value;},get lyricsCalls(){return lyricsCalls;},get generateCalls(){return generateCalls;},get pollCalls(){return pollCalls;},close:()=>db.close()};
+ return {db,env,calls,objects,paypal,sentEmails,waffoSessions,identity,load,order,rpc,request,transport:fetcher,setMode:value=>{mode=value;},setFail:value=>{fail=value;},get lyricsCalls(){return lyricsCalls;},get generateCalls(){return generateCalls;},get pollCalls(){return pollCalls;},close:()=>db.close()};
 }

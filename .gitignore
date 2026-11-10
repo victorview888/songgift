@@ -54,3 +54,4 @@ next-env.d.ts
 
 # Disposable account verification sessions
 /.account-test-fixtures/
+/supabase/.temp/

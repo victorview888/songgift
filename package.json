@@ -17,12 +17,14 @@
     "deploy:maintenance": "wrangler deploy --config wrangler.maintenance.jsonc",
     "test:delivery": "node --test tests/delivery-operations.test.mjs",
     "test:drafts": "node --test tests/story-drafts.test.mjs",
-    "test:account": "node --test tests/customer-account.test.mjs"
+    "test:account": "node --test tests/customer-account.test.mjs",
+    "test:payments": "node --test --test-isolation=none tests/waffo-payments.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
     "@vinext/cloudflare": "1.3.1",
+    "@waffo/pancake-ts": "0.28.0",
     "next": "^16.4.4",
     "react": "19.3.1",
     "react-dom": "19.3.1",

@@ -125,3 +125,13 @@
 .lyrics-form .lyrics-save-feedback { display: flex; align-items: center; gap: 6px; min-height: 20px; margin: 0; color: #315b40; font-size: 13px; line-height: 1.5; }
 .lyrics-form .lyrics-save-feedback span { color: inherit; font-weight: 700; }
 .lyrics-save-feedback[data-state="saving"] { color: var(--muted); }
+.payment-methods { min-width: 0; border: 0; margin: 20px 0 0; padding: 18px 0 0; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.payment-methods legend { padding: 0 0 8px; color: var(--ink); font-size: 14px; font-weight: 600; }
+.lyrics-form .payment-method { display: flex; align-items: center; gap: 12px; margin: 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
+.payment-method[data-selected="true"] { border-color: #315b40; background: #315b4008; }
+.lyrics-form .payment-method input { width: 18px; height: 18px; flex: 0 0 18px; margin: 0; padding: 0; accent-color: #315b40; }
+.lyrics-form .payment-method input:focus-visible { outline: 2px solid #315b40; outline-offset: 3px; }
+.lyrics-form .payment-method > span { min-width: 0; display: grid; gap: 3px; margin: 0; }
+.payment-method strong { font-size: 14px; }
+.lyrics-form .payment-method small, .payment-methods .payment-method-note { font-size: 12px; font-weight: 400; line-height: 1.6; color: var(--muted); margin: 0; }
+.payment-methods:disabled .payment-method { cursor: wait; opacity: .65; }

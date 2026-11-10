@@ -7,9 +7,9 @@ import { publicPageMetadata } from "@/lib/seo";
 
 const documents = {
   refunds: { title: "Payments & refund requests", description: "How to check a SongGift payment and ask for help with a refund.", sections: [
-    ["Check the original payment", "SongGift uses PayPal for checkout. Your payment history shows recorded captures and refunds with their transaction references. A quote or a checkout return is not proof of a captured payment. Sandbox entries are tests."],
-    ["Ask for a review", "For a duplicate charge, a song that has not been delivered, or a problem with the delivered song, contact support with your order reference and describe the issue. Keep your PayPal receipt so the payment can be checked. Do not send card details or sign-in codes."],
-    ["Refund confirmation", "A request for review is not a confirmed refund. Check your PayPal Activity for the actual refund and its status. Payment and delivery issues need to be checked before a refund outcome can be confirmed."],
+    ["Check the original payment", "Choose an available payment method at checkout. Your payment history shows recorded captures and refunds with their transaction references. A quote or a checkout return is not proof of a captured payment. Sandbox entries are tests."],
+    ["Ask for a review", "For a duplicate charge, a song that has not been delivered, or a problem with the delivered song, contact support with your order reference and describe the issue. Keep your payment receipt so the payment can be checked. Do not send card details or sign-in codes."],
+    ["Refund confirmation", "A request for review is not a confirmed refund. Check the payment provider’s transaction record for the actual refund and its status. Payment and delivery issues need to be checked before a refund outcome can be confirmed."],
     ["Your rights", "This guidance does not limit any consumer rights that apply to your purchase."],
   ] },
   "audio-storage": { title: "Keeping your audio", description: "Access your private SongGift audio and keep a downloaded backup.", sections: [

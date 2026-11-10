@@ -36,6 +36,9 @@
     "PAYPAL_CURRENCY": "USD",
     "SONG_PRICE_USD": "9.99",
     "PAYPAL_BRAND_NAME": "SongGift",
+    "WAFFO_ENABLED": "false",
+    "WAFFO_ENVIRONMENT": "prod",
+    "WAFFO_PRODUCT_ID": "PROD_58CiJH8X22sAkYIJsRjUyy",
     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_VKDMdgzhiKI67CH6wn-Qhw_ANW5N0GO"
   }
 }

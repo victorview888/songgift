@@ -1,5 +1,5 @@
 export type CustomerTransaction = {
-  id: string; type: "capture" | "refund"; externalId: string; environment: "sandbox" | "live";
+  id: string; provider: "paypal" | "waffo"; type: "capture" | "refund"; externalId: string; environment: "sandbox" | "live";
   amountMinor: number; currency: string; occurredAt: string;
 };
 export type CustomerPayment = {
