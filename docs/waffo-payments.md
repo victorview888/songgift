@@ -101,3 +101,7 @@ Workers 构建通过；桌面与手机浏览器验证通过。两种构建共享
 
 2026-11-10 界面同步：共享导航已恢复 Log out，Save lyrics 及保存成功提示移到歌词框下方、
 Payment method 上方。沿用已有退出登录和支付确认流程，Waffo 仍等待正式商家配置与验收。
+
+## Payment options recovery (2026-11-10)
+
+The draft checkout now distinguishes loading, unavailable methods and failed requests. A failed request has a local Retry payment options action and does not keep an endless loading message. Retrying reloads payment methods only; it does not reload or discard lyric edits, open checkout or generate music. Waffo remains disabled until the documented configuration, migration and acceptance steps are complete. Before integrating, synchronize the released pricing/policies and the separate experience-polish branch.

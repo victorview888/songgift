@@ -14,6 +14,9 @@ export default function LyricsPage() {
   const [order, setOrder] = useState<AccountOrder | null>(null);
   const [checkoutPrice, setCheckoutPrice] = useState("");
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [paymentOptionsLoading, setPaymentOptionsLoading] = useState(true);
+  const [paymentOptionsError, setPaymentOptionsError] = useState("");
+  const [paymentOptionsRevision, setPaymentOptionsRevision] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod["id"]>("paypal");
   const [paymentPending, setPaymentPending] = useState(false);
   const [confirmedPaid, setConfirmedPaid] = useState(false);
@@ -36,6 +39,9 @@ export default function LyricsPage() {
     let active = true;
     void (async () => {
       try {
+        await Promise.resolve();
+        if (!active) return;
+        setPaymentOptionsLoading(true); setPaymentOptionsError(""); setPaymentMethods([]);
         const response = await fetch("/api/payments/methods", { cache: "no-store" });
         const data = await response.json();
         if (!response.ok || !Array.isArray(data.methods)) throw new Error("Payment options could not be loaded. Please refresh this page.");
@@ -44,10 +50,11 @@ export default function LyricsPage() {
           setPaymentMethods(methods);
           setPaymentMethod(current => methods.some(method => method.id === current && method.available) ? current : methods.find(method => method.available)?.id || "paypal");
         }
-      } catch (caught) { if (active) setError(caught instanceof Error ? caught.message : "Payment options could not be loaded."); }
+      } catch { if (active) { setPaymentMethods([]); setPaymentOptionsError("Payment options could not be loaded. Your lyrics are safe; please retry."); } }
+      finally { if (active) setPaymentOptionsLoading(false); }
     })();
     return () => { active = false; };
-  }, [user, authLoading]);
+  }, [user, authLoading, paymentOptionsRevision]);
   useEffect(() => {
     if (authLoading) return;
     if (!user) { window.location.replace("/login?next=" + encodeURIComponent("/lyrics/" + id + window.location.search)); return; }
@@ -173,7 +180,7 @@ export default function LyricsPage() {
           <button className="text-button" type="button" disabled={busy || paymentPending || lyrics === savedLyrics} onClick={() => void saveLyrics()}>{saveStatus === "saving" ? "Saving…" : "Save lyrics"}</button>
           <p className="lyrics-save-feedback" data-state={saveStatus} role="status" aria-live="polite" aria-atomic="true">{saveStatus === "saved" ? <><span aria-hidden="true">✓</span> Lyrics saved successfully.</> : saveStatus === "saving" ? "Saving your lyrics…" : ""}</p>
         </div>
-        {!hasPaid && !paymentPending && <PaymentMethodSelector methods={paymentMethods} selected={paymentMethod} disabled={busy} onChange={setPaymentMethod} />}
+        {!hasPaid && !paymentPending && <PaymentMethodSelector methods={paymentMethods} selected={paymentMethod} disabled={busy} onChange={setPaymentMethod} loading={paymentOptionsLoading} error={paymentOptionsError} onRetry={() => setPaymentOptionsRevision(value => value + 1)} />}
         <div className="form-submit-row">
           <button className="primary-button" type="submit" disabled={busy || paymentPending || (!hasPaid && (!checkoutPrice || !canCheckout))}>
             {busy && saveStatus !== "saving" ? "Please wait…" : hasPaid ? "Create my song" : paymentPending ? "Confirming payment…" : checkoutPrice ? `Pay ${checkoutPrice} · Create song` : "Pay and create song"}<span aria-hidden="true">↗</span>
