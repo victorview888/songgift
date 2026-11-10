@@ -1,0 +1,2 @@
+export const contentCategories = ["sexual", "violence", "hate", "child_safety", "impersonation", "intellectual_property", "other", "appeal"] as const;
+export const categoryLabels: Record<typeof contentCategories[number], string> = { sexual: "Pornography / NSFW", violence: "Violence / gore / terrorism", hate: "Hate or discrimination", child_safety: "Child safety", impersonation: "Deepfake / impersonation", intellectual_property: "Copyright / trademark", other: "Other safety concern", appeal: "Appeal a content decision" };

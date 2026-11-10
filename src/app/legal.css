@@ -24,3 +24,15 @@
 .policy-provider-links { display: flex; flex-wrap: wrap; gap: 12px 22px; margin: 20px 0; font-size: 14px; }
 @media(max-width:600px) { .legal-footer { align-items: flex-start; flex-direction: column; padding: 24px 20px; gap: 14px; }.legal-footer nav { gap: 4px 18px; }.policy-identity dl { grid-template-columns: 1fr; gap: 5px; }.policy-identity dd { margin-bottom: 12px; }.policy-toc { padding: 18px; } }
 @media print { .legal-footer, .policy-toc { display: none !important; } }
+.home-pricing { padding: 45px max(32px, calc((100vw - 1240px) / 2)) 0; }
+.song-price { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 30px; }
+.song-price-compact { padding: 30px; border: 1px solid var(--line); border-radius: 22px; background: var(--cream); }
+.song-price h2 { margin: 10px 0 16px; font-size: clamp(32px,4vw,48px); line-height: 1.2; letter-spacing: -.04em; }
+.song-price h2 span { display: block; margin-top: 12px; font-size: 17px; letter-spacing: 0; font-weight: 400; }
+.song-price p, .song-price li { color: var(--muted); font-size: 14px; line-height: 1.8; }
+.song-price ul { margin: 0 0 22px; padding-left: 22px; }
+.song-price li + li { margin-top: 10px; }
+.report-reference { overflow-wrap: anywhere; }
+.report-honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.song-report-link { text-align: center; padding: 10px 20px; font-size: 13px; }
+@media(max-width:650px) { .song-price { grid-template-columns: minmax(0,1fr); gap: 18px; }.song-price-compact { padding: 24px; }.home-pricing { padding: 30px 20px 0; } }

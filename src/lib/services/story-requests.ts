@@ -2,7 +2,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { HttpError } from "@/lib/http-error";
-import { getLyricsProvider } from "@/lib/providers/factory";
+import { generateCheckedLyrics } from "@/lib/safety/lyrics";
 import type { SongStoryInput } from "@/lib/types/song";
 
 type StoryResult = { start?: boolean; pending?: boolean; blocked?: boolean; orderId: string; leaseToken?: string; title?: string | null; lyricsText?: string };
@@ -23,11 +23,12 @@ export async function writeStoryLyrics(requestId: string, userId: string, input:
   if (!reservation.start) return { orderId: reservation.orderId, title: reservation.title, lyricsText: reservation.lyricsText, pending: reservation.pending === true, persistenceStatus: "saved" };
   let result;
   try {
-    result = await getLyricsProvider().generateLyrics({ ...input, orderId: reservation.orderId });
+    result = await generateCheckedLyrics({ ...input, orderId: reservation.orderId });
     if (!result.title?.trim() || result.title.length > 200 || typeof result.lyricsText !== "string" || result.lyricsText.length < 20 || result.lyricsText.length > 12000) throw new Error("Invalid lyric result.");
   } catch (error) {
     // Only an explicit later submission retries this known failed attempt, reusing its order.
     await getSupabaseAdmin().rpc("fail_songgift_story", { p_request_id: requestId, p_user_id: userId, p_lease_token: reservation.leaseToken });
+    if (error instanceof HttpError) throw error;
     throw new HttpError(error instanceof Error && error.name === "ProviderConfigurationError" ? 503 : 502, "We couldn't write your lyrics right now. Your story is saved; try again when you're ready.");
   }
   const saved = await storyRpc("finish_songgift_story", { p_request_id: requestId, p_user_id: userId, p_lease_token: reservation.leaseToken, p_title: result.title.trim(), p_lyrics: result.lyricsText });

@@ -106,6 +106,7 @@ export default function CreatePage() {
           <p>Share as much as feels natural. Names, places, tiny habits, and favorite memories are all welcome.</p>
         </div>
 
+        <p className="legal-notice">See <Link href="/pricing">pricing, payment options and included services</Link> before you start. Please follow our <Link href="/policies/content-standards" target="_blank" rel="noopener">Content Standards</Link>.</p>
         <div className="account-save-note">{user ? <>Your song will be saved to <strong>{user.email}</strong>. Find it anytime in <Link href="/my-songs">My Songs</Link>.</> : <>Bring your story. <Link href="/login?next=/create">Sign in</Link> to save your lyrics and finished song to your account.</>}</div>
         {notice && <p className="draft-status" role="status">{notice}</p>}
         {ready && activeDraft?.orderId ? <section className="draft-resume" aria-label="Saved song"><h2>Continue where you left off.</h2><p>Continue your saved song to review its lyrics or resume checkout.</p><div className="draft-actions">{activeDraft.stage === "ready" ? <Link className="primary-button" href={"/lyrics/" + activeDraft.orderId}>Continue saved song <span aria-hidden="true">↗</span></Link> : <button className="primary-button" disabled={isGenerating} onClick={() => void submitStory()}>{isGenerating ? "Checking your saved story…" : "Continue saved story"}</button>}<button className="text-button" disabled={isGenerating} onClick={startNew}>Start a new story</button></div></section> : <form className="story-form" onSubmit={handleSubmit}>
