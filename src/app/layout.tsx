@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./account.css";
+import "./legal.css";
 import { AccountProvider } from "@/components/account-provider";
 import { siteUrl } from "@/lib/seo";
+import { LegalFooter } from "@/components/legal-footer";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -15,7 +17,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body><AccountProvider>{children}</AccountProvider></body>
+      <body><AccountProvider>{children}</AccountProvider><LegalFooter /></body>
     </html>
   );
 }

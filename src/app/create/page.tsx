@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AccountHeader } from "@/components/account-header";
+import { TermsConfirmation } from "@/components/terms-confirmation";
 import { useAccount } from "@/components/account-provider";
 
 import { ACCOUNT_CLEARED_EVENT, clearStoryDraft, initialStory, loadStoryDraft, newStoryDraft, saveStoryDraft, type StoryDraft, type StoryForm } from "@/lib/drafts/story";
@@ -130,6 +131,8 @@ export default function CreatePage() {
             </select></label>
 
           </div>
+          <p className="legal-notice">Your story, recipient details and lyrics are sent to AI services to create your lyrics and music. Include only information you have permission to share, and leave out sensitive personal details. See our <Link href="/policies/privacy" target="_blank" rel="noopener">Privacy Policy</Link>.</p>
+          <TermsConfirmation disabled={isGenerating || loading} />
           <div className="form-submit-row">
             <p><span aria-hidden="true">✦</span> You will review the lyrics before the song is made.</p>
             <button className="primary-button" type="submit" disabled={isGenerating || loading}>

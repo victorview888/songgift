@@ -3,7 +3,7 @@ import { occasionSlugs } from "@/lib/occasions";
 import { absoluteUrl } from "@/lib/seo";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return ["/", "/create", ...occasionSlugs.map((slug) => `/occasions/${slug}`)].map((path) => ({
+  return ["/", "/create", "/policies/terms", "/policies/privacy", ...occasionSlugs.map((slug) => `/occasions/${slug}`)].map((path) => ({
     url: absoluteUrl(path),
   }));
 }

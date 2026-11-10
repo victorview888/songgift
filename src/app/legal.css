@@ -1,0 +1,26 @@
+.legal-footer { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 25px max(32px, calc((100vw - 1240px) / 2)); border-top: 1px solid #514b46; background: var(--ink); color: #d7d0ca; font-size: 12px; line-height: 1.7; }
+.legal-footer > span { flex-shrink: 0; }
+.legal-footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.legal-footer a { padding: 6px 0; }
+.legal-footer a:hover { color: white; text-decoration: underline; text-underline-offset: 4px; }
+.legal-consent { margin: 20px 0 0; }
+.story-form .legal-confirmation, .login-form .legal-confirmation { display: flex; align-items: flex-start; gap: 12px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.8; font-weight: 400; cursor: pointer; }
+.story-form .legal-confirmation input, .login-form .legal-confirmation input { flex: 0 0 18px; width: 18px; height: 18px; margin: 3px 0 0; padding: 0; accent-color: var(--orange-dark); }
+.story-form .legal-confirmation > span, .login-form .legal-confirmation > span { margin: 0; color: inherit; font-size: inherit; font-weight: inherit; }
+.legal-confirmation a, .legal-notice a, .policy-document a.text-link { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.story-form .legal-notice, .login-form .legal-notice { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.login-form .legal-consent { margin-bottom: 22px; }
+.policy-identity { margin-bottom: 28px; }
+.policy-identity dl { display: grid; grid-template-columns: 145px minmax(0, 1fr); gap: 12px 20px; font-size: 14px; line-height: 1.7; }
+.policy-identity dt { color: var(--muted); }
+.policy-identity dd { margin: 0; overflow-wrap: anywhere; }
+.policy-toc { display: grid; gap: 10px; margin: 28px 0 36px; padding: 22px; border-left: 3px solid var(--orange); background: var(--cream); font-size: 13px; line-height: 1.7; }
+.policy-toc > strong { margin-bottom: 4px; }
+.policy-toc a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.policy-document .customer-card { scroll-margin-top: 25px; }
+.policy-document .customer-card p, .policy-document .customer-card li { font-size: 14px; line-height: 1.9; overflow-wrap: anywhere; }
+.policy-document .customer-card ul { padding-left: 22px; color: var(--muted); }
+.policy-document .customer-card li + li { margin-top: 10px; }
+.policy-provider-links { display: flex; flex-wrap: wrap; gap: 12px 22px; margin: 20px 0; font-size: 14px; }
+@media(max-width:600px) { .legal-footer { align-items: flex-start; flex-direction: column; padding: 24px 20px; gap: 14px; }.legal-footer nav { gap: 4px 18px; }.policy-identity dl { grid-template-columns: 1fr; gap: 5px; }.policy-identity dd { margin-bottom: 12px; }.policy-toc { padding: 18px; } }
+@media print { .legal-footer, .policy-toc { display: none !important; } }
