@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
-import {createHash} from 'node:crypto';
+import {createHash,createHmac} from 'node:crypto';
 import ts from 'typescript';
 import { PGlite } from '@electric-sql/pglite';
 import { createClient } from '@supabase/supabase-js';
@@ -12,16 +12,17 @@ export const otherId='b3f10454-1234-4234-8234-012345678902';
 export function wav() {
   const b=Buffer.alloc(204);b.write('RIFF');b.writeUInt32LE(196,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(8000,24);b.writeUInt32LE(16000,28);b.writeUInt16LE(2,32);b.writeUInt16LE(16,34);b.write('data',36);b.writeUInt32LE(160,40);return b;
 }
-export async function fixture() {
+export async function fixture({legacyContent=false}={}) {
  const db=new PGlite();
  await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema storage;
  create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
  create function auth.uid() returns uuid language sql as $$select null::uuid$$;
  create table storage.buckets(id text primary key,name text,public boolean);`);
- await db.exec(readFileSync('supabase/schema.sql','utf8').replace('create extension if not exists pgcrypto;',''));
+ const schema=readFileSync('supabase/schema.sql','utf8').replace('create extension if not exists pgcrypto;','');
+ await db.exec(legacyContent?schema.split('-- Additive, service-only report intake')[0]:schema);
  await db.query('insert into auth.users values ($1,\'owner@isolated.example\',now()),($2,\'other@isolated.example\',now())',[userId,otherId]);
  await db.exec('grant select,insert,update on public.song_orders,public.song_assets to service_role;set role service_role;');
- const env={SONG_PRICE_USD:'9.99',PAYPAL_CURRENCY:'USD',PAYPAL_ENVIRONMENT:'sandbox',PAYPAL_CLIENT_ID:'test-id',PAYPAL_CLIENT_SECRET:'test-secret',PAYPAL_LIVE_CLIENT_ID:'live-test-id',PAYPAL_LIVE_CLIENT_SECRET:'live-test-secret',MUSIC_PROVIDER:'fal',SUPABASE_STORAGE_BUCKET:'songs'};
+ const env={SUPABASE_SERVICE_ROLE_KEY:'isolated-service-role',DEEPSEEK_API_KEY:'isolated-safety-key',SONG_PRICE_USD:'9.99',PAYPAL_CURRENCY:'USD',PAYPAL_ENVIRONMENT:'sandbox',PAYPAL_CLIENT_ID:'test-id',PAYPAL_CLIENT_SECRET:'test-secret',PAYPAL_LIVE_CLIENT_ID:'live-test-id',PAYPAL_LIVE_CLIENT_SECRET:'live-test-secret',MUSIC_PROVIDER:'fal',SUPABASE_STORAGE_BUCKET:'songs'};
  const calls=[],objects=new Map(),paypal=new Map(),sentEmails=new Map();let generateCalls=0,pollCalls=0,mode='queued',fail={},lyricsCalls=0;
  const identity={provider:'fal',model:'fal-ai/lyria3/pro',environment:'production'};
  const json=(body,status=200,headers={})=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json',...headers}});
@@ -41,6 +42,7 @@ export async function fixture() {
  const transport=async(input,init={})=>{
   const url=new URL(input);const method=init.method||'GET';const body=typeof init.body==='string'&&init.body.startsWith('{')?JSON.parse(init.body):{};
   calls.push({url:url.toString(),method,body,headers:init.headers});
+  if(url.hostname==='api.deepseek.com'){const blocked=fail.safetyBlocked||(fail.safetyOutput&&JSON.parse(body.messages[1].content).content.includes('\"lyrics\":'));return json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(fail.safetyMalformed?{allowed:'unknown'}:{allowed:!blocked,category:blocked?'other':'safe'})}}]});}
   if(url.hostname==='audio.isolated.example')return fail.download?new Response('unavailable',{status:503}):new Response(fail.invalidAudio?'not an audio file':wav(),{headers:{'Content-Type':'audio/wav'}});
   if(url.hostname==='api.resend.com') {
    assert.equal(url.pathname,'/emails');assert.ok(body.to[0].endsWith('@isolated.example'));
@@ -90,7 +92,7 @@ export async function fixture() {
     if(!objects.has(key))return json({message:'Object not found',statusCode:'404'},404);
     return new Response(objects.get(key),{headers:{'Content-Type':'audio/wav'}});
    }
-   const table=url.pathname.split('/').at(-1);assert.ok(['song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests','payment_transactions'].includes(table),table);
+   const table=url.pathname.split('/').at(-1);assert.ok(['song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests','payment_transactions','content_reports','content_report_reviews','content_report_limits'].includes(table),table);
    const cond=matches(url.searchParams);
    if(method==='GET') {
     if(fail.paymentHistory&&table==='song_orders'&&url.searchParams.get('select')?.includes('payment_transactions'))return json({message:'isolated history failure'},503);
@@ -105,6 +107,7 @@ export async function fixture() {
     const project=(row,columns)=>columns==='*'?row:Object.fromEntries(split(columns).map(column=>{const nested=column.match(/^([a-z_]+)(?::([a-z_]+))?\((.*)\)$/);return nested?[nested[1],(row[nested[1]]||[]).map(item=>project(item,nested[3]))]:[column,row[column]];}));
     const selected=[];
     for(const row of rows) {
+     if(table==='content_reports'&&select.includes('reviews:'))row.reviews=(await db.query('select status,note,created_at from public.content_report_reviews where report_id=$1 order by created_at desc limit 5',[row.id])).rows;
      if(table==='song_orders') {
       if(select.includes('song_assets('))row.song_assets=(await db.query('select * from public.song_assets where order_id=$1',[row.id])).rows;
       if(select.includes('final_assets:'))row.final_assets=row.song_assets.filter(asset=>asset.is_final).slice(0,1);
@@ -161,10 +164,10 @@ export async function fixture() {
   const globals={Buffer,process:{env},crypto,fetch:fetcher,URL,Response,Request,AbortSignal,console};
   const requireModule=name=>{
    if(name==='server-only')return {};
-   if(name==='node:crypto')return {createHash};
+   if(name==='node:crypto')return {createHash,createHmac};
    if(name==='next/server')return {NextResponse:Response};
-   if((name==='@/lib/auth/server' || name==='@/lib/http-error' || name==='./server'))return {HttpError,authRoute:async(request,handler)=>{
-    const id=request.headers.get('x-fixture-user');if(!id)return json({error:'Please sign in.'},401);
+   if((name==='@/lib/auth/server' || name==='@/lib/http-error' || name==='./server'))return {HttpError,authRoute:async(request,handler,requireLogin=true)=>{
+    const id=request.headers.get('x-fixture-user');if(!id&&requireLogin)return json({error:'Please sign in.'},401);
     try{return await handler({user:{id,email:'owner@isolated.example',email_confirmed_at:'2026-11-06'},supabase:client});}catch(e){return json({error:e instanceof HttpError?e.message:'Request failed'},e instanceof HttpError?e.status:500);}
    }};
    if(name==='@/lib/supabase/admin'||name==='./admin')return {getSupabaseAdmin:()=>client};

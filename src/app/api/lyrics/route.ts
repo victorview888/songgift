@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { authRoute, HttpError } from "@/lib/auth/server";
-import { getLyricsProvider } from "@/lib/providers/factory";
+import { generateCheckedLyrics } from "@/lib/safety/lyrics";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getOwnedOrder } from "@/lib/supabase/orders";
 import { writeStoryLyrics } from "@/lib/services/story-requests";
@@ -28,8 +28,8 @@ export async function POST(request: Request) {
       if (existing.paid_at || existing.provider_job_id || existing.song_assets.length || existing.status !== "lyrics_ready") throw new HttpError(409, "This order has already moved to checkout. Create a new song for a different story.");
     }
     let result;
-    try { result = await getLyricsProvider().generateLyrics(input); }
-    catch (error) { throw new HttpError(error instanceof Error && error.name === "ProviderConfigurationError" ? 503 : 502, "We couldn't write your lyrics right now. Please try again."); }
+    try { result = await generateCheckedLyrics(input); }
+    catch (error) { if (error instanceof HttpError) throw error; throw new HttpError(error instanceof Error && error.name === "ProviderConfigurationError" ? 503 : 502, "We couldn't write your lyrics right now. Please try again."); }
     const record = { user_id: user!.id, recipient_name: input.recipientName, relationship: input.relationship, occasion: input.occasion, story: input.story, mood: input.mood, style: input.style, email: user!.email, title: result.title, lyrics_text: result.lyricsText, status: "lyrics_ready", updated_at: new Date().toISOString() };
     const db = getSupabaseAdmin();
     const saved = body.orderId

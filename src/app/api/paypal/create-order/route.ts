@@ -1,3 +1,5 @@
+import { moderateSongText } from "@/lib/safety/moderation";
+import { getOwnedOrder } from "@/lib/supabase/orders";
 import { NextResponse } from "next/server";
 import { authRoute } from "@/lib/auth/server";
 import { createPayPalOrder, capturePayPalOrder } from "@/lib/paypal";
@@ -11,6 +13,8 @@ export async function POST(request: Request) {
     const orderId = typeof body.orderId === "string" ? body.orderId : "";
     const order = await getPaymentOrder(orderId, user!.id);
     if (order.paid_at) return NextResponse.json({ alreadyPaid: true, orderId });
+    const song = await getOwnedOrder(orderId, user!.id);
+    await moderateSongText(JSON.stringify({ recipientName: song.recipient_name, occasion: song.occasion, story: song.story, mood: song.mood, style: song.style, lyricsText: song.lyrics_text }));
     const quote = await checkoutQuote(order, user!);
     const returnUrl = new URL("/lyrics/" + orderId, request.url).toString();
     const result = await createPayPalOrder(quote, { returnUrl, cancelUrl: returnUrl }, order.paypal_order_id);

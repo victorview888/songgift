@@ -3,7 +3,7 @@ export type PolicyDocument = { title: string; description: string; effectiveDate
 
 export const legalDetails = { operator: "明日逻辑", location: "Shanghai, China", email: "support@songforalways.com" } as const;
 
-export const legalDocuments: Record<"terms" | "privacy", PolicyDocument> = {
+export const legalDocuments: Record<"terms" | "privacy" | "content-standards", PolicyDocument> = {
   "terms": {
     "title": "Terms of Service",
     "description": "How SongGift accounts, personalised song orders, payments and delivery work.",
@@ -62,6 +62,15 @@ export const legalDocuments: Record<"terms" | "privacy", PolicyDocument> = {
           {
             "kind": "paragraph",
             "text": "The amount and currency for your order are shown before you authorise payment. SongGift currently sells individual song orders. A single-song purchase does not create a recurring subscription."
+          },
+          {
+            "kind": "links",
+            "links": [
+              {
+                "label": "Current pricing and included services",
+                "href": "/pricing"
+              }
+            ]
           },
           {
             "kind": "paragraph",
@@ -159,6 +168,23 @@ export const legalDocuments: Record<"terms" | "privacy", PolicyDocument> = {
           {
             "kind": "paragraph",
             "text": "We may restrict activity where reasonably necessary to address a security incident, fraud, unlawful content or a material breach of these terms. Where appropriate, we will explain the restriction and provide a way to raise a concern. A restriction does not automatically remove rights relating to an existing paid order."
+          },
+          {
+            "kind": "paragraph",
+            "text": "Our Content Standards apply to stories, instructions, lyrics and generated music, including content you request, store or distribute through SongGift. They specify prohibited categories, reporting routes, review targets and possible actions."
+          },
+          {
+            "kind": "links",
+            "links": [
+              {
+                "label": "Content Standards and review process",
+                "href": "/policies/content-standards"
+              },
+              {
+                "label": "Report content or appeal a decision",
+                "href": "/report"
+              }
+            ]
           }
         ]
       },
@@ -234,6 +260,10 @@ export const legalDocuments: Record<"terms" | "privacy", PolicyDocument> = {
           {
             "kind": "paragraph",
             "text": "Support information: the email address, order reference, message and attachments you send when contacting support. The current contact form prepares an email draft in your browser; pressing “Prepare email” does not send it. You choose whether to send it using your email application, which has its own privacy practices."
+          },
+          {
+            "kind": "paragraph",
+            "text": "Content reports: the category, content link or reference, description and optional contact email you submit; the report receipt; and authorised reviewers’ decisions and notes. To limit spam we temporarily store a keyed hash derived from the connection IP and a time window, rather than storing the raw IP in the report-rate-limit table."
           }
         ]
       },
@@ -274,6 +304,10 @@ export const legalDocuments: Record<"terms" | "privacy", PolicyDocument> = {
               "DeepSeek: the lyric-writing request includes the recipient’s name, relationship, occasion, mood, musical style and story. SongGift does not deliberately include your account email in this prompt; an email address or other private detail you type into the story could nevertheless be sent as part of its text.",
               "fal.ai and its underlying music-model provider: the music request includes the approved lyrics, recipient’s name, story details, occasion and musical direction. The current configured model is Google’s Lyria 3 Pro through fal. A model provider may receive the content when fal forwards the request to its service."
             ]
+          },
+          {
+            "kind": "paragraph",
+            "text": "DeepSeek also checks submitted story details, generated lyrics and the final approved text for content-standard violations before we proceed. This includes lyrics edited by you. The checks do not require your account email to be included in their prompts."
           },
           {
             "kind": "paragraph",
@@ -375,6 +409,10 @@ export const legalDocuments: Record<"terms" | "privacy", PolicyDocument> = {
           },
           {
             "kind": "paragraph",
+            "text": "Content-report contact details, descriptions and review records are retained as needed to investigate the report, respond to an appeal, document action or meet a legal obligation. Temporary report-rate-limit hashes are removed after their short anti-spam window, with expired windows cleared during later submissions. A reporter’s email is optional and is not treated as proof of account ownership."
+          },
+          {
+            "kind": "paragraph",
             "text": "External providers may have separate retention periods for the information they process. Deletion from an active system does not necessarily mean immediate deletion from every backup. For a deletion request, we will explain any remaining retention requirements or backup limitations that apply."
           }
         ]
@@ -441,6 +479,163 @@ export const legalDocuments: Record<"terms" | "privacy", PolicyDocument> = {
           {
             "kind": "paragraph",
             "text": "Questions and requests should be sent to support@songforalways.com. The data controller is 明日逻辑, operating SongGift from Shanghai, China. We display the effective date of this policy and will provide notice of material changes where required."
+          }
+        ]
+      }
+    ]
+  },
+  "content-standards": {
+    "title": "Content Standards & Reporting",
+    "description": "Rules for AI lyrics and songs, how to report a concern, and how SongGift reviews it.",
+    "effectiveDate": "2026-11-10",
+    "sections": [
+      {
+        "title": "1. Where these standards apply",
+        "blocks": [
+          {
+            "kind": "paragraph",
+            "text": "These standards form part of the SongGift Terms of Service. They cover the story, names, instructions and preferences you submit, lyrics you generate or edit, and music or vocals created, stored or distributed through SongGift. Our service is for personal songs and respectful gifts. The same rules apply to attempts to bypass a safety check."
+          },
+          {
+            "kind": "links",
+            "links": [
+              {
+                "label": "Terms of Service",
+                "href": "/policies/terms"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "2. Content we prohibit",
+        "blocks": [
+          {
+            "kind": "list",
+            "items": [
+              "Pornography / NSFW: sexually explicit material, descriptions of sexual acts, fetish content, sexual exploitation, non-consensual intimate content or requests to create nudity or sexualised depictions.",
+              "Violence / gore: graphic injury or cruelty, credible threats, instructions or encouragement for violence, terrorism, extremist recruitment, mass harm or weapons of mass destruction.",
+              "Hate or discrimination: dehumanisation, targeted abuse, exclusion or incitement against people based on protected characteristics such as race, ethnicity, nationality, religion, disability, sex, sexual orientation or gender identity.",
+              "Child-unsafe content, including CSAM: any sexualisation, grooming, exploitation or abuse of children or people presented as children, including synthetic, fictional or edited material. Never submit or forward illegal media to report it.",
+              "Deepfakes / impersonation: cloning or imitating a real person’s voice or identity, inventing statements or endorsements attributed to them, or deceptively presenting an AI performance as theirs. Claimed permission does not make prohibited deepfake requests acceptable.",
+              "Copyright / trademark infringement: copying protected lyrics or recordings without the necessary rights, requesting unauthorised artist imitation, misusing brand names or marks to suggest endorsement, or otherwise violating intellectual-property, privacy or personality rights."
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": "Ordinary non-explicit affection, family celebrations and respectful songs about children are allowed when the necessary permissions exist. A factual name or memory is different from an instruction to impersonate someone. Misleading claims, harassment, spam and attempts to defeat safeguards are also prohibited."
+          }
+        ]
+      },
+      {
+        "title": "3. How content is checked",
+        "blocks": [
+          {
+            "kind": "paragraph",
+            "text": "SongGift uses a DeepSeek-based semantic text-safety check on the submitted story and instructions before lyric writing, on the generated lyric result, and on the approved text frozen for a new music-generation attempt. A failed or unavailable check stops that new step; it does not silently authorise another music call."
+          },
+          {
+            "kind": "paragraph",
+            "text": "These checks assess text against the categories above. They are not a guarantee that every violation will be detected. We do not claim to run an independent automated analysis of every finished audio waveform. Audio-provider safety controls are supplemented by human review when an issue is reported or identified."
+          },
+          {
+            "kind": "paragraph",
+            "text": "The operator’s authorised reviewer assesses submitted reports and relevant order or provider evidence. Access is limited to what is needed for the investigation. Private songs are not placed in a public moderation gallery, and we do not claim a 24-hour staffed moderation team."
+          }
+        ]
+      },
+      {
+        "title": "4. Submit a report or appeal",
+        "blocks": [
+          {
+            "kind": "paragraph",
+            "text": "Use the on-site report form. No account is required. Choose a category and provide a SongGift page, order number or earlier report reference and a concise explanation. An email address is optional but helps us ask questions or send a progress update. The form returns a receipt only after the report is saved."
+          },
+          {
+            "kind": "links",
+            "links": [
+              {
+                "label": "Submit a content report",
+                "href": "/report"
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": "For an appeal, choose “Appeal a content decision” and identify the decision or order, explaining why you think it was wrong. Avoid including passwords, sign-in codes, full payment credentials or unnecessary private stories. Do not upload or reproduce illegal images, recordings or child abuse material. Reports are not a route to obtain somebody else’s private song."
+          },
+          {
+            "kind": "paragraph",
+            "text": "We use report details to investigate fairly, and limit disclosure of the reporter’s identity to authorised handling or a legal requirement. Deliberately abusive reports may be restricted. For immediate danger, contact local emergency services; this form is not a live emergency service."
+          }
+        ]
+      },
+      {
+        "title": "5. Review targets and procedure",
+        "blocks": [
+          {
+            "kind": "list",
+            "items": [
+              "Receipt: a report reference is displayed immediately after successful submission. Keep it for follow-up; no reference is shown as received if saving fails.",
+              "Urgent concerns: child safety, terrorism and credible threats are prioritised. We aim to begin review within 24 hours of receipt and take protective steps promptly when warranted.",
+              "Other reports: we aim to begin review within 3 business days and provide a decision or progress update within 7 business days.",
+              "Appeals: request a further review through the same form. We aim to provide an outcome or progress update within 10 business days. A different authorised reviewer is used where one is available."
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": "Business days are Monday to Friday, excluding public holidays in Shanghai, China. Complex investigations or missing information can take longer. If contact details were provided, we explain delays and request further information as needed. These are service targets rather than a promise of an instant final decision."
+          },
+          {
+            "kind": "paragraph",
+            "text": "The process is receipt → priority assessment → review of the relevant content and evidence → decision → appropriate action → a recorded outcome and, where contact details are available, notification. Report status changes and reviewer notes are kept in a private administrator record."
+          }
+        ]
+      },
+      {
+        "title": "6. Actions and safeguards",
+        "blocks": [
+          {
+            "kind": "paragraph",
+            "text": "Depending on the evidence and severity, we may reject a new request, ask for an edit, warn the account holder, withdraw access to a confirmed violating hosted file, or work with the provider on further restrictions. Authorised personnel carry out and record manual actions; clicking a report status does not itself delete audio, refund a payment or ban an account."
+          },
+          {
+            "kind": "paragraph",
+            "text": "We may preserve relevant evidence and contact competent authorities where required or appropriate for serious unlawful activity. We do not promise to erase necessary investigation or payment records immediately. Measures should be proportionate, and reporting a concern does not by itself establish a violation or determine a refund."
+          },
+          {
+            "kind": "paragraph",
+            "text": "If you believe a decision was mistaken, use the appeal route above. This process does not restrict rights available under applicable law."
+          }
+        ]
+      },
+      {
+        "title": "7. Operator and policy updates",
+        "blocks": [
+          {
+            "kind": "paragraph",
+            "text": "SongGift is operated by 明日逻辑 in Shanghai, China. The on-site report form is the primary content-reporting channel. For general enquiries, the support address is support@songforalways.com. Use the on-site form for a saved content-report reference."
+          },
+          {
+            "kind": "links",
+            "links": [
+              {
+                "label": "Report form",
+                "href": "/report"
+              },
+              {
+                "label": "Privacy Policy",
+                "href": "/policies/privacy"
+              },
+              {
+                "label": "Contact support",
+                "href": "/contact"
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": "We update these standards when the service or applicable requirements change and give notice of material changes where required. The effective date is shown above."
           }
         ]
       }

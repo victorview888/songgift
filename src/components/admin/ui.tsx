@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { AdminSignOut } from "@/components/admin-sign-out";
 
-export function AdminShell({ current, children }: { current: "home" | "orders" | "jobs"; children: ReactNode }) {
+export function AdminShell({ current, children }: { current: "home" | "orders" | "jobs" | "reports"; children: ReactNode }) {
   return <div className="admin-shell">
     <aside className="admin-sidebar">
       <Link href="/" className="admin-brand">♪ songgift<span>管理后台</span></Link>
@@ -13,6 +13,7 @@ export function AdminShell({ current, children }: { current: "home" | "orders" |
         <Link href="/admin" aria-current={current === "home" ? "page" : undefined}>经营概览</Link>
         <Link href="/admin/orders" aria-current={current === "orders" ? "page" : undefined}>订单列表</Link>
         <Link href="/admin/jobs" aria-current={current === "jobs" ? "page" : undefined}>生成任务</Link>
+        <Link href="/admin/reports" aria-current={current === "reports" ? "page" : undefined}>内容举报</Link>
         <Link href="/my-songs">我的歌曲</Link><Link href="/">返回网站</Link>
       </nav>
       <p className="admin-sidebar-note">为每一首歌，<br />做好交付的最后一步。</p>
@@ -24,8 +25,8 @@ export function AdminShell({ current, children }: { current: "home" | "orders" |
   </div>;
 }
 
-export function AdminPage({ title, description, actions, children, readOnly = true }: { title: string; description?: string; actions?: ReactNode; children: ReactNode; readOnly?: boolean }) {
-  return <><header className="admin-page-heading"><div><p className="admin-eyebrow">管理工作区{readOnly ? " · 只读" : " · 订单处理"}</p><h1>{title}</h1>{description && <p>{description}</p>}</div>{actions}</header>{children}</>;
+export function AdminPage({ title, description, actions, children, readOnly = true, activityLabel = "订单处理" }: { title: string; description?: string; actions?: ReactNode; children: ReactNode; readOnly?: boolean; activityLabel?: string }) {
+  return <><header className="admin-page-heading"><div><p className="admin-eyebrow">管理工作区 · {readOnly ? "只读" : activityLabel}</p><h1>{title}</h1>{description && <p>{description}</p>}</div>{actions}</header>{children}</>;
 }
 
 export function AdminCard({ title, children }: { title: string; children: ReactNode }) {

@@ -22,7 +22,7 @@ const documents = {
   ] },
 } as const;
 function document(slug: string): PolicyDocument | null {
-  if (slug === "terms" || slug === "privacy") return legalDocuments[slug];
+  if (slug === "terms" || slug === "privacy" || slug === "content-standards") return legalDocuments[slug];
   if (slug !== "refunds" && slug !== "audio-storage") return null;
   const existing = documents[slug];
   return { ...existing, sections: existing.sections.map(([title, body]) => ({ title, blocks: [{ kind: "paragraph", text: body }] })) };

@@ -1,4 +1,5 @@
 import "server-only";
+import { moderateSongText } from "@/lib/safety/moderation";
 import type { AccountOrder } from "@/lib/types/account";
 import type { MusicGenerationResult } from "@/lib/types/song";
 import { HttpError } from "@/lib/http-error";
@@ -132,6 +133,12 @@ export async function startOrderGeneration(order: AccountOrder, userId: string) 
   if (!reserved.created) return checkJob(reserved.job);
   let job = reserved.job;
   if (!job.lease_token || !job.input_snapshot) throw new HttpError(503, "This song task needs assistance.");
+  try { await moderateSongText(JSON.stringify(job.input_snapshot)); }
+  catch (error) {
+    // The frozen input, including any last lyric edit, is checked before a paid music call.
+    await release(job, "needs_review", "query_failed");
+    throw error;
+  }
   let result: MusicGenerationResult;
   try { result = await getPinnedMusicProvider(job).generateSong(job.input_snapshot); }
   catch {

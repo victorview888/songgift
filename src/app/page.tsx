@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { SongPrice } from "@/components/song-price";
+import { publicSongPriceUsd } from "@/lib/pricing";
+
+export const dynamic = "force-dynamic";
 import { AccountNav } from "@/components/account-nav";
 import { publicPageMetadata, siteName, siteUrl } from "@/lib/seo";
 
@@ -53,6 +57,7 @@ export default function Home() {
         <nav className="desktop-nav" aria-label="Main navigation">
           <a href="#how-it-works">How it works</a>
           <a href="#occasions">Occasions</a>
+          <Link href="/pricing">Pricing</Link>
           <a href="#faq">FAQ</a>
         </nav>
         <div className="header-actions"><AccountNav /><Link className="header-cta" href="/create">Create a song <span aria-hidden="true">↗</span></Link></div>
@@ -69,7 +74,7 @@ export default function Home() {
             <Link className="primary-button" href="/create">Create their song <span aria-hidden="true">↗</span></Link>
             <a className="text-link" href="#how-it-works">See how it works <span aria-hidden="true">↓</span></a>
           </div>
-          <p className="hero-note"><span aria-hidden="true">✦</span> Start with a free preview · No card required</p>
+          <p className="hero-note"><span aria-hidden="true">✦</span> Free lyric preview · US${publicSongPriceUsd()} per song · USD / PayPal</p>
         </div>
 
         <div className="hero-art" role="img" aria-label="A record made for a special memory">
@@ -92,6 +97,8 @@ export default function Home() {
         <span>Made for the moments words cannot quite hold</span>
         <div><strong>Personal</strong><strong>Original</strong><strong>Made to keep</strong></div>
       </div>
+
+      <div className="home-pricing"><SongPrice compact /></div>
 
       <section className="section" id="how-it-works">
         <div className="section-heading">
