@@ -1,6 +1,6 @@
-import Link from "next/link";
+import { SupportNav } from "./support-nav";
 import { AccountHeader } from "./account-header";
 
 export function SupportShell({ children }: { children: React.ReactNode }) {
-  return <main className="form-page"><AccountHeader /><section className="customer-shell support-shell"><nav className="customer-links" aria-label="Help pages"><Link href="/help">Help</Link><Link href="/pricing">Pricing</Link><Link href="/policies/content-standards">Content standards</Link><Link href="/report">Report content</Link><Link href="/contact">Contact</Link><Link href="/policies/refunds">Payment & refunds</Link><Link href="/policies/audio-storage">Keeping your audio</Link><Link href="/policies/terms">Terms</Link><Link href="/policies/privacy">Privacy</Link></nav>{children}</section></main>;
+  return <main className="form-page"><AccountHeader /><section className="customer-shell support-shell"><SupportNav />{children}</section></main>;
 }

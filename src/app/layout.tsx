@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./account.css";
 import "./legal.css";
+import "./experience.css";
 import { AccountProvider } from "@/components/account-provider";
 import { siteUrl } from "@/lib/seo";
 import { LegalFooter } from "@/components/legal-footer";

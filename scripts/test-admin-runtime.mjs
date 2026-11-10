@@ -25,6 +25,7 @@ async function serve() {
   const auditMigration=readFileSync("supabase/migrations/20261105_admin_audio_audit.sql","utf8");
   await db.exec(auditMigration);
   let signingCalls=0;
+  let authUnavailable=false;
   let historyAvailable=true;
   let jobsAvailable=true;
   let overviewAvailable=true, extraOrder=false;
@@ -89,6 +90,7 @@ async function serve() {
         else {await restore();if(body.active===false)await db.query("update public.admin_members set active=false where user_id=$1",[ownerId]);}
         return json(200,{ok:true});
       }
+      if(url.pathname==="/__fixture__/auth-availability"){authUnavailable=body.unavailable===true;return json(200,{ok:true});}
       if(url.pathname==="/auth/v1/otp")return json(200,{});
       if(url.pathname==="/auth/v1/verify") {
         const user=identities.find(u=>u.email===body.email);
@@ -99,6 +101,7 @@ async function serve() {
         return user?json(200,session(user)):json(403,{msg:"Invalid isolated test session"});
       }
       if(url.pathname==="/auth/v1/user") {
+        if(authUnavailable)return json(503,{msg:"Temporary isolated Auth outage",code:"unexpected_failure"});
         const user=tokens.get((req.headers.authorization||"").replace(/^Bearer /,""));
         return user?json(200,authUser(user)):json(401,{msg:"No test session",code:"bad_jwt"});
       }
@@ -140,7 +143,8 @@ async function serve() {
           relationship:"friend",story:"Fixture private story <script>test</script>",mood:"warm",style:"pop",title:"Fixture song",lyrics_text:"Fixture private lyrics\nSecond line",provider_job_id:"fixture-job-1",updated_at:row.created_at,
           song_assets:row.id===detailOrderId?[{id:detailAssetId,asset_type:"final",mime_type:"audio/mpeg",duration_seconds:null,provider:"fal",model_id:"isolated-model",provider_job_id:"fixture-job-1",is_final:true,created_at:"2026-11-05T01:20:00Z"}]:[]
         }));
-        if(url.searchParams.get("select")?.includes("quoted_amount_minor")) {
+        if(url.searchParams.get("select")?.includes("capture_records:")) rows=rows.map(row=>({...row,quoted_amount_minor:100,currency:"USD",payment_environment:"live",capture_records:row.id===detailOrderId?[{amount_minor:100,currency:"USD",provider:"paypal",environment:"live"}]:[]}));
+        if(url.searchParams.get("select")?.includes("quoted_amount_minor") && !url.searchParams.get("select")?.includes("capture_records:")) {
           if(!historyAvailable)return json(404,{message:"Fixture operations schema unavailable"});
           rows=rows.map(row=>({id:row.id,created_at:row.created_at,quoted_amount_minor:row.id===detailOrderId?100:null,currency:row.id===detailOrderId?"USD":null,payment_environment:row.id===detailOrderId?"live":null,price_version:row.id===detailOrderId?"isolated-v1":null,quoted_at:row.id===detailOrderId?row.created_at:null,
             payment_transactions:row.id===detailOrderId?[{id:"f3f10454-1234-4234-8234-000000000001",provider:"paypal",environment:"live",transaction_type:"capture",external_id:"ISOLATED-CAPTURE",amount_minor:100,currency:"USD",fee_minor:null,occurred_at:"2026-11-05T01:00:00Z"}]:[],
@@ -201,6 +205,12 @@ async function checks() {
   await signIn(customer,identities[1].email);response=await customer("/api/admin/session");assert.equal(response.status,403);pass("verified customer cannot grant access with forged Auth metadata");
   response=await customer("/admin");html=await response.text();assert.doesNotMatch(html,/owner@admin-test.example/);assert.ok(html.includes("无法访问这个后台页面")||response.status===404);pass("ordinary user cannot render the administrator shell");
   await signIn(owner,identities[0].email);response=await owner("/api/admin/session");assert.equal(response.status,200,await response.clone().text());assert.equal((await response.json()).admin.userId,ownerId);pass("active owner receives server-checked identity");
+  await fetch(fixtureOrigin+"/__fixture__/auth-availability",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({unavailable:true})});
+  assert.equal((await owner("/api/auth/session")).status,503);
+  assert.equal((await owner("/api/orders")).status,503);
+  await fetch(fixtureOrigin+"/__fixture__/auth-availability",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({unavailable:false})});
+  assert.equal((await owner("/api/auth/session")).status,200);
+  pass("temporary Auth outages remain retryable and do not impersonate an expired session");
   response=await owner("/admin");html=await response.text();assert.equal(response.status,200);assert.ok(html.includes("经营概览"));assert.ok(html.includes(identities[0].email));assert.match(html,/noindex/);assert.match(response.headers.get("cache-control"),/private|no-store/);pass("owner page is dynamic, private, non-indexable and server-rendered");
   const setOverview=body=>fetch(fixtureOrigin+"/__fixture__/overview",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
   await setOverview({available:true});

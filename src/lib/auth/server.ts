@@ -40,6 +40,7 @@ export async function authRoute(
     let user: User | null = null;
     if (requireLogin) {
       const result = await supabase.auth.getUser();
+      if (result.error && (!result.error.status || result.error.status >= 500 || result.error.status === 429)) throw new HttpError(503, "Account verification is temporarily unavailable. Your work is saved; please retry.");
       user = result.data.user;
       if (result.error || !user || !user.email_confirmed_at) throw new HttpError(401, "Please sign in to access your songs.");
     }

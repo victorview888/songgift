@@ -1,3 +1,4 @@
+import { ArrowIcon } from "@/components/arrow-icon";
 // Layout, Stat and Todo adapted from ShrimpReel admin/index.tsx (MIT).
 // Copyright (c) 2026 qianshuixia. See third-party/shrimpreel/LICENSE and
 // docs/admin-template-migration.md. Metrics and queries are SongGift-specific.
@@ -6,10 +7,10 @@ import type { AdminOverview } from "@/lib/admin/overview";
 import { AdminCard, shortDate } from "./ui";
 
 function Stat({ label, value, hint, href }: { label: string; value: number; hint: string; href: string }) {
-  return <Link className="admin-stat-card" href={href} prefetch={false}><span className="admin-stat-label">{label}</span><strong className="admin-stat-value">{new Intl.NumberFormat("zh-CN").format(value)}</strong><span className="admin-stat-hint">{hint}</span><span className="admin-stat-link">查看订单 ↗</span></Link>;
+  return <Link className="admin-stat-card" href={href} prefetch={false}><span className="admin-stat-label">{label}</span><strong className="admin-stat-value">{new Intl.NumberFormat("zh-CN").format(value)}</strong><span className="admin-stat-hint">{hint}</span><span className="admin-stat-link">查看订单 <ArrowIcon /></span></Link>;
 }
 function Todo({ label, value, href, attention = false }: { label: string; value: number; href: string; attention?: boolean }) {
-  return <Link className="admin-overview-todo" href={href} prefetch={false}><span>{label}</span><strong className={attention && value > 0 ? "admin-count-attention" : ""}>{value}</strong><span aria-hidden="true">↗</span></Link>;
+  return <Link className="admin-overview-todo" href={href} prefetch={false}><span>{label}</span><strong className={attention && value > 0 ? "admin-count-attention" : ""}>{value}</strong><ArrowIcon /></Link>;
 }
 export function Overview({ data }: { data: AdminOverview }) {
   const { counts, links } = data;

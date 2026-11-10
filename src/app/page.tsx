@@ -1,4 +1,8 @@
+import { ArrowIcon } from "@/components/arrow-icon";
 import Link from "next/link";
+import { HomeMenu } from "@/components/home-menu";
+import { SongSamples } from "@/components/song-samples";
+import { publicSongSamples } from "@/lib/song-samples";
 import { SongPrice } from "@/components/song-price";
 import { publicSongPriceUsd } from "@/lib/pricing";
 
@@ -44,6 +48,7 @@ function Brand() {
 }
 
 export default function Home() {
+  const samples = publicSongSamples();
   return (
     <main>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -52,7 +57,7 @@ export default function Home() {
         name: siteName,
         url: siteUrl,
       }) }} />
-      <header className="site-header">
+      <header className="site-header home-header">
         <Link className="brand-link" href="/" aria-label="SongGift home"><Brand /></Link>
         <nav className="desktop-nav" aria-label="Main navigation">
           <a href="#how-it-works">How it works</a>
@@ -60,19 +65,20 @@ export default function Home() {
           <Link href="/pricing">Pricing</Link>
           <a href="#faq">FAQ</a>
         </nav>
-        <div className="header-actions"><AccountNav /><Link className="header-cta" href="/create">Create a song <span aria-hidden="true">↗</span></Link></div>
+        <div className="header-actions"><HomeMenu /><AccountNav /><Link className="header-cta" href="/create">Create a song <ArrowIcon /></Link></div>
       </header>
 
       <section className="hero-section">
         <div className="hero-copy">
           <p className="eyebrow"><span className="eyebrow-dot" />Original songs made from real memories</p>
-          <h1>Turn one unforgettable story into a song made just for them.</h1>
+          <h1>Your story.
+Their favorite song.</h1>
           <p className="hero-description">
-            The most personal gifts start with the details only you know. Tell us the story, and turn it into a song they can keep forever.
+            Turn the names, memories and little moments only you know into a personal song. Read your lyrics for free, then bring them to life.
           </p>
           <div className="hero-actions">
-            <Link className="primary-button" href="/create">Create their song <span aria-hidden="true">↗</span></Link>
-            <a className="text-link" href="#how-it-works">See how it works <span aria-hidden="true">↓</span></a>
+            <Link className="primary-button" href="/create">Create their song <ArrowIcon /></Link>
+            <a className="text-link" href={samples.length ? "#samples" : "#how-it-works"}>{samples.length ? "Hear a sample" : "See how it works"} <span aria-hidden="true">↓</span></a>
           </div>
           <p className="hero-note"><span aria-hidden="true">✦</span> Free lyric preview · US${publicSongPriceUsd()} per song · USD / PayPal</p>
         </div>
@@ -98,11 +104,11 @@ export default function Home() {
         <div><strong>Personal</strong><strong>Original</strong><strong>Made to keep</strong></div>
       </div>
 
-      <div className="home-pricing"><SongPrice compact /></div>
+      {samples.length > 0 && <SongSamples samples={samples} />}
 
       <section className="section" id="how-it-works">
         <div className="section-heading">
-          <div><p className="section-kicker">The simple part</p><h2>A memory becomes music in three thoughtful steps.</h2></div>
+          <div><p className="section-kicker">The simple part</p><h2>A little story. A lasting gift.</h2></div>
           <p>No songwriting experience needed. Just bring the story that means something to you.</p>
         </div>
         <div className="step-grid">
@@ -117,7 +123,7 @@ export default function Home() {
 
       <section className="section section-cream" id="occasions">
         <div className="section-heading">
-          <div><p className="section-kicker">Made for their moment</p><h2>Some stories deserve their own soundtrack.</h2></div>
+          <div><p className="section-kicker">Made for their moment</p><h2>For their kind of special.</h2></div>
           <p>Start with an occasion, then make it completely personal with the memories behind it.</p>
         </div>
         <div className="occasion-grid">
@@ -125,28 +131,13 @@ export default function Home() {
             <Link className="occasion-card" href={href} key={title}>
               <span className="occasion-number">0{index + 1}</span>
               <div><h3>{title}</h3><p>{text}</p></div>
-              <span className="occasion-arrow" aria-hidden="true">↗</span>
+              <span className="occasion-arrow"><ArrowIcon /></span>
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="delivery-section">
-        <div className="delivery-copy"><p className="section-kicker">A gift with a heartbeat</p><h2>More than a recording. It is your story, heard out loud.</h2></div>
-        <div className="delivery-list">
-          <div><span>01</span><strong>Personalized lyrics</strong><p>Your names, details, and memories stay at the center.</p></div>
-          <div><span>02</span><strong>An original song</strong><p>Created from your direction and shaped for the occasion.</p></div>
-          <div><span>03</span><strong>Easy to share</strong><p>Play it together, send it as a surprise, or keep it close.</p></div>
-        </div>
-      </section>
-
-      <section className="quote-section">
-        <span className="quote-mark" aria-hidden="true">“</span>
-        <blockquote>The best gifts are the ones that make someone say,{" "}
-          <em>“How did you remember all of that?”</em>
-        </blockquote>
-        <Link className="light-button" href="/create">Start their song <span aria-hidden="true">↗</span></Link>
-      </section>
+      <div className="home-pricing"><SongPrice compact /></div>
 
       <section className="section faq-section" id="faq">
         <p className="section-kicker">Good to know</p><h2>Questions, answered.</h2>

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAccount } from "./account-provider";
 
 export function usePrivateResource<T>(path: string, next: string) {
@@ -27,5 +27,6 @@ export function usePrivateResource<T>(path: string, next: string) {
     return () => controller.abort();
   }, [loading, user, path, next, revision]);
   const current = user && state?.owner === user.id && state.path === path ? state : null;
-  return { data: current?.data, error: current?.error, loading: loading || !current || current.busy, retry: () => setRevision(value => value + 1) };
+  const retry = useCallback(() => setRevision(value => value + 1), []);
+  return { data: current?.data, error: current?.error, loading: loading || !current || current.busy, retry };
 }
