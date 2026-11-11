@@ -8,11 +8,12 @@ import { publicSongPriceUsd } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 import { AccountNav } from "@/components/account-nav";
-import { publicPageMetadata, siteName, siteUrl } from "@/lib/seo";
+import { publicPageMetadata, websiteStructuredData } from "@/lib/seo";
+import { JsonLd } from "@/components/json-ld";
 
 export const metadata = publicPageMetadata(
-  "Personalized Songs from Your Story | SongGift",
-  "Create a personalized song for someone you love. Share your story, review the lyrics, and turn your memories into music they can keep.",
+  "Personalized Song Gifts from Your Story | SongGift",
+  "Create a personalized AI song gift for birthdays, weddings or anniversaries. Preview and edit lyrics for free, then pay once for your song and audio download.",
   "/",
 );
 
@@ -26,16 +27,16 @@ const occasions = [
   ["Birthday", "A surprise they will remember long after the candles are gone.", "/occasions/birthday"],
   ["Wedding", "The little moments that made your love story yours.", "/occasions/wedding"],
   ["Anniversary", "Celebrate the years, places, and memories you share.", "/occasions/anniversary"],
-  ["Family", "A song for a parent, child, grandparent, or chosen family.", "/create"],
-  ["Pet", "A joyful tribute for the companion always by your side.", "/create"],
-  ["In memory", "Keep a meaningful story close with a song full of heart.", "/create"],
+  ["Family", "A song for a parent, child, grandparent, or chosen family.", "/occasions/family"],
+  ["Pet", "A joyful tribute for the companion always by your side.", "/occasions/pet"],
+  ["In memory", "Keep a meaningful story close with a song full of heart.", "/occasions/memorial"],
 ];
 
 const faqs = [
   ["What do I need to create a song?", "Just a few personal details and a story. The small moments often make the most meaningful lyrics."],
   ["Can I review the lyrics first?", "Yes. You can read and refine the lyrics before moving on to the finished song."],
   ["What occasions work best?", "Birthdays, weddings, anniversaries, family celebrations, pet tributes, and remembrance are all good starting points."],
-  ["Can I choose the mood?", "Yes. Choose from warm, joyful, romantic, nostalgic, peaceful, or uplifting directions."],
+  ["Can I choose the mood?", "Yes. Choose from warm, joyful, romantic, nostalgic or uplifting directions, and describe the feeling you want in your story."],
 ];
 
 function Brand() {
@@ -51,12 +52,7 @@ export default function Home() {
   const samples = publicSongSamples();
   return (
     <main>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        name: siteName,
-        url: siteUrl,
-      }) }} />
+      <JsonLd data={websiteStructuredData()} />
       <header className="site-header home-header">
         <Link className="brand-link" href="/" aria-label="SongGift home"><Brand /></Link>
         <nav className="desktop-nav" aria-label="Main navigation">
@@ -70,11 +66,11 @@ export default function Home() {
 
       <section className="hero-section">
         <div className="hero-copy">
-          <p className="eyebrow"><span className="eyebrow-dot" />Original songs made from real memories</p>
+          <p className="eyebrow"><span className="eyebrow-dot" />Personalized song gifts, made from your memories</p>
           <h1>Your story.
 Their favorite song.</h1>
           <p className="hero-description">
-            Turn the names, memories and little moments only you know into a personal song. Read your lyrics for free, then bring them to life.
+            Turn the names, memories and little moments only you know into a personal AI song. Read your lyrics for free, then bring them to life.
           </p>
           <div className="hero-actions">
             <Link className="primary-button" href="/create">Create their song <ArrowIcon /></Link>
@@ -151,7 +147,7 @@ Their favorite song.</h1>
       <footer className="site-footer">
         <div className="footer-main">
           <div><Link className="brand-link footer-brand-link" href="/"><Brand /></Link><p>Turn the moments that matter into music.</p></div>
-          <div className="footer-links"><Link href="/my-songs">My Songs</Link><Link href="/create">Create a song</Link><Link href="/occasions/birthday">Birthday songs</Link><Link href="/occasions/wedding">Wedding songs</Link><Link href="/occasions/anniversary">Anniversary songs</Link><Link href="/help">Help</Link></div>
+          <div className="footer-links"><Link href="/my-songs">My Songs</Link><Link href="/create">Create a song</Link><Link href="/occasions">Explore song occasions</Link><Link href="/occasions/birthday">Birthday songs</Link><Link href="/occasions/wedding">Wedding songs</Link><Link href="/occasions/anniversary">Anniversary songs</Link><Link href="/help">Help</Link></div>
         </div>
       </footer>
     </main>

@@ -10,6 +10,8 @@ export function LegalFooter() {
   return <footer className="legal-footer">
     <span>© 2026 SongGift</span>
     <nav aria-label="Legal and support">
+      <Link href="/occasions">Song occasions</Link>
+      <Link href="/help">Help</Link>
       <Link href="/pricing">Pricing</Link>
       <Link href="/policies/content-standards">Content Standards</Link>
       <Link href="/report">Report content</Link>
