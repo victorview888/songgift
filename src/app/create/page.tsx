@@ -1,4 +1,5 @@
 "use client";
+import { ArrowIcon } from "@/components/arrow-icon";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -102,16 +103,16 @@ export default function CreatePage() {
       <section className="form-shell">
         <div className="form-intro">
           <p className="section-kicker">Start with the story</p>
-          <h1>Tell us about the person behind the song.</h1>
+          <h1>Every song starts with someone.</h1>
           <p>Share as much as feels natural. Names, places, tiny habits, and favorite memories are all welcome.</p>
         </div>
 
         <p className="legal-notice">See <Link href="/pricing">pricing, payment options and included services</Link> before you start. Please follow our <Link href="/policies/content-standards" target="_blank" rel="noopener">Content Standards</Link>.</p>
         <div className="account-save-note">{user ? <>Your song will be saved to <strong>{user.email}</strong>. Find it anytime in <Link href="/my-songs">My Songs</Link>.</> : <>Bring your story. <Link href="/login?next=/create">Sign in</Link> to save your lyrics and finished song to your account.</>}</div>
         {notice && <p className="draft-status" role="status">{notice}</p>}
-        {ready && activeDraft?.orderId ? <section className="draft-resume" aria-label="Saved song"><h2>Continue where you left off.</h2><p>Continue your saved song to review its lyrics or resume checkout.</p><div className="draft-actions">{activeDraft.stage === "ready" ? <Link className="primary-button" href={"/lyrics/" + activeDraft.orderId}>Continue saved song <span aria-hidden="true">↗</span></Link> : <button className="primary-button" disabled={isGenerating} onClick={() => void submitStory()}>{isGenerating ? "Checking your saved story…" : "Continue saved story"}</button>}<button className="text-button" disabled={isGenerating} onClick={startNew}>Start a new story</button></div></section> : <form className="story-form" onSubmit={handleSubmit}>
+        {ready && activeDraft?.orderId ? <section className="draft-resume" aria-label="Saved song"><h2>Continue where you left off.</h2><p>Continue your saved song to review its lyrics or resume checkout.</p><div className="draft-actions">{activeDraft.stage === "ready" ? <Link className="primary-button" href={"/lyrics/" + activeDraft.orderId}>Continue saved song <ArrowIcon /></Link> : <button className="primary-button" disabled={isGenerating} onClick={() => void submitStory()}>{isGenerating ? "Checking your saved story…" : "Continue saved story"}</button>}<button className="text-button" disabled={isGenerating} onClick={startNew}>Start a new story</button></div></section> : <form className="story-form" onSubmit={handleSubmit}>
           <fieldset className="story-fields" disabled={!ready || !activeDraft || isGenerating || loading}>
-          <div className="field-grid">
+          <h2 className="form-group-heading"><span>01</span> Who is it for?</h2><div className="field-grid">
             <label><span>Their name</span><input required maxLength={100} value={form.recipientName} onChange={(event) => updateField("recipientName", event.target.value)} placeholder="e.g. Emma" /></label>
             <label><span>Your relationship</span><select required value={form.relationship} onChange={(event) => updateField("relationship", event.target.value)}>
               <option value="">Choose one</option><option>Partner</option><option>Spouse</option><option>Parent</option><option>Child</option><option>Friend</option><option>Family member</option><option>Pet</option><option>Someone I miss</option>
@@ -121,13 +122,12 @@ export default function CreatePage() {
             <label><span>What is the occasion?</span><select required value={form.occasion} onChange={(event) => updateField("occasion", event.target.value)}>
               <option value="">Choose one</option><option>Birthday</option><option>Wedding</option><option>Anniversary</option><option>Just because</option><option>Thank you</option><option>In memory</option>
             </select></label>
-            <label><span>What should it feel like?</span><select value={form.mood} onChange={(event) => updateField("mood", event.target.value)}>
-              <option>Warm and heartfelt</option><option>Joyful and bright</option><option>Romantic and intimate</option><option>Nostalgic and gentle</option><option>Uplifting and hopeful</option>
-            </select></label>
+
           </div>
-          <label><span>Tell us the story</span><textarea required minLength={20} maxLength={8000} rows={8} value={form.story} onChange={(event) => updateField("story", event.target.value)} placeholder="What do you love about them? Include a favorite memory, a place you share, a phrase they always say, or anything you want them to hear..." /><small>There is no perfect way to write this. Just write from the heart.</small></label>
-          <div className="field-grid">
-            <label><span>Music direction</span><select value={form.style} onChange={(event) => updateField("style", event.target.value)}>
+          <h2 className="form-group-heading"><span>02</span> The memories that matter</h2><p className="writing-hint">Try a moment you shared, a little habit you love, and what you want them to know.</p><label><span>Tell us the story</span><textarea required minLength={20} maxLength={8000} rows={8} value={form.story} onChange={(event) => updateField("story", event.target.value)} placeholder="What do you love about them? Include a favorite memory, a place you share, a phrase they always say, or anything you want them to hear..." /><small className="story-count">{form.story.length.toLocaleString()} / 8,000 characters · {form.story.length < 20 ? "Add at least 20 characters" : "Ready to turn into lyrics"}</small></label>
+          <h2 className="form-group-heading"><span>03</span> Give it a feeling</h2><div className="field-grid">            <label><span>What should it feel like?</span><select value={form.mood} onChange={(event) => updateField("mood", event.target.value)}>
+              <option>Warm and heartfelt</option><option>Joyful and bright</option><option>Romantic and intimate</option><option>Nostalgic and gentle</option><option>Uplifting and hopeful</option>
+            </select></label><label><span>Music direction</span><select value={form.style} onChange={(event) => updateField("style", event.target.value)}>
               <option>Acoustic pop</option><option>Soft piano ballad</option><option>Indie folk</option><option>Uplifting pop</option><option>Country inspired</option>
             </select></label>
 
@@ -138,7 +138,7 @@ export default function CreatePage() {
             <p><span aria-hidden="true">✦</span> You will review the lyrics before the song is made.</p>
             <button className="primary-button" type="submit" disabled={isGenerating || loading}>
               {isGenerating ? "Writing lyrics..." : user ? "Continue to lyrics" : "Sign in to continue"}
-              {!isGenerating && <span aria-hidden="true">↗</span>}
+              {!isGenerating && <ArrowIcon />}
             </button>
           </div>
           </fieldset>

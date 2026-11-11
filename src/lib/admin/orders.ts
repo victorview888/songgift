@@ -43,18 +43,21 @@ type OrderRow = {
   id: string; user_id: string | null; email: string | null; recipient_name: string;
   occasion: string; status: string; paid_at: string | null; created_at: string;
   paypal_order_id: string | null; music_provider: string | null; music_model: string | null;
+  quoted_amount_minor?: number | null; currency?: string | null; payment_environment?: string | null;
+  capture_records?: { amount_minor: number; currency: string; environment: string; provider: string }[];
   final_assets: { id: string }[];
 };
-export type AdminOrderSummary = Omit<OrderRow, "final_assets"> & { hasFinalAudio: boolean };
+export type AdminOrderSummary = Omit<OrderRow, "final_assets" | "capture_records"> & { hasFinalAudio: boolean; financial: { label: string; amountMinor: number | null; currency: string | null; environment: string | null; provider: string | null } };
 export type AdminOrderList = { orders: AdminOrderSummary[]; page: number; pageSize: number; total: number; totalPages: number };
 
 // Call only AFTER the page/API has checked current admin membership. This
 // privileged read never fetches stories, lyrics, storage paths or signed URLs.
 export async function listAdminOrders(filters: OrderFilters): Promise<AdminOrderList> {
-  const columns = "id,user_id,email,recipient_name,occasion,status,paid_at,created_at,paypal_order_id,music_provider,music_model";
+  const columns = "id,user_id,email,recipient_name,occasion,status,paid_at,created_at,paypal_order_id,music_provider,music_model,quoted_amount_minor,currency,payment_environment";
   const relation = filters.delivery === "delivered" ? "final_assets:song_assets!inner(id)" : "final_assets:song_assets(id)";
   let query = getSupabaseAdmin().from("song_orders")
-    .select(`${columns},${relation}`, { count: "exact" })
+    .select(`${columns},${relation},capture_records:payment_transactions(amount_minor,currency,environment,provider)`, { count: "exact" })
+    .eq("capture_records.transaction_type", "capture").order("occurred_at", { referencedTable: "capture_records", ascending: false }).limit(2, { referencedTable: "capture_records" })
     .eq("final_assets.is_final", true);
   if (filters.q) {
     if (filters.searchBy === "email") {
@@ -73,6 +76,18 @@ export async function listAdminOrders(filters: OrderFilters): Promise<AdminOrder
   const start = (filters.page - 1) * PAGE_SIZE;
   const { data, error, count } = await query.order("created_at", { ascending: false }).order("id", { ascending: false }).range(start, start + PAGE_SIZE - 1);
   if (error || count === null) throw new HttpError(503, "订单查询暂时不可用，请稍后重试。");
-  const orders = (data as unknown as OrderRow[]).map(({ final_assets, ...row }) => ({ ...row, hasFinalAudio: final_assets.length > 0 }));
+  const orders = (data as unknown as OrderRow[]).map(({ final_assets, capture_records = [], ...row }) => {
+    const capture = capture_records.length === 1 ? capture_records[0] : null;
+    const valid = (amount: unknown, currency: unknown) => Number.isSafeInteger(amount) && Number(amount) >= 0 && typeof currency === "string" && /^[A-Z]{3}$/.test(currency);
+    const verified = capture && valid(capture.amount_minor, capture.currency);
+    const quoted = !row.paid_at && !capture_records.length && valid(row.quoted_amount_minor, row.currency);
+    return { ...row, hasFinalAudio: final_assets.length > 0, financial: {
+      label: verified ? "已登记收款" : capture_records.length > 1 ? "多笔收款待核查" : quoted ? "报价（未收款）" : "金额未核实",
+      amountMinor: verified ? capture.amount_minor : quoted ? row.quoted_amount_minor! : null,
+      currency: verified ? capture.currency : quoted ? row.currency! : null,
+      environment: verified ? capture.environment : row.payment_environment || null,
+      provider: verified ? capture.provider : null,
+    } };
+  });
   return { orders, page: filters.page, pageSize: PAGE_SIZE, total: count, totalPages: Math.ceil(count / PAGE_SIZE) };
 }

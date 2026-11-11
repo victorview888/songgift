@@ -8,7 +8,7 @@ import type { ContentReport } from "@/lib/safety/reports";
 const labels: Record<string, string> = { received: "待受理", reviewing: "核查中", needs_information: "待补资料", action_taken: "已采取措施", no_violation: "未发现违规" };
 
 function ReportReview({ report, onSaved }: { report: ContentReport; onSaved: () => void }) {
-  const [status, setStatus] = useState("reviewing"), [note, setNote] = useState(""), [busy, setBusy] = useState(false), [error, setError] = useState("");
+  const [status, setStatus] = useState<string>(report.status === "received" ? "reviewing" : report.status), [note, setNote] = useState(""), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const attempt = useRef<{ body: string; id: string } | null>(null);
   async function submit(event: FormEvent) {
     event.preventDefault(); if (busy) return;
@@ -31,8 +31,8 @@ export function ContentReportInbox({ reports, ownerId }: { reports: ContentRepor
   if (loading || user?.id !== ownerId) return <p role="status">正在核对当前管理员账号…</p>;
   return <>{message && <p role="status" className="admin-operation-message">{message}</p>}{reports.map(report => <article className="admin-card" key={report.id + report.updated_at}>
     <h2>{categoryLabels[report.category as keyof typeof categoryLabels] || report.category} · {labels[report.status]}</h2>
-    <dl className="admin-fields"><dt>举报编号</dt><dd>{report.id}</dd><dt>内容引用</dt><dd className="admin-long-text">{report.content_reference}</dd><dt>收到时间</dt><dd>{new Date(report.created_at).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })}（北京时间）</dd><dt>联系邮箱</dt><dd>{report.contact_email || "未提供"}（未经身份验证）</dd><dt>描述</dt><dd className="admin-long-text">{report.details}</dd></dl>
+    <dl className="admin-fields"><dt>举报编号</dt><dd>{report.id}</dd><dt>内容引用</dt><dd className="admin-long-text">{report.content_reference}</dd><dt>收到时间</dt><dd>{new Date(report.created_at).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })}（北京时间）</dd><dt>联系邮箱</dt><dd>{report.contact_email || "未提供"}（未经身份验证）</dd><dt>描述</dt><dd className="admin-long-text"><details><summary>{report.details.slice(0, 90)}{report.details.length > 90 ? "…" : ""}</summary><p>{report.details}</p></details></dd></dl>
     {report.reviews.length > 0 && <details className="admin-long-text"><summary>最近 5 条核查记录</summary>{report.reviews.map((review, i) => <p key={i}><strong>{labels[review.status]}</strong> · {new Date(review.created_at).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })}<br />{review.note}</p>)}</details>}
-    <ReportReview report={report} onSaved={() => { setMessage("处理记录已保存。请按实际处理结果通知相关方。"); router.refresh(); }} />
+    <details className="report-action"><summary>查看或更新处理结果</summary><ReportReview report={report} onSaved={() => { setMessage("处理记录已保存。请按实际处理结果通知相关方。"); router.refresh(); }} /></details>
   </article>)}</>;
 }

@@ -5,6 +5,31 @@ import vm from "node:vm";
 import ts from "typescript";
 import { createClient } from "@supabase/supabase-js";
 
+test("financial summaries distinguish captured, quoted, unknown and conflicting payments", async () => {
+  const base = { id: "a", final_assets: [], quoted_amount_minor: 999, currency: "USD", payment_environment: "live" };
+  const capture = { amount_minor: 799, currency: "USD", environment: "sandbox", provider: "paypal" };
+  const f = fixture({ rows: [
+    { ...base, paid_at: "2026-11-10", capture_records: [capture] },
+    { ...base, paid_at: null, capture_records: [] },
+    { ...base, paid_at: "2026-11-10", capture_records: [] },
+    { ...base, paid_at: "2026-11-10", capture_records: [capture, capture] },
+    { ...base, quoted_amount_minor: -1, paid_at: null, capture_records: [] },
+  ], total: 5 });
+  const { orders } = await f.listAdminOrders(f.filters());
+  assert.equal(orders[0].financial.amountMinor, 799);
+  assert.equal(orders[0].financial.environment, "sandbox");
+  assert.equal(orders[1].financial.label, "报价（未收款）");
+  assert.equal(orders[2].financial.amountMinor, null);
+  assert.equal(orders[3].financial.label, "多笔收款待核查");
+  assert.equal(orders[3].financial.amountMinor, null);
+  assert.equal(orders[4].financial.amountMinor, null);
+  const query = f.calls[0].url.searchParams;
+  assert.equal(query.get("capture_records.transaction_type"), "eq.capture");
+  assert.equal(query.get("capture_records.limit"), "2");
+  assert.equal(f.calls.length, 1);
+  assert.ok(orders.every(order => !Object.hasOwn(order, "capture_records")));
+});
+
 class HttpError extends Error { constructor(status, message) { super(message); this.status = status; } }
 function fixture({ rows = [], total = 0, failure = false } = {}) {
   const calls = [];

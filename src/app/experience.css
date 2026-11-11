@@ -1,0 +1,157 @@
+/* Shared visual rhythm for the customer journey. Keep admin styles scoped. */
+:root { --radius-card: 20px; --space-page: 24px; }
+body { font-size: 16px; line-height: 1.5; }
+h1, h2, h3 { overflow-wrap: anywhere; }
+.primary-button, .header-cta, .light-button { min-height: 48px; padding: 12px 22px; font-size: 14px; }
+.text-button, .text-link { min-height: 44px; align-items: center; }
+.text-button { padding: 10px 4px; }
+.arrow-icon { flex-shrink: 0; vertical-align: middle; }
+.site-header { padding: 20px 0; }
+.hero-section { min-height: 570px; padding: 48px 0 64px; gap: 48px; }
+.hero-copy h1 { font-size: clamp(48px, 5vw, 68px); line-height: 1.06; letter-spacing: -.045em; white-space: pre-line; }
+.hero-description { margin-top: 24px; font-size: 18px; }
+.hero-art { min-height: 440px; min-width: 0; }
+.album-card { width: min(340px, 82%); }
+.record-wrap { height: 240px; }
+.record { width: min(210px, 100%); height: auto; aspect-ratio: 1; position: relative; }
+.record::after { width: 82%; height: 82%; }
+.record-label { max-width: 32%; max-height: 32%; }
+.hero-note { font-size: 13px; line-height: 1.8; }
+.trust-strip { padding: 20px 0; }
+.section { padding-top: 64px; padding-bottom: 64px; }
+.section-heading h2, .faq-section h2 { font-size: clamp(32px, 4vw, 48px); letter-spacing: -.04em; line-height: 1.12; }
+.section-heading { margin-bottom: 32px; }
+.step-card { min-height: 210px; }
+.step-card h3, .occasion-card h3 { letter-spacing: -.025em; }
+.step-card p, .occasion-card p, .faq-list p { font-size: 15px; }
+.occasion-card { min-height: 160px; border-radius: var(--radius-card); transition: background 180ms ease; }
+.occasion-card:nth-child(3n+1) { background: #fffaf2; }
+.occasion-card:nth-child(3n+2) { background: #eeebf5; }
+.occasion-card:nth-child(3n) { background: #edf1e7; }
+.occasion-card:hover { background: #fff; }
+.home-pricing { padding-top: 56px; padding-bottom: 0; }
+.site-footer { padding-top: 48px; padding-bottom: 28px; }
+.footer-links { flex-wrap: wrap; gap: 12px 24px; }
+.mobile-menu { display: none; position: relative; }
+.mobile-menu nav { position: absolute; z-index: 5; top: 48px; right: 0; width: 210px; padding: 12px; display: grid; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 30px #29231f18; }
+.mobile-menu nav a { padding: 12px; font-size: 14px; }
+.connection-note { background: #fff4d9; padding: 10px 20px; font-size: 14px; text-align: center; }
+.form-shell { padding-top: 48px; padding-bottom: 72px; }
+.form-intro h1 { font-size: clamp(36px, 4.5vw, 52px); line-height: 1.1; letter-spacing: -.04em; }
+.form-intro { margin-bottom: 24px; }
+.form-intro > p:last-child { margin-top: 16px; font-size: 16px; }
+.story-form { padding: 32px; border-radius: var(--radius-card); box-shadow: 0 12px 32px #45332508; }
+.story-form label { margin-bottom: 20px; }
+.story-form small, .legal-notice, .form-error, .form-note { font-size: 13px; line-height: 1.7; }
+.form-group-heading { grid-column: 1 / -1; font-size: 20px; letter-spacing: -.025em; margin: 12px 0 20px; }
+.form-group-heading span { color: var(--orange-dark); font-size: 12px; margin-right: 10px; }
+.writing-hint { color: var(--muted); font-size: 14px; margin: -8px 0 16px; }
+.story-count { text-align: right; }
+.lyrics-shell { width: min(1160px, calc(100% - 48px)); }
+.lyrics-form { display: grid; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; gap: 32px; }
+.lyrics-edit-panel { min-width: 0; }
+.story-form .lyrics-editor { min-height: 480px; padding: 22px; font-family: Georgia, serif; font-size: 17px; line-height: 1.8; }
+.lyrics-toolbar { gap: 16px; align-items: baseline; font-size: 14px; }
+.lyrics-toolbar small { margin-top: 0; font-size: 13px; }
+.checkout-summary { position: sticky; top: 24px; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--cream); min-width: 0; }
+.checkout-summary h2 { font-size: 32px; margin: 8px 0; letter-spacing: -.04em; }
+.checkout-summary p { font-size: 14px; color: var(--muted); }
+.checkout-summary ul { padding-left: 18px; font-size: 14px; line-height: 1.9; }
+.checkout-summary .form-submit-row { padding-top: 20px; }
+.checkout-summary .primary-button { width: 100%; }
+.checkout-summary .legal-consent, .checkout-summary .legal-notice { font-size: 13px; }
+.account-auth-shell { margin-top: 40px; margin-bottom: 60px; }
+.account-auth-card { padding: 40px; }
+.account-auth-card h1 { font-size: 36px; letter-spacing: -.04em; }
+.auth-small-print, .auth-small-actions, .existing-code-button { font-size: 13px; }
+.result-shell { padding: 56px 0 72px; gap: 56px; }
+.result-copy h1 { font-size: clamp(36px, 4.5vw, 54px); line-height: 1.1; letter-spacing: -.04em; }
+.result-note, .last-checked { font-size: 13px; }
+.song-progress-note { background: #ffffff60; font-size: 16px; font-weight: 600; }
+.song-audio { margin-top: 28px; }
+.song-audio audio { display: block; width: 100%; }
+.audio-actions { margin-top: 16px; }
+.song-audio.compact { margin-top: 0; margin-bottom: 16px; }
+.song-audio.compact .audio-actions { display: none; }
+.library-heading h1 { font-size: clamp(40px, 5vw, 56px); letter-spacing: -.04em; }
+.library-account { margin-top: 24px; font-size: 14px; }
+.library-cover { min-height: 180px; padding: 24px; }
+.card-order-number, .card-date, .song-status { font-size: 13px; letter-spacing: 0; }
+.library-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+.library-filters button { min-height: 44px; font-size: 13px; }
+.library-card-body { padding: 24px; }
+.library-card-body h2 { font-size: 24px; }
+.customer-shell { margin-top: 32px; }
+.customer-title { font-size: clamp(34px, 4vw, 48px); letter-spacing: -.04em; }
+.customer-card { border-radius: var(--radius-card); }
+.support-nav { display: flex; flex-wrap: wrap; gap: 16px 32px; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.support-nav details { flex: 1 1 280px; }
+.support-nav summary { font-size: 14px; cursor: pointer; padding: 8px 0; font-weight: 700; }
+.support-nav details div { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.support-nav a { display: inline-flex; align-items: center; min-height: 40px; font-size: 13px; color: var(--muted); }
+.support-nav a[aria-current] { color: var(--orange-dark); text-decoration: underline; text-underline-offset: 5px; }
+.sample-section h2 { font-size: 40px; letter-spacing: -.04em; }
+.sample-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+.sample-card { min-width: 0; padding: 24px; border: 1px solid var(--line); background: var(--cream); border-radius: 20px; }
+.sample-card h3 { font-size: 24px; }
+.sample-card audio { width: 100%; }
+@media(max-width: 800px) {
+  .mobile-menu { display: block; }
+  .hero-section { gap: 24px; padding-top: 40px; padding-bottom: 40px; }
+  .hero-art { min-height: 340px; }
+  .hero-copy h1 { font-size: 42px; }
+  .hero-description { font-size: 16px; }
+  .section { padding-top: 48px; padding-bottom: 48px; }
+  .lyrics-form { grid-template-columns: minmax(0,1fr); gap: 24px; }
+  .checkout-summary { position: static; }
+  .story-form .lyrics-editor { min-height: 360px; }
+  .result-shell { gap: 24px; padding-top: 32px; }
+  .result-record { width: 180px; height: 180px; justify-self: center; box-shadow: 10px 12px 0 #28231f18; }
+  .result-record .record-label { width: 50px; height: 50px; }
+  .library-cover { min-height: 150px; }
+  .sample-grid { grid-template-columns: minmax(0,1fr); }
+}
+@media(max-width: 500px) {
+  .site-header { gap: 12px; padding: 16px 0; }
+  .home-header { display: grid; grid-template-columns: minmax(0,1fr) auto; }
+  .home-header .header-actions { display: contents; }
+  .home-header .brand-link { grid-column: 1; grid-row: 1; }
+  .home-header .account-nav { grid-column: 2; grid-row: 1; justify-self: end; }
+  .home-header .mobile-menu { grid-column: 1; grid-row: 2; }
+  .home-header .mobile-menu nav { right: auto; left: 0; }
+  .home-header .header-cta { grid-column: 2; grid-row: 2; justify-self: end; }
+  .header-actions { flex-wrap: wrap; gap: 8px 12px; }
+  .header-cta { font-size: 13px; }
+  .hero-section { padding-left: 0; padding-right: 0; }
+  .hero-copy h1 { font-size: clamp(36px, 10vw, 42px); }
+  .hero-actions { gap: 12px; margin-top: 24px; }
+  .hero-art { min-height: 320px; }
+  .album-card { padding: 16px; }
+  .record-wrap { height: 210px; }
+  .album-bottom strong { font-size: 20px; }
+  .floating-note { padding: 8px; }
+  .form-shell { padding-top: 32px; }
+  .form-intro h1, .result-copy h1, .occasion-hero h1 { font-size: 36px; letter-spacing: -.04em; line-height: 1.12; }
+  .story-form { padding: 20px; }
+  .lyrics-form { background: transparent; border: 0; box-shadow: none; padding: 0; }
+  .story-form .lyrics-editor { min-height: 380px; padding: 16px; }
+  .lyrics-toolbar { flex-wrap: wrap; gap: 4px; }
+  .account-auth-art { padding: 20px; }
+  .account-auth-art .library-record { width: 54px; }
+  .account-auth-art > p { font-size: 24px; }
+  .account-auth-card { padding: 24px; }
+  .account-auth-card h1 { font-size: 30px; }
+  .library-heading h1 { font-size: 40px; }
+  .library-toolbar { flex-direction: column; gap: 8px; }
+  .library-filters button { font-size: 13px; padding: 10px 12px; }
+  .library-cover { min-height: 150px; }
+  .library-cover .library-record { width: 110px; }
+  .customer-shell { margin-top: 24px; }
+  .support-nav { gap: 8px; margin-bottom: 24px; }
+  .support-nav details { flex-basis: 100%; }
+  .sample-section h2 { font-size: 32px; }
+}
+@media(prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}

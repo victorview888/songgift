@@ -1,3 +1,4 @@
+import { ArrowIcon } from "@/components/arrow-icon";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -42,7 +43,7 @@ export default async function OccasionPage({ params }: Props) {
             <p className="section-kicker">A song for the occasion</p>
             <h1>{occasion.heading}</h1>
             <p>{occasion.introduction}</p>
-            <Link className="primary-button" href="/create">Create a {occasion.name.toLowerCase()} song <span aria-hidden="true">↗</span></Link>
+            <Link className="primary-button" href="/create">Create a {occasion.name.toLowerCase()} song <ArrowIcon /></Link>
           </div>
           <div className="occasion-art" aria-hidden="true"><span>♪</span><p>{occasion.name}<br />memories,<br /><em>made into music.</em></p></div>
         </section>
@@ -64,9 +65,9 @@ export default async function OccasionPage({ params }: Props) {
           <div className="occasion-answer"><h3>{occasion.question}</h3><p>{occasion.answer}</p></div>
         </section>
 
-        <section className="occasion-next" aria-label="Other occasions"><h2>Find another moment worth singing about.</h2><div>{occasionSlugs.filter((other) => other !== slug).map((other) => <Link key={other} href={`/occasions/${other}`}>{occasions[other].name} songs <span aria-hidden="true">↗</span></Link>)}</div></section>
+        <section className="occasion-next" aria-label="Other occasions"><h2>Find another moment worth singing about.</h2><div>{occasionSlugs.filter((other) => other !== slug).map((other) => <Link key={other} href={`/occasions/${other}`}>{occasions[other].name} songs <ArrowIcon /></Link>)}</div></section>
       </div>
-      <footer className="occasion-footer"><Link href="/">SongGift</Link><Link href="/create">Create a song <span aria-hidden="true">↗</span></Link></footer>
+      <footer className="occasion-footer"><Link href="/">SongGift</Link><Link href="/create">Create a song <ArrowIcon /></Link></footer>
     </main>
   );
 }

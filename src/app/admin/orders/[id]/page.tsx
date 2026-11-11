@@ -35,10 +35,9 @@ export default async function AdminOrderDetailPage({ params, searchParams }: {
     unavailable = true;
   }
   if (unavailable || !data) return <AdminShell current="orders"><AdminPage title="订单详情"><LoadState error="订单详情暂时不可用，请稍后重试。"><Link href={back}>{backLabel}</Link></LoadState></AdminPage></AdminShell>;
-  let history: OrderHistory | undefined;
-  try { history = await getAdminOrderHistory(id); } catch { /* Existing details stay available while the operations schema is unavailable. */ }
-  let notices: Awaited<ReturnType<typeof getOrderNotifications>> | undefined;
-  try { notices = await getOrderNotifications(id); } catch { /* Missing notification schema never conceals existing order data. */ }
+  const [historyResult, noticesResult] = await Promise.allSettled([getAdminOrderHistory(id), getOrderNotifications(id)]);
+  const history: OrderHistory | undefined = historyResult.status === "fulfilled" ? historyResult.value : undefined;
+  const notices = noticesResult.status === "fulfilled" ? noticesResult.value : undefined;
   const { order, assets, timeline } = data;
   const captured = history?.payments.find(payment => payment.transaction_type === "capture");
   return <AdminShell current="orders"><AdminPage title="订单详情" readOnly={false} description="时间均为北京时间（UTC+8）。下方可处理原订单及已有任务，操作会写入审计。" actions={<Link className="admin-button admin-button-quiet" href={back}>← {backLabel}</Link>}>
