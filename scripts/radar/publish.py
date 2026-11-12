@@ -1,6 +1,7 @@
 """Publish a bounded public-source report with short-lived GitHub OIDC identity."""
 import json
 import os
+import re
 from pathlib import Path
 import sys
 import time
@@ -25,6 +26,7 @@ def publish(path):
         raise ValueError("Report does not belong to this workflow run")
     opener = urllib.request.build_opener(NoRedirect)
     for attempt in range(5):
+        stage = "GitHub identity"
         try:
             request_url = os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"]
             # The request URL is supplied by GitHub; do not allow forwarding its bearer elsewhere.
@@ -37,6 +39,7 @@ def publish(path):
             req = urllib.request.Request(request_url, headers={"Authorization": "Bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]})
             with opener.open(req, timeout=20) as response:
                 token = json.loads(response.read(30000))["value"]
+            stage = "SongGift report"
             req = urllib.request.Request(ENDPOINT, data=body, headers={"Content-Type": "application/json", "Authorization": "Bearer " + token, "User-Agent": "SongGift-Free-Radar/1"}, method="POST")
             with opener.open(req, timeout=35) as response:
                 result = json.loads(response.read(1000))
@@ -45,8 +48,15 @@ def publish(path):
             print("Report saved to SongGift admin (idempotent upload).")
             return
         except urllib.error.HTTPError as exc:
-            # Never log headers, JWTs, response bodies or query strings.
-            print(f"Report upload HTTP {exc.code}; attempt {attempt + 1}/5")
+            # Log only a bounded machine error code, never arbitrary response text.
+            code = ""
+            try:
+                value = json.loads(exc.read(1000)).get("code", "")
+                if isinstance(value, str) and re.fullmatch(r"RADAR_[A-Z0-9_]{1,48}", value):
+                    code = " (" + value + ")"
+            except (ValueError, AttributeError):
+                pass
+            print(f"{stage} HTTP {exc.code}{code}; attempt {attempt + 1}/5", flush=True)
             if exc.code not in (429, 500, 502, 503, 504) or attempt == 4:
                 raise RuntimeError("Report upload rejected") from None
         except (urllib.error.URLError, TimeoutError, ConnectionError):

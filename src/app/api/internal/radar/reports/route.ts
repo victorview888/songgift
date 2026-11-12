@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { HttpError } from "@/lib/http-error";
-import { verifyRadarIdentity } from "@/lib/radar/github-identity";
+import { RadarKeyUnavailable, verifyRadarIdentity } from "@/lib/radar/github-identity";
 import { readRadarBody, validateRadarReport } from "@/lib/radar/report";
 import { saveRadarReport } from "@/lib/radar/store";
 
@@ -16,6 +16,6 @@ export async function POST(request: Request) {
     const saved = await saveRadarReport(report);
     return NextResponse.json(saved, { status: saved.duplicate ? 200 : 201, headers });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof HttpError ? error.message : "报告上报暂时不可用。" }, { status: error instanceof HttpError ? error.status : 503, headers });
+    return NextResponse.json({ error: error instanceof HttpError ? error.message : "报告上报暂时不可用。", ...(error instanceof RadarKeyUnavailable ? { code: error.code } : {}) }, { status: error instanceof HttpError ? error.status : 503, headers });
   }
 }
