@@ -8,6 +8,9 @@ const REPO_ID = "1432492683", OWNER_ID = "261133674";
 const WORKFLOW = `${REPOSITORY}/.github/workflows/radar-free.yml@refs/heads/master`;
 type Jwk = JsonWebKey & { kid?: string; alg?: string; use?: string };
 let cache: { keys: Jwk[]; loaded: number } | undefined;
+export class RadarKeyUnavailable extends HttpError {
+  constructor(public code: string) { super(503, "采集身份验证暂时不可用，请重试。"); }
+}
 
 function denied(): never { throw new HttpError(401, "采集任务身份无效或已过期。"); }
 function decode(value: string) {
@@ -23,14 +26,16 @@ async function keyFor(kid: string): Promise<Jwk> {
   const now = Date.now();
   if (!cache || now - cache.loaded > 300000 || (!cache.keys.some(k => k.kid === kid) && now - cache.loaded > 60000)) {
     try {
-      const response = await fetch(`${ISSUER}/.well-known/jwks`, { redirect: "error", signal: AbortSignal.timeout(6000) });
-      if (!response.ok) throw new Error("keys unavailable");
+      // workerd supports manual/follow only. Reject 3xx explicitly; never follow
+      // the issuer to a different host while resolving verification keys.
+      const response = await fetch(`${ISSUER}/.well-known/jwks`, { cache: "no-store", headers: { Accept: "application/json", "User-Agent": "SongGift-Free-Radar/1" }, redirect: "manual", signal: AbortSignal.timeout(6000) });
+      if (!response.ok) throw new RadarKeyUnavailable(`RADAR_KEYS_HTTP_${response.status}`);
       const text = await response.text();
       if (text.length > 131072) throw new Error("keys too large");
       const data = JSON.parse(text);
       if (!Array.isArray(data.keys) || !data.keys.length || data.keys.length > 20) throw new Error("keys malformed");
       cache = { keys: data.keys, loaded: now };
-    } catch { throw new HttpError(503, "采集身份验证暂时不可用，请重试。"); }
+    } catch (error) { throw error instanceof RadarKeyUnavailable ? error : new RadarKeyUnavailable(error instanceof TypeError ? "RADAR_KEYS_TRANSPORT" : "RADAR_KEYS_UNAVAILABLE"); }
   }
   const key = cache.keys.find(k => k.kid === kid && k.kty === "RSA" && (!k.alg || k.alg === "RS256") && (!k.use || k.use === "sig"));
   if (!key) denied();

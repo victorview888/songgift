@@ -45,6 +45,15 @@ test('rejects forged signature and missing token',async()=>{
  assert.equal((await post(body(),parts.join('.'))).status,401);
  assert.equal((await post(body(),'')).status,401);
 });
+test('JWKS transport failures fail closed with a safe diagnostic code and no database writes',async()=>{
+ const broken=await fixture({oidcJwks:{unavailable:true,keys:[]}});
+ try {
+  const request=new Request(audience,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+await token()},body:JSON.stringify(body())});
+  const response=await broken.load('src/app/api/internal/radar/reports/route.ts').POST(request);
+  assert.equal(response.status,503);assert.match((await response.json()).code,/^RADAR_KEYS_/);
+  assert.ok(broken.calls.every(call=>!call.url.includes('supabase')));
+ }finally{await broken.close();}
+});
 test('binds body to signed run metadata and enforces freshness',async()=>{
  assert.equal((await post(body('999'),await token())).status,403);
  assert.equal((await post({...body(),generatedAt:'2026-01-01T00:00:00Z'},await token())).status,400);

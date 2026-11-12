@@ -44,6 +44,7 @@ export async function fixture({legacyContent=false,oidcJwks}={}) {
   calls.push({url:url.toString(),method,body,headers:init.headers});
   if(url.hostname==='token.actions.githubusercontent.com') {
    assert.equal(url.pathname,'/.well-known/jwks');assert.ok(oidcJwks,'OIDC requests require an explicit isolated JWKS fixture');
+   assert.equal(init.cache,'no-store');assert.equal(init.redirect,'manual');assert.equal(init.headers['User-Agent'],'SongGift-Free-Radar/1');
    if(oidcJwks.unavailable)throw new Error('Isolated JWKS outage');return json({keys:oidcJwks.keys});
   }
   if(url.hostname==='api.deepseek.com'){const blocked=fail.safetyBlocked||(fail.safetyOutput&&JSON.parse(body.messages[1].content).content.includes('\"lyrics\":'));return json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(fail.safetyMalformed?{allowed:'unknown'}:{allowed:!blocked,category:blocked?'other':'safe'})}}]});}

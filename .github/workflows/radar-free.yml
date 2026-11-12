@@ -66,4 +66,4 @@ jobs:
         with:
           name: public-radar-report
       - name: Upload with GitHub short-lived identity
-        run: python3 scripts/radar/publish.py radar-report.json
+        run: python3 -u scripts/radar/publish.py radar-report.json
