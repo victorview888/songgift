@@ -26,7 +26,9 @@ async function keyFor(kid: string): Promise<Jwk> {
   const now = Date.now();
   if (!cache || now - cache.loaded > 300000 || (!cache.keys.some(k => k.kid === kid) && now - cache.loaded > 60000)) {
     try {
-      const response = await fetch(`${ISSUER}/.well-known/jwks`, { cache: "no-store", headers: { Accept: "application/json", "User-Agent": "SongGift-Free-Radar/1" }, redirect: "error", signal: AbortSignal.timeout(6000) });
+      // workerd supports manual/follow only. Reject 3xx explicitly; never follow
+      // the issuer to a different host while resolving verification keys.
+      const response = await fetch(`${ISSUER}/.well-known/jwks`, { cache: "no-store", headers: { Accept: "application/json", "User-Agent": "SongGift-Free-Radar/1" }, redirect: "manual", signal: AbortSignal.timeout(6000) });
       if (!response.ok) throw new RadarKeyUnavailable(`RADAR_KEYS_HTTP_${response.status}`);
       const text = await response.text();
       if (text.length > 131072) throw new Error("keys too large");
