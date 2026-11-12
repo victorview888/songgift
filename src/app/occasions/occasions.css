@@ -1,0 +1,28 @@
+.occasion-breadcrumb { flex-wrap: wrap; }
+.occasion-action-links { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 16px 0 0; }
+.occasion-action-links a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--orange-dark); font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
+.occasion-gifting { padding: 64px 0; border-top: 1px solid var(--line); }
+.occasion-gifting h2 { max-width: 760px; margin: 0 0 24px; font-size: clamp(30px, 4vw, 46px); line-height: 1.12; letter-spacing: -.04em; }
+.occasion-gifting > p:not(.section-kicker) { max-width: 780px; color: var(--muted); font-size: 16px; line-height: 1.8; }
+.occasion-gifting > .primary-button { margin-top: 24px; }
+.occasion-hub-heading { max-width: 840px; padding: 64px 0 40px; }
+.occasion-hub-heading h1 { margin: 0; font-size: clamp(36px, 5vw, 64px); line-height: 1.08; letter-spacing: -.045em; }
+.occasion-hub-heading > p:last-child { max-width: 700px; margin-top: 24px; color: var(--muted); font-size: 18px; line-height: 1.7; }
+.occasion-hub-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-bottom: 64px; }
+.occasion-hub-card { min-width: 0; padding: 28px; border: 1px solid var(--line); border-radius: 20px; background: var(--cream); }
+.occasion-hub-card:nth-child(3n+2) { background: var(--lavender); }
+.occasion-hub-card:nth-child(3n) { background: var(--green); }
+.occasion-hub-card h2 { margin: 24px 0 12px; font-size: 26px; letter-spacing: -.03em; }
+.occasion-hub-card h2 a { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; }
+.occasion-hub-card h2 a:hover { text-decoration: underline; text-underline-offset: 5px; }
+.occasion-hub-card p { margin-bottom: 0; color: var(--muted); font-size: 15px; line-height: 1.7; }
+@media (max-width: 800px) {
+  .occasion-hub-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .occasion-hub-heading { padding-top: 40px; }
+}
+@media (max-width: 500px) {
+  .occasion-hub-grid { grid-template-columns: minmax(0, 1fr); margin-bottom: 40px; }
+  .occasion-hub-card { padding: 24px; }
+  .occasion-hub-heading > p:last-child { font-size: 16px; }
+  .occasion-gifting { padding: 40px 0; }
+}
