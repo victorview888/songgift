@@ -17,7 +17,8 @@
     "deploy:maintenance": "wrangler deploy --config wrangler.maintenance.jsonc",
     "test:delivery": "node --test tests/delivery-operations.test.mjs",
     "test:drafts": "node --test tests/story-drafts.test.mjs",
-    "test:account": "node --test tests/customer-account.test.mjs"
+    "test:account": "node --test tests/customer-account.test.mjs",
+    "test:radar": "node --test --test-isolation=none tests/radar-reports.test.mjs && python tests/radar-collector.test.py"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

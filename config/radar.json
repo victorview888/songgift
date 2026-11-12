@@ -1,0 +1,12 @@
+{
+  "lang": "zh",
+  "x_accounts": { "labs": [], "bloggers": [] },
+  "sitemaps": {
+    "songgift": { "label": "SongGift 公开页面", "index": "https://www.songforalways.com/sitemap.xml", "pause": 3 },
+    "giftsong": { "label": "GiftSong.ai 公开页面", "index": "https://www.giftsong.ai/sitemap.xml", "pause": 3 },
+    "thesongforyou": { "label": "The Song For You 公开页面", "index": "https://thesongforyou.com/sitemap.xml", "pause": 3 }
+  },
+  "judge": { "model": "" },
+  "usecases": { "per_day": 0 },
+  "gsc": {}
+}
