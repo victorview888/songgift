@@ -12,7 +12,7 @@ export const otherId='b3f10454-1234-4234-8234-012345678902';
 export function wav() {
   const b=Buffer.alloc(204);b.write('RIFF');b.writeUInt32LE(196,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(8000,24);b.writeUInt32LE(16000,28);b.writeUInt16LE(2,32);b.writeUInt16LE(16,34);b.write('data',36);b.writeUInt32LE(160,40);return b;
 }
-export async function fixture({legacyContent=false}={}) {
+export async function fixture({legacyContent=false,oidcJwks}={}) {
  const db=new PGlite();
  await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema storage;
  create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
@@ -42,6 +42,10 @@ export async function fixture({legacyContent=false}={}) {
  const transport=async(input,init={})=>{
   const url=new URL(input);const method=init.method||'GET';const body=typeof init.body==='string'&&init.body.startsWith('{')?JSON.parse(init.body):{};
   calls.push({url:url.toString(),method,body,headers:init.headers});
+  if(url.hostname==='token.actions.githubusercontent.com') {
+   assert.equal(url.pathname,'/.well-known/jwks');assert.ok(oidcJwks,'OIDC requests require an explicit isolated JWKS fixture');
+   if(oidcJwks.unavailable)throw new Error('Isolated JWKS outage');return json({keys:oidcJwks.keys});
+  }
   if(url.hostname==='api.deepseek.com'){const blocked=fail.safetyBlocked||(fail.safetyOutput&&JSON.parse(body.messages[1].content).content.includes('\"lyrics\":'));return json({choices:[{finish_reason:'stop',message:{content:JSON.stringify(fail.safetyMalformed?{allowed:'unknown'}:{allowed:!blocked,category:blocked?'other':'safe'})}}]});}
   if(url.hostname==='audio.isolated.example')return fail.download?new Response('unavailable',{status:503}):new Response(fail.invalidAudio?'not an audio file':wav(),{headers:{'Content-Type':'audio/wav'}});
   if(url.hostname==='api.resend.com') {
@@ -92,7 +96,7 @@ export async function fixture({legacyContent=false}={}) {
     if(!objects.has(key))return json({message:'Object not found',statusCode:'404'},404);
     return new Response(objects.get(key),{headers:{'Content-Type':'audio/wav'}});
    }
-   const table=url.pathname.split('/').at(-1);assert.ok(['song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests','payment_transactions','content_reports','content_report_reviews','content_report_limits'].includes(table),table);
+   const table=url.pathname.split('/').at(-1);assert.ok(['radar_reports','song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests','payment_transactions','content_reports','content_report_reviews','content_report_limits'].includes(table),table);
    const cond=matches(url.searchParams);
    if(method==='GET') {
     if(fail.paymentHistory&&table==='song_orders'&&url.searchParams.get('select')?.includes('payment_transactions'))return json({message:'isolated history failure'},503);
@@ -161,7 +165,7 @@ export async function fixture({legacyContent=false}={}) {
   const full=path.resolve(filename);if(cache.has(full))return cache.get(full);
   const exports={};cache.set(full,exports);
   const compiled=ts.transpileModule(readFileSync(full,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;
-  const globals={Buffer,process:{env},crypto,fetch:fetcher,URL,Response,Request,AbortSignal,console};
+  const globals={Buffer,process:{env},crypto,fetch:fetcher,URL,Response,Request,Headers,AbortSignal,console,TextEncoder,TextDecoder,atob,Uint8Array};
   const requireModule=name=>{
    if(name==='server-only')return {};
    if(name==='node:crypto')return {createHash,createHmac};

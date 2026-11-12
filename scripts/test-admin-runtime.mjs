@@ -28,7 +28,7 @@ async function serve() {
   let authUnavailable=false;
   let historyAvailable=true;
   let jobsAvailable=true;
-  let overviewAvailable=true, extraOrder=false;
+  let overviewAvailable=true, extraOrder=false, radarMode="records";
   const restore=async()=>{await db.exec(migration);await db.query("insert into public.admin_members(user_id,active) values ($1,true) on conflict(user_id) do update set active=true",[ownerId]);};
   await restore();
   const tokens = new Map();
@@ -46,6 +46,19 @@ async function serve() {
       let body={};
       if(req.method!=="GET"&&req.method!=="HEAD") {let text="";for await(const chunk of req){text+=chunk;if(text.length>10000){json(413,{error:"Fixture request too large"});return;}}if(text)body=JSON.parse(text);}
       if(url.pathname==="/__fixture__/health")return json(200,{fixture:"songgift-admin-loopback",owner:identities[0].email,customer:identities[1].email});
+      if(url.pathname==="/__fixture__/radar" && req.method==="POST") {radarMode=body.mode||"records";return json(200,{ok:true});}
+      if(url.pathname==="/rest/v1/radar_reports" && req.method==="GET") {
+        if(req.headers.authorization!=="Bearer isolated-service-role")return json(403,{message:"Fixture reports require service role"});
+        if(radarMode==="error")return json(503,{message:"Isolated report outage"});
+        let rows=radarMode==="empty"?[]:Array.from({length:12},(_,i)=>{
+          const report={schemaVersion:1,runId:String(1000+i),runAttempt:1,commitSha:"a".repeat(40),generatedAt:new Date(Date.now()-i*86400000).toISOString(),sources:[{id:"hf",name:"Hugging Face 热门模型与演示",status:"baseline",count:200,newCount:0,note:"首次运行建立基线。"},{id:"sitemap:giftsong",name:"GiftSong.ai 公开页面",status:"error",count:0,newCount:0,note:"公开来源暂时不可用，原快照保留。"},{id:"gsc",name:"Google Search Console",status:"off",count:0,newCount:0,note:"尚未授权。"}],items:[{kind:"model",sourceId:"hf",title:"Audio song <script>alert(1)</script>",url:"https://huggingface.co/models",detail:"测试歌曲生成技术线索，需人工核对。"}]};
+          return {id:report.runId+"-1",generated_at:report.generatedAt,created_at:report.generatedAt,status:"partial",item_count:1,source_count:3,error_count:1,run_id:report.runId,run_attempt:1,report};
+        });
+        if(url.searchParams.has("id"))rows=rows.filter(row=>row.id===url.searchParams.get("id").replace(/^eq\./,""));
+        const total=rows.length,offset=Number(url.searchParams.get("offset")||0),limit=Number(url.searchParams.get("limit")||10);
+        rows=rows.slice(offset,offset+limit);res.setHeader("Content-Range",rows.length?`${offset}-${offset+rows.length-1}/${total}`:`*/${total}`);
+        return json(200,rows);
+      }
       if(url.pathname==="/__fixture__/jobs" && req.method==="POST") {jobsAvailable=body.available!==false;return json(200,{ok:true});}
       if(url.pathname==="/__fixture__/overview" && req.method==="POST") {overviewAvailable=body.available!==false;extraOrder=body.extraOrder===true;return json(200,{ok:true});}
       if(url.pathname==="/__fixture__/history" && req.method==="POST") {historyAvailable=body.available!==false;return json(200,{ok:true});}

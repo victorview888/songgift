@@ -54,3 +54,10 @@ next-env.d.ts
 
 # Disposable account verification sessions
 /.account-test-fixtures/
+
+# Radar snapshots and local Supabase CLI metadata
+/.radar-state/
+/.radar-upstream/
+/radar-report.json
+/supabase/.temp/
+__pycache__/
