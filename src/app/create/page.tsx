@@ -1,4 +1,5 @@
 "use client";
+import { trackUsage } from "@/lib/growth/usage-client";
 import { ArrowIcon } from "@/components/arrow-icon";
 
 import Link from "next/link";
@@ -70,6 +71,7 @@ export default function CreatePage() {
       if (!response.ok) throw new Error(payload.error || "Lyrics generation failed.");
       if (abort.signal.aborted || owner.current !== submittedOwner) return;
       if (typeof payload.orderId !== "string" || !/^[0-9a-f-]{36}$/i.test(payload.orderId)) throw new Error("Your saved story could not be opened. Please try again.");
+      void trackUsage("story_submitted", payload.orderId);
       const next: StoryDraft = { ...current, ownerId: submittedOwner, orderId: payload.orderId, stage: payload.pending ? "writing" : "ready", savedAt: Date.now() };
       persist(next);
       if (payload.pending) {
@@ -87,6 +89,7 @@ export default function CreatePage() {
       }
       if (abort.signal.aborted || owner.current !== submittedOwner) return;
       persist({ ...next, stage: "ready", savedAt: Date.now() });
+      void trackUsage("lyrics_ready", payload.orderId);
       router.push("/lyrics/" + payload.orderId);
     } catch (caught) {
       if (!abort.signal.aborted && owner.current === submittedOwner) setError(caught instanceof Error ? caught.message : "Please try again.");

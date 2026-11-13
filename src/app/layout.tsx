@@ -5,6 +5,8 @@ import "./legal.css";
 import "./experience.css";
 import { AccountProvider } from "@/components/account-provider";
 import { siteUrl } from "@/lib/seo";
+import { UsageConsent } from "@/components/usage-consent";
+import { campaignAllowlist } from "@/lib/growth/usage";
 import { LegalFooter } from "@/components/legal-footer";
 
 export const metadata: Metadata = {
@@ -23,7 +25,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body><AccountProvider>{children}</AccountProvider><LegalFooter /></body>
+      <body><AccountProvider>{children}</AccountProvider><LegalFooter /><UsageConsent campaigns={campaignAllowlist(process.env.SONGGIFT_ANALYTICS_CAMPAIGNS || "")} /></body>
     </html>
   );
 }

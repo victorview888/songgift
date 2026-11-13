@@ -20,6 +20,13 @@ async function serve() {
    if(url.pathname==='/__fixture__/health')return json(200,{fixture:'songgift-customer-loopback',submissions,queries});
    if(url.pathname==='/__fixture__/seed'&&req.method==='POST') {
     const draft=await f.order(),paid=await f.order({paid:true}),foreign=await f.order({owner:otherId,paid:true});
+    if(body.growth){
+     await f.db.query('insert into public.admin_members(user_id) values($1) on conflict(user_id) do update set active=true',[userId]);
+     await f.db.query("update song_orders set title='A Song for Emma',status='completed' where id=$1",[paid]);
+     await f.db.query("insert into song_assets(order_id,storage_path,mime_type,provider,model_id,is_final) values($1,$2,'audio/wav','fal','isolated-model',true)",[paid,paid+'/gift.wav']);
+     f.objects.set('songs/'+paid+'/gift.wav',wav());
+     return json(200,{draft,paid,foreign});
+    }
     if(body.account){
      const legacy=await f.order({legacy:true}),quoted=await f.order();await f.rpc('prepare_songgift_checkout',{p_order_id:quoted,p_user_id:userId,p_amount_minor:1299,p_environment:'live',p_price_version:'isolated-old-price'});
      await f.db.query("insert into public.payment_transactions(order_id,provider,environment,transaction_type,external_id,amount_minor,currency,occurred_at) values($1,'paypal','sandbox','refund',$2,400,'USD',now())",[paid,'REF-'+crypto.randomUUID()]);
@@ -27,6 +34,8 @@ async function serve() {
     }
     if(body.admin)await f.db.query('insert into public.admin_members(user_id) values($1) on conflict(user_id) do update set active=true',[userId]);return json(200,{draft,paid,foreign});
    }
+   if(url.pathname==='/__fixture__/usage')return json(200,{events:(await f.db.query('select event,page,first_source,last_source,medium,campaign from usage_events order by id')).rows,attributions:(await f.db.query('select count(*)::int n from song_order_attribution')).rows[0].n});
+   if(url.pathname==='/__fixture__/membership'&&req.method==='POST'){await f.db.query('update admin_members set active=$1 where user_id=$2',[body.active===true,userId]);return json(200,{ok:true});}
    if(url.pathname==='/__fixture__/stories'){const requestId=url.searchParams.get('requestId');const rows=(await f.db.query('select request_id,order_id,state from public.song_story_requests where request_id=$1',[requestId])).rows;return json(200,{requests:rows});}
    if(url.pathname==='/__fixture__/fault'&&req.method==='POST'){f.setFail(body);return json(200,{ok:true});}
    if(url.pathname==='/__fixture__/due'&&req.method==='POST'){await f.db.query("update public.generation_jobs set next_check_at=now()-interval '1 second' where id=$1",[body.jobId]);return json(200,{ok:true});}

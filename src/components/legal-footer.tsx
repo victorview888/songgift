@@ -10,6 +10,7 @@ export function LegalFooter() {
   return <footer className="legal-footer">
     <span>© 2026 SongGift</span>
     <nav aria-label="Legal and support">
+      <Link href="/guides">Song guides</Link>
       <Link href="/occasions">Song occasions</Link>
       <Link href="/help">Help</Link>
       <Link href="/pricing">Pricing</Link>
@@ -20,6 +21,7 @@ export function LegalFooter() {
       <Link href="/policies/refunds">Payments &amp; refunds</Link>
       <Link href="/policies/audio-storage">Keeping your audio</Link>
       <Link href="/contact">Contact</Link>
+      {!pathname.startsWith("/gift/") && <button type="button" className="text-button" onClick={() => window.dispatchEvent(new Event("songgift:preferences"))}>Analytics preferences</button>}
     </nav>
   </footer>;
 }

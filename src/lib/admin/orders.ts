@@ -8,7 +8,7 @@ export const paymentLabels = { all: "全部", recorded: "已记录付款", unrec
 export const deliveryLabels = { all: "全部", delivered: "已有最终音频", undelivered: "无最终音频记录", generating: "生成中（未入库）", failed: "失败（未入库）", review: "异常待核查（未入库）" };
 export const providers = ["fal", "musicapi", "mureka_cn", "google_lyria", "mock"] as const;
 export type OrderFilters = {
-  searchBy: "id" | "email" | "paypal";
+  searchBy: "id" | "email" | "paypal" | "user";
   q: string; from: string; to: string;
   payment: keyof typeof paymentLabels;
   delivery: keyof typeof deliveryLabels;
@@ -26,9 +26,9 @@ export function parseOrderFilters(params: URLSearchParams): OrderFilters {
   const delivery = read("delivery", "all");
   const provider = read("provider");
   const page = read("page", "1");
-  if (!["id", "email", "paypal"].includes(searchBy) || !Object.hasOwn(paymentLabels, payment) || !Object.hasOwn(deliveryLabels, delivery) || (provider && !(providers as readonly string[]).includes(provider))) throw new HttpError(400, "请选择有效的筛选条件。");
+  if (!["id", "email", "paypal", "user"].includes(searchBy) || !Object.hasOwn(paymentLabels, payment) || !Object.hasOwn(deliveryLabels, delivery) || (provider && !(providers as readonly string[]).includes(provider))) throw new HttpError(400, "请选择有效的筛选条件。");
   if (!/^[1-9]\d{0,5}$/.test(page)) throw new HttpError(400, "页码须为 1 至 999999 的整数。");
-  if (q.length > 254 || (q && searchBy === "id" && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(q)) || (q && searchBy === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(q)) || (q && searchBy === "paypal" && !/^[a-z0-9]{1,64}$/i.test(q))) throw new HttpError(400, "请输入完整有效的订单号、邮箱或 PayPal 订单号。");
+  if (q.length > 254 || (q && ["id", "user"].includes(searchBy) && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(q)) || (q && searchBy === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(q)) || (q && searchBy === "paypal" && !/^[a-z0-9]{1,64}$/i.test(q))) throw new HttpError(400, "请输入完整有效的订单号、邮箱或 PayPal 订单号。");
   const date = (key: string) => {
     const value = read(key);
     if (value && (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0, 10) !== value)) throw new HttpError(400, "请输入有效日期（YYYY-MM-DD）。");
@@ -63,7 +63,7 @@ export async function listAdminOrders(filters: OrderFilters): Promise<AdminOrder
     if (filters.searchBy === "email") {
       // ilike provides case-insensitive exact matching; escape pattern syntax.
       query = query.ilike("email", filters.q.replace(/[\\%_]/g, "\\$&"));
-    } else query = query.eq(filters.searchBy === "id" ? "id" : "paypal_order_id", filters.q);
+    } else query = query.eq(filters.searchBy === "id" ? "id" : filters.searchBy === "user" ? "user_id" : "paypal_order_id", filters.q);
   }
   if (filters.from) query = query.gte("created_at", new Date(`${filters.from}T00:00:00+08:00`).toISOString());
   if (filters.to) query = query.lt("created_at", new Date(Date.parse(`${filters.to}T00:00:00+08:00`) + 86400000).toISOString());

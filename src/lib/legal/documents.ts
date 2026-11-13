@@ -7,7 +7,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
   "terms": {
     "title": "Terms of Service",
     "description": "How SongGift accounts, personalised song orders, payments and delivery work.",
-    "effectiveDate": "2026-11-10",
+    "effectiveDate": "2026-11-13",
     "sections": [
       {
         "title": "1. About SongGift and these terms",
@@ -35,7 +35,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
           },
           {
             "kind": "paragraph",
-            "text": "Use an email address you control. Keep your email account, sign-in codes and sign-in links secure. Give the recipient a downloaded song rather than your sign-in credentials. Let us know if you believe someone has accessed your account without permission."
+            "text": "Use an email address you control. Keep your email account, sign-in codes and sign-in links secure. Give the recipient a downloaded song or an explicitly enabled gift link. Never share your sign-in credentials. Let us know if you believe someone has accessed your account without permission."
           }
         ]
       },
@@ -223,7 +223,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
   "privacy": {
     "title": "Privacy Policy",
     "description": "How SongGift handles your account, stories, AI generation, payments and saved songs.",
-    "effectiveDate": "2026-11-10",
+    "effectiveDate": "2026-11-13",
     "sections": [
       {
         "title": "1. Who is responsible for your information",
@@ -370,7 +370,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         ]
       },
       {
-        "title": "6. Cookies and browser drafts",
+        "title": "6. Cookies, browser drafts and optional analytics",
         "blocks": [
           {
             "kind": "paragraph",
@@ -386,7 +386,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
           },
           {
             "kind": "paragraph",
-            "text": "We currently do not use advertising pixels or optional product-analytics tracking on the SongGift website. If we introduce optional tracking, we will explain its purposes and provide any choices required by applicable law before activating it. Third-party checkout pages have their own cookie notices."
+            "text": "We offer optional first-party usage analytics, disabled until you choose “Allow analytics”. A random browser identifier is stored in the sg_usage cookie and local storage, with coarse first and recent traffic sources, a channel category and pre-approved campaign labels. We record public page categories and song-making steps, not full URLs, raw referrers, stories, lyrics, names, emails or IP addresses in the analytics tables. For signed-in users who agree, an order reference may be associated with that random identifier so verified Live payment records can be grouped by source. Browser events can be incomplete or inaccurate and do not confirm a payment. We use no external advertising or analytics service for this feature. Third-party checkout pages have their own cookie notices."
           }
         ]
       },
@@ -403,6 +403,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
               "Account and saved-order information: maintained to provide account access, order history, delivery and support; retention following a deletion request depends on the request and any lawful reason to retain particular records.",
               "Purchased audio: currently kept long term with no scheduled expiry for finished files. Download and back up your song. An expiring playback link is separate from deletion of the stored file.",
               "Browser drafts: restorable in the same tab for up to 24 hours after the last save, as described above; server-saved orders are separate.",
+              "Optional analytics: the browser context and cookie have a 30-day window. Server events and order associations older than 30 days are removed when subsequent collection runs, so physical deletion may happen later if collection is idle. Source reports use a limited time window. The separate choice preference is kept in your browser until changed or cleared.",
               "Payment and audit records: retained where necessary for accounting, fraud prevention, disputes or legal obligations. A request to delete an account may not require immediate deletion of all transaction evidence.",
               "Support records and operational logs: kept as needed to handle the issue, maintain security and comply with applicable obligations."
             ]
@@ -426,7 +427,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
           },
           {
             "kind": "paragraph",
-            "text": "Keep your account secure and treat valid audio links as confidential. A person holding a valid signed link may be able to access its file until the link expires. Your account-protected song page is different from a freely shareable gift page."
+            "text": "Keep your account secure and treat valid audio links as confidential. A person holding a valid signed link may be able to access its file until the link expires. Sharing is off by default. After payment and finished audio are recorded, you may explicitly enable a gift link. Anyone holding the link can view the song title, recipient name and optional greeting, and listen without signing in. The gift page does not expose your original story, lyrics, account email or payment details. Links can be forwarded. Creating a replacement invalidates the previous link; turning sharing off blocks new requests. Audio already buffered, downloaded or otherwise saved cannot be recalled. Obtain permission to share the song and recipient information before enabling a link."
           }
         ]
       },
@@ -446,6 +447,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
       {
         "title": "10. Your choices and privacy requests",
         "blocks": [
+          {"kind": "paragraph", "text": "Use “Analytics preferences” in the footer to refuse or withdraw optional analytics. Do Not Track and Global Privacy Control signals disable collection in this browser. Withdrawing stops new browser collection immediately and requests deletion of events and order-source associations for the current random browser identifier. If that request fails, the page offers a retry; keep this browser open to complete it. A minimal random-ID stop marker is kept for 30 days to prevent delayed requests from recreating withdrawn events. Operational order, payment and security records remain separate and are not deleted by withdrawing analytics. You can also contact support for a privacy request."},
           {
             "kind": "paragraph",
             "text": "Depending on applicable law, you may have rights to access, correct, receive a copy of or request deletion of your information, restrict or object to processing, withdraw consent where consent is used, and complain to the relevant data-protection authority."

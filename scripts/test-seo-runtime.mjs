@@ -11,10 +11,10 @@ assert.equal(base.pathname, '/');
 const canonicalOrigin = 'https://www.songforalways.com';
 const expectedPrice = process.env.SONGGIFT_SEO_EXPECTED_PRICE || '9.99';
 assert.match(expectedPrice, /^\d+\.\d{2}$/);
-const publicPaths = ['/', '/create', '/pricing', '/occasions', '/help',
+const publicPaths = ['/', '/guides', '/guides/turn-memories-into-a-song', '/guides/review-lyrics-before-music', '/guides/give-a-personal-song-gift', '/create', '/pricing', '/occasions', '/help',
   ...['terms', 'privacy', 'content-standards', 'refunds', 'audio-storage'].map(slug => '/policies/' + slug),
   ...['birthday', 'wedding', 'anniversary', 'family', 'pet', 'memorial'].map(slug => '/occasions/' + slug)];
-const privatePaths = ['/login', '/my-songs', '/account', '/account/payments', '/admin', '/admin/orders',
+const privatePaths = ['/gift/'+'A'.repeat(43), '/admin/users', '/admin/system', '/admin/audit', '/admin/analytics', '/login', '/my-songs', '/account', '/account/payments', '/admin', '/admin/orders',
   '/lyrics/00000000-0000-4000-8000-000000000036', '/song/00000000-0000-4000-8000-000000000036', '/contact', '/report'];
 let checks = 0;
 function passed(message) { checks++; console.log('PASS ' + message); }
@@ -138,12 +138,12 @@ try {
   passed('Robots exposes sitemap and permits reading private-page noindex');
 
   for (const path of privatePaths) {
-    const response = await get(path); assert.equal(response.status, 200, path);
+    const response = await get(path); assert.ok(path.startsWith('/gift/') ? [200,404].includes(response.status) : response.status===200, path);
     const data = await parse(await response.text()); assert.match(data.robots.join(','), /noindex/, path);
     assert.equal(data.scripts.length, 0, path + ': no public structured data on private pages');
     passed(path + ': anonymous SSR noindex');
   }
-  for (const path of ['/seo-unknown-route', '/policies/seo-unknown-policy',
+  for (const path of ['/guides/unknown-guide', '/guides/__proto__', '/guides/constructor', '/guides/toString', '/seo-unknown-route', '/policies/seo-unknown-policy',
     ...['seo-unknown-occasion', '__proto__', 'constructor', 'toString'].map(slug => '/occasions/' + slug)]) {
     const response = await get(path); assert.equal(response.status, 404, path + ': correct 404, not 500 or soft 404');
     const data = await parse(await response.text()); assert.match(data.robots.join(','), /noindex/, path);

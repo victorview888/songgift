@@ -19,7 +19,8 @@
     "test:drafts": "node --test tests/story-drafts.test.mjs",
     "test:account": "node --test tests/customer-account.test.mjs",
     "test:radar": "node --test --test-isolation=none tests/radar-reports.test.mjs && python tests/radar-collector.test.py",
-    "test:radar:worker": "node scripts/test-radar-worker.mjs"
+    "test:radar:worker": "node scripts/test-radar-worker.mjs",
+    "test:growth": "node --test --test-isolation=none tests/resumed-modules.test.mjs tests/usage-browser-logic.test.mjs tests/admin-permissions.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

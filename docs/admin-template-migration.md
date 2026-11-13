@@ -74,3 +74,7 @@ src/lib/drafts/story.ts 参考同一固定版本的 src/lib/photo-draft.ts，复
 
 来源标记保留在适配文件，完整 MIT 许可见 third-party/shrimpreel/LICENSE。
 详情见 docs/customer-account-support.md；T06/T08/T09/T10 保持暂停。
+
+## 2026-11-13 恢复模块
+
+T06、T08、T09、T10 已恢复，见 [实现与验收](resumed-modules-2026-11-13.md)。用户/系统/审计/来源页面复用本仓库已有 AdminShell、FilterSelect、Pager、LoadState 和样式；赠礼与统计服务、Supabase 安全投影和指南文章为 SongGift 业务实现。未新增复制模板源码，既有 MIT 声明及固定来源版本继续保留。

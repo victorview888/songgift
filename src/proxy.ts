@@ -17,5 +17,12 @@ export function proxy(request: NextRequest) {
     });
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  if(source.pathname.startsWith('/gift/') || source.pathname.startsWith('/api/gifts/')) {
+    response.headers.set('Cache-Control','private, no-store, max-age=0');
+    response.headers.set('Referrer-Policy','no-referrer');
+    response.headers.set('X-Robots-Tag','noindex, nofollow, noarchive');
+    response.headers.set('Content-Security-Policy',"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; media-src 'self'; frame-ancestors 'none'");
+  }
+  return response;
 }
