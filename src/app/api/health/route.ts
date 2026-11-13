@@ -3,6 +3,12 @@ import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
+function healthJson(data: Record<string, unknown>, status = 200) {
+  return NextResponse.json({ releaseSha: process.env.SONGGIFT_RELEASE_SHA || null, ...data }, {
+    status, headers: { "Cache-Control": "private, no-store, max-age=0" },
+  });
+}
+
 export async function GET() {
   const paypalLive = (process.env.PAYPAL_ENVIRONMENT || "sandbox").toLowerCase() === "live";
   const providerConfig = {
@@ -30,7 +36,7 @@ export async function GET() {
   };
 
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({
+    return healthJson({
       ok: false,
       supabase: {
         configured: false,
@@ -55,7 +61,7 @@ export async function GET() {
     const databaseOk = !databaseResult.error;
     const storageOk = !storageResult.error;
 
-    return NextResponse.json(
+    return healthJson(
       {
         ok: databaseOk && storageOk,
         supabase: {
@@ -75,10 +81,10 @@ export async function GET() {
           ? { storageError: storageResult.error.message }
           : {}),
       },
-      { status: databaseOk && storageOk ? 200 : 503 },
+      databaseOk && storageOk ? 200 : 503,
     );
   } catch (error) {
-    return NextResponse.json(
+    return healthJson(
       {
         ok: false,
         supabase: {
@@ -89,7 +95,7 @@ export async function GET() {
         providers: providerConfig,
         message: error instanceof Error ? error.message : "Supabase health check failed.",
       },
-      { status: 503 },
+      503,
     );
   }
 }
