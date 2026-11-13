@@ -37,7 +37,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   return <AdminShell current="orders"><AdminPage title="订单列表" description="日期按北京时间（UTC+8）筛选，包含结束日期。每页 20 条，按创建时间倒序排列。">
       <nav className="admin-quick-filters" aria-label="常用订单筛选">{[["all", "全部"], ["unrecorded", "待付款"], ["generating", "生成中"], ["review", "待核查"], ["delivered", "已交付"]].map(([key, label]) => { const query = new URLSearchParams(params); query.delete("page"); query.set("payment", key === "unrecorded" ? key : "all"); query.set("delivery", key === "unrecorded" ? "all" : key); return <Link key={key} href={`/admin/orders?${query}`} aria-current={(key === "unrecorded" ? filters?.payment === key : filters?.payment !== "unrecorded" && (filters?.delivery || "all") === key) ? "page" : undefined}>{label}</Link>; })}</nav>
       <details className="admin-filter-panel" open={!!(params.get("q") || params.get("from") || params.get("to") || params.get("provider"))}><summary>搜索与详细筛选</summary><form action="/admin/orders" method="get" className="admin-order-filters">
-        <FilterSelect name="searchBy" label="搜索字段" value={filters?.searchBy ?? "id"} options={[["id", "订单号"], ["email", "订单邮箱"], ["paypal", "PayPal 订单号"]]} />
+        <FilterSelect name="searchBy" label="搜索字段" value={filters?.searchBy ?? "id"} options={[["id", "订单号"], ["email", "订单邮箱"], ["paypal", "PayPal 订单号"], ["user", "用户 ID"]]} />
         <label className="admin-search-field">精确搜索<input name="q" type="search" maxLength={254} defaultValue={filters?.q ?? ""} placeholder="输入完整订单号或邮箱" /></label>
         <label>创建日期从<input type="date" name="from" defaultValue={filters?.from ?? ""} /></label>
         <label>至<input type="date" name="to" defaultValue={filters?.to ?? ""} /></label>

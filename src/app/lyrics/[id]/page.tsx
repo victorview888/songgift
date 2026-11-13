@@ -1,4 +1,5 @@
 "use client";
+import { trackUsage } from "@/lib/growth/usage-client";
 import { ArrowIcon } from "@/components/arrow-icon";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -125,6 +126,7 @@ function LyricsEditor() {
       const data = await response.json(); if (!response.ok) throw new Error(data.error || "We couldn't open checkout.");
       if (data.alreadyPaid) { setOrder(current => current ? { ...current, paid_at: new Date().toISOString() } : current); await generate(); return; }
       if (!data.approvalUrl) throw new Error("Checkout is temporarily unavailable.");
+      void trackUsage("checkout_started", id);
       window.location.assign(data.approvalUrl);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Please try again."); setBusy(false); setMessage(""); }
   }

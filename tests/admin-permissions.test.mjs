@@ -12,7 +12,7 @@ const verified = (extra = {}) => ({ id: "a3f10454-1234-4234-8234-012345678901", 
 const member = (extra = {}) => ({ user_id: verified().id, role: "owner", active: true, ...extra });
 
 function fixture(options = {}) {
-  const state = { user: verified(), membership: member(), dbError: null, authError: null, reads: [], handlers: 0, orderReads: 0, detailReads: 0, historyReads: 0, overviewReads: 0, jobReads: 0, audioReads: 0, operationParses: 0, operationRuns: 0, ...options };
+  const state = { user: verified(), membership: member(), dbError: null, authError: null, reads: [], handlers: 0, orderReads: 0, detailReads: 0, historyReads: 0, overviewReads: 0, jobReads: 0, workspaceReads: 0, audioReads: 0, operationParses: 0, operationRuns: 0, ...options };
   const modules = new Map();
   const context = vm.createContext({ URL, Request, Response, Headers, Map, console: { error() {} }, process: { env: { SUPABASE_URL: "https://test-project.supabase.invalid", SUPABASE_PUBLISHABLE_KEY: "test-public-key", ...options.env } } });
   const db = { from(table) {
@@ -44,6 +44,7 @@ function fixture(options = {}) {
       if(name==="@/lib/admin/operations")return {parseAdminOperation:body=>{state.operationParses++;return body;},runAdminOperation:async()=>{state.operationRuns++;return {result:"succeeded"};}};
       if(name==="@/lib/admin/orders")return {parseOrderFilters:()=>({}),listAdminOrders:async()=>{state.orderReads++;return {orders:[],total:0,page:1,pageSize:20,totalPages:0};}};
       if(name==="@/lib/admin/jobs")return {parseJobFilters:()=>({}),listAdminJobs:async()=>{state.jobReads++;return {jobs:[],total:0,page:1,pageSize:20,totalPages:0};}};
+      if(name==="@/lib/admin/workspace")return {workspaceData:async()=>{state.workspaceReads++;return {rows:[],total:0,page:1};}};
       if(name==="@/lib/admin/overview")return {getAdminOverview:async()=>{state.overviewReads++;return {counts:{orders:0}};}};
       if(name==="@/lib/admin/order-history")return {getAdminOrderHistory:async()=>{state.historyReads++;return {quote:null,payments:[],jobs:[],events:[],audit:[]};}};
       if(name==="@/lib/admin/order-detail")return {getAdminOrderDetail:async()=>{state.detailReads++;return {order:{id:"isolated-order"}};}};
@@ -228,4 +229,14 @@ test("order operation POST checks origin, verified identity and current Owner be
  const f=fixture();assert.equal((await f.load(file).POST(request("https://evil.example"),context)).status,403);assert.equal((await f.load(file).POST(request("https://songgift.example","text/plain"),context)).status,415);
  assert.equal(f.state.operationRuns,0);const response=await f.load(file).POST(request(),context);assert.equal(response.status,200);assert.match(response.headers.get("cache-control"),/private.*no-store/);assert.equal(f.state.operationRuns,1);
  f.state.membership.active=false;assert.equal((await f.load(file).POST(request(),context)).status,403);assert.equal(f.state.operationRuns,1);
+});
+
+ test("all resumed admin modules check current membership before data and honour revocation",async()=>{
+ for(const kind of ['users','system','audit','analytics']){
+  const file='src/app/api/admin/'+kind+'/route.ts';
+  for(const options of [{user:null},{membership:null},{membership:member({active:false})},{dbError:{message:'missing'}}]){
+   const f=fixture(options),response=await f.load(file).GET(new Request('https://songgift.example/api/admin/'+kind));assert.ok([401,403,503].includes(response.status));assert.equal(f.state.workspaceReads,0);assert.match(response.headers.get('cache-control'),/private.*no-store/);
+  }
+  const f=fixture(),request=()=>f.load(file).GET(new Request('https://songgift.example/api/admin/'+kind));assert.equal((await request()).status,200);f.state.membership=null;assert.equal((await request()).status,403);assert.equal(f.state.workspaceReads,1);
+ }
 });

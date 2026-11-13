@@ -7,15 +7,15 @@ const db=new PGlite();
 const user="a3f10454-1234-4234-8234-012345678901",other="b3f10454-1234-4234-8234-012345678902";
 const migration=readFileSync("supabase/migrations/20261105_order_operations.sql","utf8");
 before(async()=>{
-  await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
+  await db.exec(`create role anon; create role authenticated; create role service_role bypassrls; create role supabase_auth_admin;
     create schema auth; create schema storage;
-    create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
+    create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,created_at timestamptz not null default now(),last_sign_in_at timestamptz);
     create function auth.uid() returns uuid language sql as $$ select nullif(current_setting('test.user_id',true),'')::uuid $$;
     create table storage.buckets(id text primary key,name text,public boolean);
     grant usage on schema public to anon,authenticated,service_role;`);
   const schema=readFileSync("supabase/schema.sql","utf8").split("-- Order operations foundation.")[0].replace("create extension if not exists pgcrypto;","");
   await db.exec(schema);
-  await db.query("insert into auth.users values ($1,'owner@isolated.example',now()),($2,'customer@isolated.example',now())",[user,other]);
+  await db.query("insert into auth.users(id,email,email_confirmed_at) values ($1,'owner@isolated.example',now()),($2,'customer@isolated.example',now())",[user,other]);
   await db.query("insert into public.admin_members(user_id) values ($1)",[user]);
   await db.exec("grant select,insert,update on public.song_orders,public.song_assets to service_role; alter default privileges grant all on tables to anon,authenticated,service_role;");
   await db.exec(migration);
@@ -169,9 +169,9 @@ test("provider references and active attempts stay unique across independently r
 test("fresh-install schema creates the same empty operations structures with service-only RPCs",async()=>{
   const fresh=new PGlite();
   try {
-    await fresh.exec(`create role anon;create role authenticated;create role service_role bypassrls;
+    await fresh.exec(`create role anon;create role authenticated;create role service_role bypassrls; create role supabase_auth_admin;
       create schema auth;create schema storage;
-      create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
+      create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,created_at timestamptz not null default now(),last_sign_in_at timestamptz);
       create function auth.uid() returns uuid language sql as $$ select null::uuid $$;
       create table storage.buckets(id text primary key,name text,public boolean);`);
     await fresh.exec(readFileSync("supabase/schema.sql","utf8").replace("create extension if not exists pgcrypto;",""));

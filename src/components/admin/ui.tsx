@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { AdminSignOut } from "@/components/admin-sign-out";
 
-export function AdminShell({ current, children }: { current: "home" | "orders" | "jobs" | "reports" | "radar"; children: ReactNode }) {
+export function AdminShell({ current, children }: { current: "home" | "orders" | "jobs" | "reports" | "radar" | "users" | "system" | "audit" | "analytics"; children: ReactNode }) {
   return <div className="admin-shell">
     <aside className="admin-sidebar">
       <Link href="/" className="admin-brand">♪ songgift<span>管理后台</span></Link>
@@ -15,6 +15,10 @@ export function AdminShell({ current, children }: { current: "home" | "orders" |
         <Link href="/admin/jobs" aria-current={current === "jobs" ? "page" : undefined}>生成任务</Link>
         <Link href="/admin/reports" aria-current={current === "reports" ? "page" : undefined}>内容举报</Link>
         <Link href="/admin/radar" aria-current={current === "radar" ? "page" : undefined}>市场雷达</Link>
+        <Link href="/admin/users" aria-current={current === "users" ? "page" : undefined}>用户管理</Link>
+        <Link href="/admin/system" aria-current={current === "system" ? "page" : undefined}>系统状态</Link>
+        <Link href="/admin/audit" aria-current={current === "audit" ? "page" : undefined}>操作审计</Link>
+        <Link href="/admin/analytics" aria-current={current === "analytics" ? "page" : undefined}>来源与转化</Link>
         <Link href="/my-songs">我的歌曲</Link><Link href="/">返回网站</Link>
       </nav>
       <p className="admin-sidebar-note">为每一首歌，<br />做好交付的最后一步。</p>

@@ -14,13 +14,13 @@ export function wav() {
 }
 export async function fixture({legacyContent=false,oidcJwks}={}) {
  const db=new PGlite();
- await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema storage;
- create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
+ await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create role supabase_auth_admin;create schema auth;create schema storage;
+ create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,created_at timestamptz not null default now(),last_sign_in_at timestamptz);
  create function auth.uid() returns uuid language sql as $$select null::uuid$$;
  create table storage.buckets(id text primary key,name text,public boolean);`);
  const schema=readFileSync('supabase/schema.sql','utf8').replace('create extension if not exists pgcrypto;','');
  await db.exec(legacyContent?schema.split('-- Additive, service-only report intake')[0]:schema);
- await db.query('insert into auth.users values ($1,\'owner@isolated.example\',now()),($2,\'other@isolated.example\',now())',[userId,otherId]);
+ await db.query('insert into auth.users(id,email,email_confirmed_at) values ($1,\'owner@isolated.example\',now()),($2,\'other@isolated.example\',now())',[userId,otherId]);
  await db.exec('grant select,insert,update on public.song_orders,public.song_assets to service_role;set role service_role;');
  const env={SUPABASE_SERVICE_ROLE_KEY:'isolated-service-role',DEEPSEEK_API_KEY:'isolated-safety-key',SONG_PRICE_USD:'9.99',PAYPAL_CURRENCY:'USD',PAYPAL_ENVIRONMENT:'sandbox',PAYPAL_CLIENT_ID:'test-id',PAYPAL_CLIENT_SECRET:'test-secret',PAYPAL_LIVE_CLIENT_ID:'live-test-id',PAYPAL_LIVE_CLIENT_SECRET:'live-test-secret',MUSIC_PROVIDER:'fal',SUPABASE_STORAGE_BUCKET:'songs'};
  const calls=[],objects=new Map(),paypal=new Map(),sentEmails=new Map();let generateCalls=0,pollCalls=0,mode='queued',fail={},lyricsCalls=0;
@@ -29,10 +29,11 @@ export async function fixture({legacyContent=false,oidcJwks}={}) {
  function matches(p) {
   const values=[],where=[];
   for(const [key,filter] of p) {
-   if(['select','order','limit','offset'].includes(key)||/\.(order|limit)$/.test(key)||key==='final_assets.is_final')continue;
+   if(['select','order','limit','offset','on_conflict'].includes(key)||/\.(order|limit)$/.test(key)||['final_assets.is_final','capture_records.transaction_type'].includes(key))continue;
    if(key==='or'){assert.equal(filter,'(paid_at.not.is.null,quoted_at.not.is.null)');where.push('(paid_at is not null or quoted_at is not null)');continue;}
    assert.match(key,/^[a-z_]+$/);
    if(filter.startsWith('eq.')){values.push(filter.slice(3));where.push('"'+key+'"=$'+values.length);}
+   else if(filter.startsWith('gte.')||filter.startsWith('lt.')){values.push(filter.slice(filter.indexOf('.')+1));where.push('"'+key+'"'+(filter.startsWith('gte.')?'>=':'<')+'$'+values.length);}
    else if(filter==='is.null')where.push('"'+key+'" is null');
    else if(filter.startsWith('in.(')){values.push(filter.slice(4,-1).split(','));where.push('"'+key+'"=any($'+values.length+'::text[])');}
    else throw new Error('Unsupported fixture filter: '+filter);
@@ -82,12 +83,16 @@ export async function fixture({legacyContent=false,oidcJwks}={}) {
   try {
    if(url.pathname.startsWith('/rest/v1/rpc/')) {
     const name=url.pathname.split('/').at(-1);assert.match(name,/^[a-z_]+$/);
+    if(fail.rpc===name)return json({message:'PRIVATE outage',code:'08006'},503);
     if((name==='complete_songgift_audio'&&(fail.finish||fail.insert))||(name==='cache_songgift_job_output'&&fail.cache))return json({message:'fixture database unavailable',code:'08006'},503);
     const keys=Object.keys(body);keys.forEach(k=>assert.match(k,/^p_[a-z0-9_]+$/));
     const sql='select to_jsonb(public.'+name+'('+keys.map((key,i)=>key+'=>$'+(i+1)).join(',')+')) result';
     return json((await db.query(sql,Object.values(body))).rows[0].result);
    }
+   if(url.pathname.startsWith('/storage/v1/object/list/'))return fail.storage?json({message:'unavailable'},503):json([]);
    if(url.pathname.startsWith('/storage/v1/object/')) {
+    if(fail.storageDownload)return json({message:'unavailable'},503);
+    if(fail.revokeOnDownload)await db.query('update public.song_gifts set active=false');
     const key=decodeURIComponent(url.pathname.replace(/^\/storage\/v1\/object\/(authenticated\/)?/,''));
     if(method==='POST') {
      if(fail.upload)return json({message:'fixture storage unavailable',statusCode:'503'},503);
@@ -97,7 +102,7 @@ export async function fixture({legacyContent=false,oidcJwks}={}) {
     if(!objects.has(key))return json({message:'Object not found',statusCode:'404'},404);
     return new Response(objects.get(key),{headers:{'Content-Type':'audio/wav'}});
    }
-   const table=url.pathname.split('/').at(-1);assert.ok(['radar_reports','song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests','payment_transactions','content_reports','content_report_reviews','content_report_limits'].includes(table),table);
+   const table=url.pathname.split('/').at(-1);assert.ok(['usage_optouts','song_gifts','usage_events','song_order_attribution','admin_customer_directory','radar_reports','song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests','payment_transactions','content_reports','content_report_reviews','content_report_limits'].includes(table),table);
    const cond=matches(url.searchParams);
    if(method==='GET') {
     if(fail.paymentHistory&&table==='song_orders'&&url.searchParams.get('select')?.includes('payment_transactions'))return json({message:'isolated history failure'},503);
@@ -115,6 +120,7 @@ export async function fixture({legacyContent=false,oidcJwks}={}) {
      if(table==='content_reports'&&select.includes('reviews:'))row.reviews=(await db.query('select status,note,created_at from public.content_report_reviews where report_id=$1 order by created_at desc limit 5',[row.id])).rows;
      if(table==='song_orders') {
       if(select.includes('song_assets('))row.song_assets=(await db.query('select * from public.song_assets where order_id=$1',[row.id])).rows;
+      if(select.includes('capture_records:'))row.capture_records=(await db.query("select * from payment_transactions where order_id=$1 and transaction_type='capture' limit 2",[row.id])).rows;
       if(select.includes('final_assets:'))row.final_assets=row.song_assets.filter(asset=>asset.is_final).slice(0,1);
       for(const relation of ['payment_transactions','generation_jobs','order_events'])if(select.includes(relation+'(')){
        const order=url.searchParams.get(relation+'.order');let sort='';if(order){const parts=order.split(',');parts.forEach(part=>assert.match(part,/^[a-z_]+\.(asc|desc)$/));sort=' order by '+parts.map(part=>part.replace('.',' ')).join(',');}
@@ -128,8 +134,10 @@ export async function fixture({legacyContent=false,oidcJwks}={}) {
    if(method==='POST') {
     if(table==='song_assets'&&fail.insert)return json({message:'fixture metadata unavailable',code:'08006'},503);
     const keys=Object.keys(body);keys.forEach(k=>assert.match(k,/^[a-z_]+$/));
-    await db.query('insert into public.'+table+'('+keys.join(',')+') values ('+keys.map((_,i)=>'$'+(i+1)).join(',')+')',Object.values(body));return json(null,201);
+    const ignore=new Headers(init.headers).get('prefer')?.includes('resolution=ignore-duplicates');
+    await db.query('insert into public.'+table+'('+keys.join(',')+') values ('+keys.map((_,i)=>'$'+(i+1)).join(',')+')'+(ignore?' on conflict do nothing':''),Object.values(body));return json(null,201);
    }
+   if(method==='DELETE'){await db.query('delete from public.'+table+cond.sql,cond.values);return new Response(null,{status:204});}
    if(method==='PATCH') {
     const keys=Object.keys(body);keys.forEach(k=>assert.match(k,/^[a-z_]+$/));
     const where=cond.sql.replace(/\$(\d+)/g,(_,n)=>'$'+(Number(n)+keys.length));

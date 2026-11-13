@@ -38,3 +38,6 @@
 .report-honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 .song-report-link { text-align: center; padding: 10px 20px; font-size: 13px; }
 @media(max-width:650px) { .song-price { grid-template-columns: minmax(0,1fr); gap: 18px; }.song-price-compact { padding: 24px; }.home-pricing { padding: 30px 20px 0; } }
+
+.legal-footer .text-button { color: inherit; font: inherit; padding: 6px 0; }
+.legal-footer .text-button:hover { color: white; text-decoration: underline; }
