@@ -331,7 +331,7 @@ try {
     "consent, refusal, private-page exclusion, withdrawal and server deletion",
   );
   const sitemap = await (await fetch(base + "/sitemap.xml")).text();
-  assert.equal((sitemap.match(/<loc>/g) || []).length, 20);
+  assert.equal((sitemap.match(/<loc>/g) || []).length, 23);
   assert.doesNotMatch(sitemap, /\/gift\/|\/song\/|\/admin/);
   await guestPage.goto(base + "/guides/toString", { waitUntil: "networkidle" });
   assert.ok(

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { HomeMenu } from "@/components/home-menu";
 import { SongSamples } from "@/components/song-samples";
 import { publicSongSamples } from "@/lib/song-samples";
+import { HolidaySongs } from "@/components/holiday-songs";
+import { holidayOccasions } from "@/lib/holidays";
 import { SongPrice } from "@/components/song-price";
 import { publicSongPriceUsd } from "@/lib/pricing";
 
@@ -102,6 +104,8 @@ Their favorite song.</h1>
 
       {samples.length > 0 && <SongSamples samples={samples} />}
 
+      <HolidaySongs />
+
       <section className="section" id="how-it-works">
         <div className="section-heading">
           <div><p className="section-kicker">The simple part</p><h2>A little story. A lasting gift.</h2></div>
@@ -131,6 +135,7 @@ Their favorite song.</h1>
             </Link>
           ))}
         </div>
+        <p className="occasion-season-links">Planning a holiday gift? {holidayOccasions.map((holiday, index) => <span key={holiday.slug}>{index > 0 && " · "}<Link href={`/occasions/${holiday.slug}`}>{holiday.name} songs</Link></span>)}</p>
       </section>
 
       <div className="home-pricing"><SongPrice compact /></div>

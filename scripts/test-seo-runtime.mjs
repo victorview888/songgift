@@ -13,7 +13,7 @@ const expectedPrice = process.env.SONGGIFT_SEO_EXPECTED_PRICE || '9.99';
 assert.match(expectedPrice, /^\d+\.\d{2}$/);
 const publicPaths = ['/', '/guides', '/guides/turn-memories-into-a-song', '/guides/review-lyrics-before-music', '/guides/give-a-personal-song-gift', '/create', '/pricing', '/occasions', '/help',
   ...['terms', 'privacy', 'content-standards', 'refunds', 'audio-storage'].map(slug => '/policies/' + slug),
-  ...['birthday', 'wedding', 'anniversary', 'family', 'pet', 'memorial'].map(slug => '/occasions/' + slug)];
+  ...['birthday', 'wedding', 'anniversary', 'family', 'pet', 'memorial', 'christmas', 'christmas-eve', 'new-year'].map(slug => '/occasions/' + slug)];
 const privatePaths = ['/gift/'+'A'.repeat(43), '/admin/users', '/admin/system', '/admin/audit', '/admin/analytics', '/login', '/my-songs', '/account', '/account/payments', '/admin', '/admin/orders',
   '/lyrics/00000000-0000-4000-8000-000000000036', '/song/00000000-0000-4000-8000-000000000036', '/contact', '/report'];
 let checks = 0;
@@ -157,10 +157,12 @@ try {
   for (const path of publicPaths.filter(path => path.startsWith('/occasions/'))) {
     assert.ok(pages.get('/occasions').links.includes(path), path + ': discoverable in occasion directory');
     assert.ok(pages.get('/').links.includes(path), path + ': discoverable from homepage');
-    assert.ok(pages.get(path).links.includes('/create'), path + ': links to creation');
+    const slug = path.split('/').at(-1);
+    const href = ['christmas', 'christmas-eve', 'new-year'].includes(slug) ? '/create?occasion=' + slug : '/create';
+    assert.ok(pages.get(path).links.includes(href), path + ': links to creation with the correct occasion');
     assert.ok(pages.get(path).scripts.flatMap(script => nodes(JSON.parse(script))).some(node => node['@type'] === 'BreadcrumbList'), path + ': breadcrumb schema');
   }
-  passed('All six occasion pages have public discovery links, conversion links and breadcrumbs');
+  passed('All nine occasion pages have public discovery links, conversion links and breadcrumbs');
   console.log(`SEO runtime: ${checks} checks passed against ${base.origin}; public price US$${expectedPrice}.`);
   await context.close();
 } finally { await browser.close(); }
