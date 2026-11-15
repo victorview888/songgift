@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { AccountHeader } from "@/components/account-header";
 import { JsonLd } from "@/components/json-ld";
 import { getOccasion, occasionSlugs, occasions } from "@/lib/occasions";
+import { holidayCreateHref } from "@/lib/holidays";
 import { absoluteUrl, publicPageMetadata } from "@/lib/seo";
 import "../occasions.css";
 
@@ -25,6 +26,7 @@ export default async function OccasionPage({ params }: Props) {
   const { slug } = await params;
   const occasion = getOccasion(slug);
   if (!occasion) notFound();
+  const createHref = holidayCreateHref(slug);
 
   return (
     <main className="occasion-page">
@@ -46,7 +48,7 @@ export default async function OccasionPage({ params }: Props) {
             <p className="section-kicker">A song for the occasion</p>
             <h1>{occasion.heading}</h1>
             <p>{occasion.introduction}</p>
-            <Link className="primary-button" href="/create">Create your {occasion.name.toLowerCase()} song <ArrowIcon /></Link>
+            <Link className="primary-button" href={createHref}>Create your {occasion.name.toLowerCase()} song <ArrowIcon /></Link>
             <div className="occasion-action-links"><Link href="/pricing">See pricing and what is included</Link><Link href="/help">How song delivery works</Link></div>
           </div>
           <div className="occasion-art" aria-hidden="true"><span>♪</span><p>{occasion.name}<br />memories,<br /><em>made into music.</em></p></div>
@@ -69,11 +71,11 @@ export default async function OccasionPage({ params }: Props) {
           <div className="occasion-answer"><h3>{occasion.question}</h3><p>{occasion.answer}</p></div>
         </section>
 
-        <section className="occasion-gifting" aria-labelledby="occasion-gifting-heading"><p className="section-kicker">When the song is ready</p><h2 id="occasion-gifting-heading">{occasion.gifting.heading}</h2><p>{occasion.gifting.detail}</p><div className="occasion-action-links"><Link href="/policies/audio-storage">Keeping your audio</Link>{slug === "pet" && <Link href="/occasions/memorial">Read the memorial song guide</Link>}<Link href="/create">Start with free lyrics <ArrowIcon /></Link></div></section>
+        <section className="occasion-gifting" aria-labelledby="occasion-gifting-heading"><p className="section-kicker">When the song is ready</p><h2 id="occasion-gifting-heading">{occasion.gifting.heading}</h2><p>{occasion.gifting.detail}</p><div className="occasion-action-links"><Link href="/policies/audio-storage">Keeping your audio</Link>{slug === "pet" && <Link href="/occasions/memorial">Read the memorial song guide</Link>}<Link href={createHref}>Start with free lyrics <ArrowIcon /></Link></div></section>
 
         <section className="occasion-next" aria-label="Other occasions"><h2>Find another moment worth singing about.</h2><div>{occasionSlugs.filter((other) => other !== slug).map((other) => <Link key={other} href={`/occasions/${other}`}>{occasions[other].name} songs <ArrowIcon /></Link>)}</div></section>
       </div>
-      <footer className="occasion-footer"><Link href="/">SongGift</Link><Link href="/create">Create a song <ArrowIcon /></Link></footer>
+      <footer className="occasion-footer"><Link href="/">SongGift</Link><Link href={createHref}>Create a song <ArrowIcon /></Link></footer>
     </main>
   );
 }

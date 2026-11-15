@@ -95,6 +95,19 @@ h1, h2, h3 { overflow-wrap: anywhere; }
 .sample-card { min-width: 0; padding: 24px; border: 1px solid var(--line); background: var(--cream); border-radius: 20px; }
 .sample-card h3 { font-size: 24px; }
 .sample-card audio { width: 100%; }
+.sample-intro { max-width: 650px; margin: 20px 0 28px; color: var(--muted); font-size: 15px; line-height: 1.7; }
+.sample-create-link { margin-top: 24px; }
+.holiday-section { background: #f4eee5; }
+.holiday-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.holiday-card { min-width: 0; display: flex; flex-direction: column; padding: 28px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--paper); }
+.holiday-card h3 { margin: 8px 0 14px; font-size: 27px; letter-spacing: -.03em; }
+.holiday-card > p:not(.section-kicker), .holiday-note { color: var(--muted); font-size: 14px; line-height: 1.7; }
+.holiday-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; margin-top: auto; padding-top: 20px; font-size: 13px; }
+.holiday-actions > a:last-child { text-decoration: underline; text-underline-offset: 3px; }
+.holiday-note { margin: 24px 0 0; }
+.occasion-season-links { margin: 24px 0 0; color: var(--muted); font-size: 14px; line-height: 1.9; }
+.occasion-season-links a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 760px) { .holiday-grid { grid-template-columns: minmax(0, 1fr); } }
 @media(max-width: 800px) {
   .mobile-menu { display: block; }
   .hero-section { gap: 24px; padding-top: 40px; padding-bottom: 40px; }

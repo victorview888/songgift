@@ -10,6 +10,7 @@ import { TermsConfirmation } from "@/components/terms-confirmation";
 import { useAccount } from "@/components/account-provider";
 
 import { ACCOUNT_CLEARED_EVENT, clearStoryDraft, initialStory, loadStoryDraft, newStoryDraft, saveStoryDraft, type StoryDraft, type StoryForm } from "@/lib/drafts/story";
+import { getHoliday, holidayForOccasion, holidayOccasions } from "@/lib/holidays";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function CreatePage() {
   const [error, setError] = useState("");
   const activeDraft = draft?.ownerId === (user?.id || null) ? draft : null;
   const form = activeDraft?.form || initialStory;
+  const selectedHoliday = holidayForOccasion(form.occasion);
   useEffect(() => { owner.current = user?.id || null; }, [user?.id]);
   useEffect(() => {
     if (loading || loadedFor.current === (user?.id || "guest")) return;
@@ -33,11 +35,13 @@ export default function CreatePage() {
     const timer = window.setTimeout(() => {
       loadedFor.current = user?.id || "guest";
       const restored = loadStoryDraft(user?.id || null);
-      const next = restored || newStoryDraft(user?.id || null);
+      const holiday = getHoliday(new URLSearchParams(window.location.search).get("occasion"));
+      const next = restored ? { ...restored, ownerId: user?.id || null } : newStoryDraft(user?.id || null);
+      if (!restored && holiday) next.form.occasion = holiday.occasion;
       draftRef.current = next; setDraft(next); setReady(true); setError(""); setIsGenerating(false);
-      const saved = !restored || saveStoryDraft(next);
+      const saved = (!restored && !holiday) || saveStoryDraft(next);
       if (!saved) clearStoryDraft();
-      setNotice(!saved ? "Local saving is unavailable. Keep a copy of your story before leaving this page." : restored ? "Restored your saved story from this tab." : "");
+      setNotice(!saved ? "Local saving is unavailable. Keep a copy of your story before leaving this page." : restored && holiday && restored.form.occasion !== holiday.occasion ? restored.orderId ? `Your saved song is unchanged. Continue it below, or choose Start a new story for ${holiday.name}.` : `Your saved story is unchanged. Choose ${holiday.name} in the occasion field if you want to adapt this draft.` : restored ? "Restored your saved story from this tab." : holiday ? `${holiday.name} is selected. Add your own memories below.` : "");
     }, 0);
     return () => window.clearTimeout(timer);
   }, [loading, user?.id]);
@@ -56,7 +60,10 @@ export default function CreatePage() {
     persist({ ...current, form: { ...current.form, [field]: value }, requestId: crypto.randomUUID(), savedAt: Date.now() });
   }
   function startNew() {
-    clearStoryDraft(); const next = newStoryDraft(user?.id || null); draftRef.current = next; setDraft(next); setNotice(""); setError("");
+    clearStoryDraft(); const next = newStoryDraft(user?.id || null);
+    const holiday = getHoliday(new URLSearchParams(window.location.search).get("occasion"));
+    if (holiday) next.form.occasion = holiday.occasion;
+    persist(next); setError("");
   }
   async function submitStory() {
     if (inFlight.current || !draftRef.current) return;
@@ -123,11 +130,11 @@ export default function CreatePage() {
           </div>
           <div className="field-grid">
             <label><span>What is the occasion?</span><select required value={form.occasion} onChange={(event) => updateField("occasion", event.target.value)}>
-              <option value="">Choose one</option><option>Birthday</option><option>Wedding</option><option>Anniversary</option><option>Just because</option><option>Thank you</option><option>In memory</option>
+              <option value="">Choose one</option><option>Birthday</option><option>Wedding</option><option>Anniversary</option><option>Just because</option><option>Thank you</option><option>In memory</option>{holidayOccasions.map(holiday => <option key={holiday.slug} value={holiday.occasion}>{holiday.name}</option>)}
             </select></label>
 
           </div>
-          <h2 className="form-group-heading"><span>02</span> The memories that matter</h2><p className="writing-hint">Try a moment you shared, a little habit you love, and what you want them to know.</p><label><span>Tell us the story</span><textarea required minLength={20} maxLength={8000} rows={8} value={form.story} onChange={(event) => updateField("story", event.target.value)} placeholder="What do you love about them? Include a favorite memory, a place you share, a phrase they always say, or anything you want them to hear..." /><small className="story-count">{form.story.length.toLocaleString()} / 8,000 characters · {form.story.length < 20 ? "Add at least 20 characters" : "Ready to turn into lyrics"}</small></label>
+          <h2 className="form-group-heading"><span>02</span> The memories that matter</h2><p className="writing-hint">{selectedHoliday?.storyHint || "Try a moment you shared, a little habit you love, and what you want them to know."}{selectedHoliday && <> <Link href={`/occasions/${selectedHoliday.slug}`} target="_blank" rel="noopener">More {selectedHoliday.name} ideas</Link></>}</p><label><span>Tell us the story</span><textarea required minLength={20} maxLength={8000} rows={8} value={form.story} onChange={(event) => updateField("story", event.target.value)} placeholder={selectedHoliday?.storyPlaceholder || "What do you love about them? Include a favorite memory, a place you share, a phrase they always say, or anything you want them to hear..."} /><small className="story-count">{form.story.length.toLocaleString()} / 8,000 characters · {form.story.length < 20 ? "Add at least 20 characters" : "Ready to turn into lyrics"}</small></label>
           <h2 className="form-group-heading"><span>03</span> Give it a feeling</h2><div className="field-grid">            <label><span>What should it feel like?</span><select value={form.mood} onChange={(event) => updateField("mood", event.target.value)}>
               <option>Warm and heartfelt</option><option>Joyful and bright</option><option>Romantic and intimate</option><option>Nostalgic and gentle</option><option>Uplifting and hopeful</option>
             </select></label><label><span>Music direction</span><select value={form.style} onChange={(event) => updateField("style", event.target.value)}>

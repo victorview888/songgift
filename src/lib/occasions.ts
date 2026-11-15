@@ -13,6 +13,57 @@ type Occasion = {
 };
 
 export const occasions: Record<string, Occasion> = {
+  christmas: {
+    name: "Christmas",
+    title: "Personalized Christmas Song Gifts from Your Memories | SongGift",
+    description: "Give a personal Christmas song inspired by your traditions, family stories and wishes. Review and edit lyrics for free before creating the music.",
+    heading: "A Christmas gift with your own story inside.",
+    introduction: "The gifts people remember often begin with something small: a familiar greeting, a recipe you make together or a call across the miles. Turn a Christmas memory into a personal song for a partner, parent, friend or chosen family. Tell us what the season means to you, without needing to write the lyrics yourself.",
+    ideas: [
+      { heading: "Choose one tradition that belongs to you", detail: "Describe the detail that makes your celebration familiar: a kitchen full of conversation, a decoration with a story or the message someone always sends. You do not need snow, a tree or a particular kind of Christmas to make the song personal." },
+      { heading: "Put the recipient in the memory", detail: "Include their name, your relationship and an action you remember. A sister rescuing the dessert or a friend setting another place at the table gives the song more to work with than a list of festive words." },
+      { heading: "Say what you want to give them this year", detail: "A thank-you, a wish or a reminder that they are missed can guide the chorus. Explain whether you want religious language, a secular celebration or simply a warm personal message. Check these choices when reviewing the lyrics." },
+    ],
+    prompt: "This Christmas song is for my brother Alex. Every year we make our grandmother's orange cake and laugh about the time we forgot the flour. We live in different cities now, but he still calls me while he bakes. I want to thank him for keeping our little tradition alive. Please make it warm and joyful, without religious language.",
+    mood: "Warm and heartfelt can suit a family thank-you, while joyful and bright works for a playful gift. Choose a music direction the recipient enjoys. Describe the festive feeling in your own words; SongGift makes an original song rather than a cover of an existing Christmas recording.",
+    question: "Can I make a non-religious Christmas song?",
+    answer: "Yes. Say which traditions and words fit your celebration and which to leave out. Review the free lyric draft carefully before paying for music. You can correct names, remove a line or change the message before generation starts.",
+    gifting: { heading: "Make room for a listening moment", detail: "Start early enough to review the lyrics, listen to the finished recording and download a backup before Christmas. From a completed song, you can choose to enable a private gift link and add a greeting, or give the audio file directly. A holiday selection does not guarantee delivery by a particular date." },
+  },
+  "christmas-eve": {
+    name: "Christmas Eve",
+    title: "Personalized Christmas Eve Songs for Someone Special | SongGift",
+    description: "Create a Christmas Eve song about the little traditions and people you share the evening with. Find story ideas and review your lyrics for free.",
+    heading: "For the little moments before Christmas morning.",
+    introduction: "Christmas Eve can be a busy gathering, a quiet evening or a call to someone far away. A personal song can hold the small ritual that makes December 24 feel like yours. Share a real memory and the message you want someone to hear, whether the song is a surprise for one person or a dedication from the family.",
+    ideas: [
+      { heading: "Start with a scene from the evening", detail: "Think of a sound, a shared meal, a walk or a conversation after everyone else has gone to bed. Describe what actually happened. A specific scene helps the lyrics feel personal without relying on familiar Christmas clichés." },
+      { heading: "Explain who is sharing the moment", detail: "Tell us the recipient's name and whether the message comes from you, a couple or a family. If you spend the evening apart, describe the way you stay connected. Leave out private details that do not belong in a gift." },
+      { heading: "Set the tone for the listening moment", detail: "You might want a peaceful thank-you, a bright family celebration or a hopeful message. Say whether faith is part of the story. Do not assume that everyone shares the same traditions or wants a surprise played in front of a group." },
+    ],
+    prompt: "This song is for my mum, June, on Christmas Eve. When I was little we wrapped presents at the kitchen table and she always saved a crooked ribbon for the last one. Now we live far apart, so we make tea and wrap gifts together over a video call. I want a gentle, grateful song about keeping that evening close, without religious language.",
+    mood: "Nostalgic and gentle or warm and heartfelt can fit an intimate evening gift. A soft piano ballad or acoustic pop can be a starting point. Give the story and feeling room to guide the result; the recording uses AI-generated vocals and is an original composition.",
+    question: "Is Christmas Eve different from the Christmas option?",
+    answer: "Both create an original song from your story. Christmas Eve gives you prompts for December 24 and its evening traditions; Christmas focuses on the wider celebration and gifting. Select the occasion that fits, then describe the particular message you want in the story field.",
+    gifting: { heading: "Let them choose when to press play", detail: "Check the finished audio in advance and download a copy. You can add a short greeting and enable the private gift link from the completed song, or send the audio privately. Allow time for generation and checking; the Christmas Eve option does not promise completion by a deadline." },
+  },
+  "new-year": {
+    name: "New Year",
+    title: "Personalized New Year Song Gifts for a New Beginning | SongGift",
+    description: "Celebrate the year you shared and the hopes ahead with a personal New Year song. Explore memory prompts and edit your lyrics before creating music.",
+    heading: "A song for the year you shared. And the one ahead.",
+    introduction: "A New Year message does not need a list of achievements or a perfect resolution. It can begin with someone who stayed beside you, a small change you are proud of or an ordinary day you want to remember. Make a personal song for January 1, a New Year's Eve gathering or a quieter new beginning.",
+    ideas: [
+      { heading: "Choose a moment from the year", detail: "Describe one real scene: a move, an unexpected adventure or a difficult week made easier by someone. Say why that moment mattered. Include the year explicitly if you want it sung; the song should not have to guess dates." },
+      { heading: "Thank someone for a particular kindness", detail: "Give their name and the thing they did that stayed with you. Explain whether the message is from one person, a couple or a group, so the lyrics can use the right relationships and perspective." },
+      { heading: "End with a hope you can mean", detail: "A wish to make more time for each other can be as meaningful as a big ambition. Describe the tone you want: reflective, joyful or hopeful. Avoid putting pressure on the recipient to make promises or meet expectations." },
+    ],
+    prompt: "This New Year song is for my friend Sam. This year we moved into our first flat and learned to cook, mostly by getting it wrong. When work was difficult he always made time for a walk by the river. I want to thank him for showing up and say that I hope the next year brings more ordinary adventures together. Keep it hopeful and light.",
+    mood: "Uplifting and hopeful can suit a fresh start, while nostalgic and gentle works for looking back. Choose the music direction for the recipient rather than the calendar. Mention the year and any date you want included, then check the generated words before starting the music.",
+    question: "Can the song be for New Year's Eve as well as New Year's Day?",
+    answer: "Yes. Select New Year's Day in the form and explain whether you plan to give the song on December 31, January 1 or another date. Your story determines the message. Review any year, date and promise in the lyrics before payment.",
+    gifting: { heading: "Check the gift before the countdown", detail: "Make time to listen to the recording and download a backup before your gathering or private listening moment. A completed song can be given as an audio file or through an optional private gift link. Generation time varies, so the New Year option is not a promise of instant or deadline delivery." },
+  },
   birthday: {
     name: "Birthday",
     title: "Personalized Birthday Song Gift | SongGift",
