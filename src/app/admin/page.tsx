@@ -1,3 +1,4 @@
+import { Brand } from "@/components/brand";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getAdminPageAccess } from "@/lib/auth/admin-page";
@@ -13,7 +14,7 @@ export default async function AdminPage() {
   if (access.status === 401) redirect("/login?next=%2Fadmin");
   if (access.status === 403) notFound();
   if (access.status === 503) {
-    return <main className="admin-access-message"><Link href="/" className="admin-brand">♪ songgift</Link><p className="admin-eyebrow">管理后台</p><h1>暂时无法验证后台访问权限</h1><p>请稍后重试。你的歌曲和订单仍可从个人歌曲库查看。</p><div className="admin-inline-actions"><Link href="/admin" className="admin-button">重新验证</Link><Link href="/my-songs" className="admin-button admin-button-quiet">我的歌曲</Link></div></main>;
+    return <main className="admin-access-message"><Link href="/" className="admin-brand"><Brand /></Link><p className="admin-eyebrow">管理后台</p><h1>暂时无法验证后台访问权限</h1><p>请稍后重试。你的歌曲和订单仍可从个人歌曲库查看。</p><div className="admin-inline-actions"><Link href="/admin" className="admin-button">重新验证</Link><Link href="/my-songs" className="admin-button admin-button-quiet">我的歌曲</Link></div></main>;
   }
 
   let data: AdminOverview | undefined;

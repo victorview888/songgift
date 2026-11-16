@@ -18,7 +18,7 @@ export async function generateMetadata({
   const g = guideBySlug((await params).slug);
   return g
     ? publicPageMetadata(
-        g.title + " | SongGift",
+        g.title + " | songforalways",
         g.description,
         "/guides/" + g.slug,
       )
@@ -60,7 +60,7 @@ export default async function GuidePage({
               image: absoluteUrl(socialImagePath),
               author: {
                 "@type": "Organization",
-                name: "SongGift",
+                name: "songforalways",
                 url: absoluteUrl("/"),
               },
             },
@@ -74,7 +74,7 @@ export default async function GuidePage({
         </p>
         <h1>{g.title}</h1>
         <p className="guide-intro">{g.description}</p>
-        <p className="guide-date">SongGift guide · {g.updatedOn ? "Updated" : "Published"}{" "}<time dateTime={g.updatedOn || g.publishedOn}>{formatContentDate(g.updatedOn || g.publishedOn)}</time></p>
+        <p className="guide-date">songforalways guide · {g.updatedOn ? "Updated" : "Published"}{" "}<time dateTime={g.updatedOn || g.publishedOn}>{formatContentDate(g.updatedOn || g.publishedOn)}</time></p>
         <nav className="guide-toc" aria-label="In this guide">
           <strong>In this guide</strong>
           {g.sections.map((s, i) => (

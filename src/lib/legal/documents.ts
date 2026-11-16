@@ -6,15 +6,15 @@ export const legalDetails = { operator: "明日逻辑", location: "Shanghai, Chi
 export const legalDocuments: Record<"terms" | "privacy" | "content-standards", PolicyDocument> = {
   "terms": {
     "title": "Terms of Service",
-    "description": "How SongGift accounts, personalised song orders, payments and delivery work.",
+    "description": "How songforalways accounts, personalised song orders, payments and delivery work.",
     "effectiveDate": "2026-11-15",
     "sections": [
       {
-        "title": "1. About SongGift and these terms",
+        "title": "1. About songforalways and these terms",
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "SongGift, available at https://www.songforalways.com, helps you turn a story and your preferences into AI-generated lyrics and a personalised song. In these terms, “we”, “us” and “our” refer to 明日逻辑, operating SongGift from Shanghai, China."
+            "text": "songforalways, available at https://www.songforalways.com, helps you turn a story and your preferences into AI-generated lyrics and a personalised song. In these terms, “we”, “us” and “our” refer to 明日逻辑, operating songforalways from Shanghai, China."
           },
           {
             "kind": "paragraph",
@@ -61,7 +61,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "The amount and currency for your order are shown before you authorise payment. SongGift currently sells individual song orders. A single-song purchase does not create a recurring subscription."
+            "text": "The amount and currency for your order are shown before you authorise payment. songforalways currently sells individual song orders. A single-song purchase does not create a recurring subscription."
           },
           {
             "kind": "links",
@@ -74,11 +74,11 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
           },
           {
             "kind": "paragraph",
-            "text": "Payment is handled by the payment provider offered at checkout. That provider may apply its own account eligibility rules, currency conversion or other charges, which it explains separately. Returning from a checkout page does not by itself confirm successful payment; SongGift must verify payment before authorising paid generation or unlocking the full previewed recording and its download. Purchasing a preview unlocks that same recording; it does not create a new musical version."
+            "text": "Payment is handled by the payment provider offered at checkout. That provider may apply its own account eligibility rules, currency conversion or other charges, which it explains separately. Returning from a checkout page does not by itself confirm successful payment; songforalways must verify payment before authorising paid generation or unlocking the full previewed recording and its download. Purchasing a preview unlocks that same recording; it does not create a new musical version."
           },
           {
             "kind": "paragraph",
-            "text": "If your provider shows a charge but the order appears unpaid, retain the receipt and contact us with the SongGift order reference. Avoid making a second purchase to resolve the first payment."
+            "text": "If your provider shows a charge but the order appears unpaid, retain the receipt and contact us with the songforalways order reference. Avoid making a second purchase to resolve the first payment."
           }
         ]
       },
@@ -99,7 +99,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
           },
           {
             "kind": "paragraph",
-            "text": "Submitting a story does not give SongGift permission to publish it or use your private song as an advertisement. Any promotional use would require separate permission."
+            "text": "Submitting a story does not give songforalways permission to publish it or use your private song as an advertisement. Any promotional use would require separate permission."
           }
         ]
       },
@@ -171,7 +171,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
           },
           {
             "kind": "paragraph",
-            "text": "Our Content Standards apply to stories, instructions, lyrics and generated music, including content you request, store or distribute through SongGift. They specify prohibited categories, reporting routes, review targets and possible actions."
+            "text": "Our Content Standards apply to stories, instructions, lyrics and generated music, including content you request, store or distribute through songforalways. They specify prohibited categories, reporting routes, review targets and possible actions."
           },
           {
             "kind": "links",
@@ -193,7 +193,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "We may maintain, update or replace parts of SongGift and its supporting providers. Material changes affecting your purchases or access will be explained where required. A later change to these terms will not retroactively remove rights attached to an earlier purchase."
+            "text": "We may maintain, update or replace parts of songforalways and its supporting providers. Material changes affecting your purchases or access will be explained where required. A later change to these terms will not retroactively remove rights attached to an earlier purchase."
           },
           {
             "kind": "paragraph",
@@ -222,7 +222,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
   },
   "privacy": {
     "title": "Privacy Policy",
-    "description": "How SongGift handles your account, stories, AI generation, payments and saved songs.",
+    "description": "How songforalways handles your account, stories, AI generation, payments and saved songs.",
     "effectiveDate": "2026-11-15",
     "sections": [
       {
@@ -230,7 +230,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "This policy describes personal information handled through SongGift at https://www.songforalways.com. 明日逻辑, operating SongGift from Shanghai, China, is responsible for deciding how SongGift uses that information. It covers website visitors, account holders and people whose information is included in song requests."
+            "text": "This policy describes personal information handled through songforalways at https://www.songforalways.com. 明日逻辑, operating songforalways from Shanghai, China, is responsible for deciding how songforalways uses that information. It covers website visitors, account holders and people whose information is included in song requests."
           },
           {
             "kind": "paragraph",
@@ -239,7 +239,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         ]
       },
       {
-        "title": "2. Information involved in using SongGift",
+        "title": "2. Information involved in using songforalways",
         "blocks": [
           {
             "kind": "paragraph",
@@ -247,15 +247,15 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
           },
           {
             "kind": "paragraph",
-            "text": "Story and song information: the recipient’s name, your relationship, the occasion, memories or story you enter, musical preferences, generated and edited lyrics, song title, generation status and finished audio. Information about another person can be personal information even if that person has no SongGift account."
+            "text": "Story and song information: the recipient’s name, your relationship, the occasion, memories or story you enter, musical preferences, generated and edited lyrics, song title, generation status and finished audio. Information about another person can be personal information even if that person has no songforalways account."
           },
           {
             "kind": "paragraph",
-            "text": "Order and payment records: order references, the quoted amount and currency, payment-provider order or transaction references, verified payment and refund amounts, timestamps and records needed to investigate discrepancies. Payment credentials are entered with the checkout provider. SongGift’s checkout does not ask you to submit your full card number or card security code to SongGift."
+            "text": "Order and payment records: order references, the quoted amount and currency, payment-provider order or transaction references, verified payment and refund amounts, timestamps and records needed to investigate discrepancies. Payment credentials are entered with the checkout provider. songforalways’s checkout does not ask you to submit your full card number or card security code to songforalways."
           },
           {
             "kind": "paragraph",
-            "text": "Technical and security information: hosting and authentication services may process IP addresses, browser or device information, request timestamps, error records and service-operation logs. SongGift also maintains records of restricted administrative actions to help investigate access and order-handling issues."
+            "text": "Technical and security information: hosting and authentication services may process IP addresses, browser or device information, request timestamps, error records and service-operation logs. songforalways also maintains records of restricted administrative actions to help investigate access and order-handling issues."
           },
           {
             "kind": "paragraph",
@@ -296,12 +296,12 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "AI generation requires sending content outside SongGift’s own database:"
+            "text": "AI generation requires sending content outside songforalways’s own database:"
           },
           {
             "kind": "list",
             "items": [
-              "DeepSeek: the lyric-writing request includes the recipient’s name, relationship, occasion, mood, musical style and story. SongGift does not deliberately include your account email in this prompt; an email address or other private detail you type into the story could nevertheless be sent as part of its text.",
+              "DeepSeek: the lyric-writing request includes the recipient’s name, relationship, occasion, mood, musical style and story. songforalways does not deliberately include your account email in this prompt; an email address or other private detail you type into the story could nevertheless be sent as part of its text.",
               "fal.ai and its underlying music-model provider: the music request includes the approved lyrics, recipient’s name, story details, occasion and musical direction. The current configured model is Google’s Lyria 3 Pro through fal. A model provider may receive the content when fal forwards the request to its service."
             ]
           },
@@ -315,7 +315,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
           },
           {
             "kind": "paragraph",
-            "text": "SongGift does not use your stories or songs to train its own AI models. External AI providers may have different rules about retention and model improvement. Provider processing, retention and any model-improvement use depend on the terms and settings applicable to the particular API and model. Review the linked provider information and contact us before submitting content if a particular restriction matters to you."
+            "text": "songforalways does not use your stories or songs to train its own AI models. External AI providers may have different rules about retention and model improvement. Provider processing, retention and any model-improvement use depend on the terms and settings applicable to the particular API and model. Review the linked provider information and contact us before submitting content if a particular restriction matters to you."
           },
           {
             "kind": "links",
@@ -374,7 +374,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "SongGift uses authentication cookies to keep you signed in and a short-lived cookie to return you to the page you intended to visit after signing in."
+            "text": "songforalways uses authentication cookies to keep you signed in and a short-lived cookie to return you to the page you intended to visit after signing in."
           },
           {
             "kind": "paragraph",
@@ -436,7 +436,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "SongGift is operated from Shanghai, China. Your information may be processed in China and other countries used by our hosting, database, AI and payment providers, including countries outside your place of residence. The location depends on the service used and the infrastructure supporting it."
+            "text": "songforalways is operated from Shanghai, China. Your information may be processed in China and other countries used by our hosting, database, AI and payment providers, including countries outside your place of residence. The location depends on the service used and the infrastructure supporting it."
           },
           {
             "kind": "paragraph",
@@ -480,7 +480,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "Questions and requests should be sent to support@songforalways.com. The data controller is 明日逻辑, operating SongGift from Shanghai, China. We display the effective date of this policy and will provide notice of material changes where required."
+            "text": "Questions and requests should be sent to support@songforalways.com. The data controller is 明日逻辑, operating songforalways from Shanghai, China. We display the effective date of this policy and will provide notice of material changes where required."
           }
         ]
       }
@@ -488,7 +488,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
   },
   "content-standards": {
     "title": "Content Standards & Reporting",
-    "description": "Rules for AI lyrics and songs, how to report a concern, and how SongGift reviews it.",
+    "description": "Rules for AI lyrics and songs, how to report a concern, and how songforalways reviews it.",
     "effectiveDate": "2026-11-10",
     "sections": [
       {
@@ -496,7 +496,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "These standards form part of the SongGift Terms of Service. They cover the story, names, instructions and preferences you submit, lyrics you generate or edit, and music or vocals created, stored or distributed through SongGift. Our service is for personal songs and respectful gifts. The same rules apply to attempts to bypass a safety check."
+            "text": "These standards form part of the songforalways Terms of Service. They cover the story, names, instructions and preferences you submit, lyrics you generate or edit, and music or vocals created, stored or distributed through songforalways. Our service is for personal songs and respectful gifts. The same rules apply to attempts to bypass a safety check."
           },
           {
             "kind": "links",
@@ -534,7 +534,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "SongGift uses a DeepSeek-based semantic text-safety check on the submitted story and instructions before lyric writing, on the generated lyric result, and on the approved text frozen for a new music-generation attempt. A failed or unavailable check stops that new step; it does not silently authorise another music call."
+            "text": "songforalways uses a DeepSeek-based semantic text-safety check on the submitted story and instructions before lyric writing, on the generated lyric result, and on the approved text frozen for a new music-generation attempt. A failed or unavailable check stops that new step; it does not silently authorise another music call."
           },
           {
             "kind": "paragraph",
@@ -551,7 +551,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "Use the on-site report form. No account is required. Choose a category and provide a SongGift page, order number or earlier report reference and a concise explanation. An email address is optional but helps us ask questions or send a progress update. The form returns a receipt only after the report is saved."
+            "text": "Use the on-site report form. No account is required. Choose a category and provide a songforalways page, order number or earlier report reference and a concise explanation. An email address is optional but helps us ask questions or send a progress update. The form returns a receipt only after the report is saved."
           },
           {
             "kind": "links",
@@ -616,7 +616,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "SongGift is operated by 明日逻辑 in Shanghai, China. The on-site report form is the primary content-reporting channel. For general enquiries, the support address is support@songforalways.com. Use the on-site form for a saved content-report reference."
+            "text": "songforalways is operated by 明日逻辑 in Shanghai, China. The on-site report form is the primary content-reporting channel. For general enquiries, the support address is support@songforalways.com. Use the on-site form for a saved content-report reference."
           },
           {
             "kind": "links",

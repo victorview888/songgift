@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./admin.css";
 
 export const metadata: Metadata = {
-  title: { absolute: "管理后台 | SongGift" },
+  title: { absolute: "管理后台 | songforalways" },
   robots: { index: false, follow: false },
   referrer: "no-referrer",
 };

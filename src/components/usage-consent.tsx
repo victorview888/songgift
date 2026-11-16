@@ -58,7 +58,7 @@ export function UsageConsent({ campaigns }: { campaigns: string[] }) {
   return (
     <section className="usage-consent" aria-label="Optional usage analytics">
       <div>
-        <h2>Help us improve SongGift?</h2>
+        <h2>Help us improve songforalways?</h2>
         <p>
           Optional first-party analytics records a random browser ID, broad
           traffic sources and song-making steps within a 30-day reporting

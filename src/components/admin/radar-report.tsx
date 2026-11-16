@@ -17,6 +17,6 @@ export function RadarReportView({ report }: { report: RadarReport }) {
       <small>{kindLabels[item.kind]} · {report.sources.find(source => source.id === item.sourceId)?.name}</small>
       <h3>{item.url ? <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title} ↗</a> : item.title}</h3><p>{item.detail}</p>
     </li>)}</ol> : <p className="admin-order-note">本次没有筛出相关线索。可能正在建立基线、来源暂时失败，或公开榜单中没有匹配内容；这不表示市场没有需求。</p>}</AdminCard>
-    <AdminCard title="如何用于 SongGift"><p className="admin-order-note">先查看来源，核对歌曲生成能力、赠礼场景及内容机会，再决定是否纳入产品或 SEO 选题。本页不会自动修改网站、生成歌曲或发送邮件。Search Console 尚未授权，当前不包含本站搜索查询数据。</p></AdminCard>
+    <AdminCard title="如何用于 songforalways"><p className="admin-order-note">先查看来源，核对歌曲生成能力、赠礼场景及内容机会，再决定是否纳入产品或 SEO 选题。本页不会自动修改网站、生成歌曲或发送邮件。Search Console 尚未授权，当前不包含本站搜索查询数据。</p></AdminCard>
   </>;
 }

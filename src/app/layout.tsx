@@ -8,14 +8,15 @@ import { siteUrl } from "@/lib/seo";
 import { UsageConsent } from "@/components/usage-consent";
 import { campaignAllowlist } from "@/lib/growth/usage";
 import { LegalFooter } from "@/components/legal-footer";
+import { brandIcon, brandName } from "@/lib/brand";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "SongGift | Personalized Songs from Your Story", template: "%s | SongGift" },
+  title: { default: `${brandName} | Personalized Songs from Your Story`, template: `%s | ${brandName}` },
   description: "Turn your memories into a personalized song with lyrics you can review before the music is made.",
-  applicationName: "SongGift",
+  applicationName: brandName,
   icons: {
-    icon: [{ url: "/brand/songgift-icon.svg", type: "image/svg+xml" }],
+    icon: [{ url: brandIcon, type: "image/png", sizes: "512x512" }],
     apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };

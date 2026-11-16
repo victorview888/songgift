@@ -61,7 +61,7 @@ export const guides: Guide[] = [
     faq: [
       {
         q: "How long should my story be?",
-        a: "Include enough context to explain a few real details. SongGift accepts 20–8,000 characters; a focused brief is usually easier to review than an entire life history.",
+        a: "Include enough context to explain a few real details. songforalways accepts 20–8,000 characters; a focused brief is usually easier to review than an entire life history.",
       },
       {
         q: "Do I need to write rhyming lyrics?",
@@ -177,7 +177,7 @@ export const guides: Guide[] = [
       {
         title: "Share only what the recipient needs",
         paragraphs: [
-          "SongGift gift sharing is off until the buyer enables it for a finished song. A separate gift link lets someone listen without using the buyer’s account. The gift page shows the selected song, the recipient’s name and an optional short greeting, rather than the private order, original story or payment information.",
+          "songforalways gift sharing is off until the buyer enables it for a finished song. A separate gift link lets someone listen without using the buyer’s account. The gift page shows the selected song, the recipient’s name and an optional short greeting, rather than the private order, original story or payment information.",
           "Anyone who receives the link may be able to listen and forward it. Send it through a channel you trust. If you replace or turn off a gift link, new playback requests through the old link stop; a recording already buffered or saved cannot be taken back.",
         ],
       },
@@ -199,7 +199,7 @@ export const guides: Guide[] = [
       {
         title: "Keep a backup and respect the setting",
         paragraphs: [
-          "Download a copy of the finished audio to your own device. SongGift currently plans long-term audio storage without a scheduled expiry, but keeping your own backup is still sensible. Future access can depend on account and service availability.",
+          "Download a copy of the finished audio to your own device. songforalways currently plans long-term audio storage without a scheduled expiry, but keeping your own backup is still sensible. Future access can depend on account and service availability.",
           "A song purchase is for the uses described in the published terms. If you want to put it in an advertisement, distribute it commercially or use it in another public production, check the relevant rights and provider terms first. A gift purchase is not a blanket guarantee of exclusive copyright or commercial clearance.",
         ],
       },

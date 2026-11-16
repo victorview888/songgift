@@ -4,11 +4,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AdminSignOut } from "@/components/admin-sign-out";
+import { Brand } from "@/components/brand";
 
 export function AdminShell({ current, children }: { current: "home" | "orders" | "jobs" | "reports" | "radar" | "users" | "system" | "audit" | "analytics"; children: ReactNode }) {
   return <div className="admin-shell">
     <aside className="admin-sidebar">
-      <Link href="/" className="admin-brand">♪ songgift<span>管理后台</span></Link>
+      <Link href="/" className="admin-brand"><Brand /><span className="admin-brand-caption">管理后台</span></Link>
       <nav aria-label="后台导航">
         <Link href="/admin" aria-current={current === "home" ? "page" : undefined}>经营概览</Link>
         <Link href="/admin/orders" aria-current={current === "orders" ? "page" : undefined}>订单列表</Link>
@@ -24,7 +25,7 @@ export function AdminShell({ current, children }: { current: "home" | "orders" |
       <p className="admin-sidebar-note">为每一首歌，<br />做好交付的最后一步。</p>
     </aside>
     <main className="admin-main admin-orders-main">
-      <header className="admin-topbar"><span>SongGift / 管理后台</span><AdminSignOut /></header>
+      <header className="admin-topbar"><span>songforalways / 管理后台</span><AdminSignOut /></header>
       {children}
     </main>
   </div>;

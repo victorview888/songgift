@@ -37,7 +37,7 @@
     "PAYPAL_ENVIRONMENT": "live",
     "PAYPAL_CURRENCY": "USD",
     "SONG_PRICE_USD": "9.99",
-    "PAYPAL_BRAND_NAME": "SongGift",
+    "PAYPAL_BRAND_NAME": "songforalways",
     "SONGGIFT_SUPPORT_EMAIL": "support@songforalways.com",
     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_VKDMdgzhiKI67CH6wn-Qhw_ANW5N0GO"
   }

@@ -15,7 +15,7 @@ type Occasion = {
 export const occasions: Record<string, Occasion> = {
   christmas: {
     name: "Christmas",
-    title: "Personalized Christmas Song Gifts from Your Memories | SongGift",
+    title: "Personalized Christmas Song Gifts from Your Memories | songforalways",
     description: "Give a personal Christmas song inspired by your traditions, family stories and wishes. Review and edit lyrics for free before creating the music.",
     heading: "A Christmas gift with your own story inside.",
     introduction: "The gifts people remember often begin with something small: a familiar greeting, a recipe you make together or a call across the miles. Turn a Christmas memory into a personal song for a partner, parent, friend or chosen family. Tell us what the season means to you, without needing to write the lyrics yourself.",
@@ -25,14 +25,14 @@ export const occasions: Record<string, Occasion> = {
       { heading: "Say what you want to give them this year", detail: "A thank-you, a wish or a reminder that they are missed can guide the chorus. Explain whether you want religious language, a secular celebration or simply a warm personal message. Check these choices when reviewing the lyrics." },
     ],
     prompt: "This Christmas song is for my brother Alex. Every year we make our grandmother's orange cake and laugh about the time we forgot the flour. We live in different cities now, but he still calls me while he bakes. I want to thank him for keeping our little tradition alive. Please make it warm and joyful, without religious language.",
-    mood: "Warm and heartfelt can suit a family thank-you, while joyful and bright works for a playful gift. Choose a music direction the recipient enjoys. Describe the festive feeling in your own words; SongGift makes an original song rather than a cover of an existing Christmas recording.",
+    mood: "Warm and heartfelt can suit a family thank-you, while joyful and bright works for a playful gift. Choose a music direction the recipient enjoys. Describe the festive feeling in your own words; songforalways makes an original song rather than a cover of an existing Christmas recording.",
     question: "Can I make a non-religious Christmas song?",
     answer: "Yes. Say which traditions and words fit your celebration and which to leave out. Review the free lyric draft carefully before paying for music. You can correct names, remove a line or change the message before generation starts.",
     gifting: { heading: "Make room for a listening moment", detail: "Start early enough to review the lyrics, listen to the finished recording and download a backup before Christmas. From a completed song, you can choose to enable a private gift link and add a greeting, or give the audio file directly. A holiday selection does not guarantee delivery by a particular date." },
   },
   "christmas-eve": {
     name: "Christmas Eve",
-    title: "Personalized Christmas Eve Songs for Someone Special | SongGift",
+    title: "Personalized Christmas Eve Songs for Someone Special | songforalways",
     description: "Create a Christmas Eve song about the little traditions and people you share the evening with. Find story ideas and review your lyrics for free.",
     heading: "For the little moments before Christmas morning.",
     introduction: "Christmas Eve can be a busy gathering, a quiet evening or a call to someone far away. A personal song can hold the small ritual that makes December 24 feel like yours. Share a real memory and the message you want someone to hear, whether the song is a surprise for one person or a dedication from the family.",
@@ -49,7 +49,7 @@ export const occasions: Record<string, Occasion> = {
   },
   "new-year": {
     name: "New Year",
-    title: "Personalized New Year Song Gifts for a New Beginning | SongGift",
+    title: "Personalized New Year Song Gifts for a New Beginning | songforalways",
     description: "Celebrate the year you shared and the hopes ahead with a personal New Year song. Explore memory prompts and edit your lyrics before creating music.",
     heading: "A song for the year you shared. And the one ahead.",
     introduction: "A New Year message does not need a list of achievements or a perfect resolution. It can begin with someone who stayed beside you, a small change you are proud of or an ordinary day you want to remember. Make a personal song for January 1, a New Year's Eve gathering or a quieter new beginning.",
@@ -66,7 +66,7 @@ export const occasions: Record<string, Occasion> = {
   },
   birthday: {
     name: "Birthday",
-    title: "Personalized Birthday Song Gift | SongGift",
+    title: "Personalized Birthday Song Gift | songforalways",
     description: "Make a personalized birthday song from the memories, habits, and hopes that make someone special. Review the lyrics before creating the music.",
     heading: "A birthday song that sounds like their story.",
     introduction: "A birthday is a chance to say more than “happy birthday.” Think about the little things they do, the moments you laugh about together, and what you hope the next year brings. Those details give a personalized birthday song a voice that a greeting card cannot.",
@@ -79,11 +79,11 @@ export const occasions: Record<string, Occasion> = {
     mood: "Choose joyful and bright for a celebration, or warm and heartfelt if you want the song to feel like a personal letter. You can also choose a music direction such as acoustic pop or piano ballad.",
     question: "Do I need to write the lyrics myself?",
     answer: "No. Tell us the story in your own words. You can read and edit the generated lyrics before deciding whether to pay for the finished song.",
-    gifting: { heading: "Give them a moment to listen", detail: "Download the finished audio before the birthday and test it on the device you plan to use. Pair it with a short note about the memory behind the song, or send the audio privately so they can listen in their own time. Share the downloaded file, rather than your signed-in SongGift account page." },
+    gifting: { heading: "Give them a moment to listen", detail: "Download the finished audio before the birthday and test it on the device you plan to use. Pair it with a short note about the memory behind the song, or send the audio privately so they can listen in their own time. Share the downloaded file, rather than your signed-in songforalways account page." },
   },
   wedding: {
     name: "Wedding",
-    title: "Personalized Wedding Song from Your Love Story | SongGift",
+    title: "Personalized Wedding Song from Your Love Story | songforalways",
     description: "Create a wedding song inspired by your own love story. Share the moments that brought you together, review the lyrics, and choose the feeling of the music.",
     heading: "Let your wedding song tell the story behind the vows.",
     introduction: "A wedding song can hold the moments guests may never have seen: the first conversation, the ordinary routines that became home, and the promise you want to make together. Start with a few honest details rather than trying to write a perfect speech.",
@@ -100,7 +100,7 @@ export const occasions: Record<string, Occasion> = {
   },
   anniversary: {
     name: "Anniversary",
-    title: "Personalized Anniversary Song Gift | SongGift",
+    title: "Personalized Anniversary Song Gift | songforalways",
     description: "Celebrate the years you have shared with a personalized anniversary song. Turn your favorite memories and everyday traditions into lyrics you can review.",
     heading: "An anniversary song for everything you have built together.",
     introduction: "An anniversary marks more than a date. It is a collection of places, changes, inside jokes, and ordinary days you chose to share. A personalized song can bring those memories into one thoughtful gift, whether you are celebrating your first year or many years together.",
@@ -117,7 +117,7 @@ export const occasions: Record<string, Occasion> = {
   },
   family: {
     name: "Family",
-    title: "Personalized Family Song Gifts | SongGift",
+    title: "Personalized Family Song Gifts | songforalways",
     description: "Create a personal song for a parent, child, grandparent or chosen family. Find story ideas, review your AI lyrics, and give them a song to keep.",
     heading: "A family song for the people who feel like home.",
     introduction: "Family stories often live in small routines: the ride home after practice, a recipe nobody measures, or a message that always arrives when you need it. A personal song can say thank you to a parent, celebrate a child, or recognize the people you have chosen as family. Begin with one relationship and a memory that explains what it means to you.",
@@ -130,11 +130,11 @@ export const occasions: Record<string, Occasion> = {
     mood: "Warm and heartfelt can suit a thank-you, while joyful and bright works for a family celebration. Choose one main feeling and a music direction the recipient enjoys. You do not have to fit every family memory into a single song.",
     question: "Can the song be from several family members?",
     answer: "Yes. Explain that the message is from the family and identify the recipient in your story. Review the lyrics to check that names, relationships and words such as “we” match what you want to say before creating the music.",
-    gifting: { heading: "Add the story behind the song", detail: "Give the downloaded audio with a short note about why you chose that memory. If family members live far apart, share the file privately so each person can listen. Your SongGift song page belongs to your account, so send the audio rather than your sign-in details." },
+    gifting: { heading: "Add the story behind the song", detail: "Give the downloaded audio with a short note about why you chose that memory. If family members live far apart, share the file privately so each person can listen. Your songforalways song page belongs to your account, so send the audio rather than your sign-in details." },
   },
   pet: {
     name: "Pet",
-    title: "Personalized Pet Songs and Tributes | SongGift",
+    title: "Personalized Pet Songs and Tributes | songforalways",
     description: "Turn your pet's little habits and shared adventures into a personalized song. Explore joyful pet song ideas or a gentle tribute, then review the lyrics.",
     heading: "A pet song for a very particular kind of best friend.",
     introduction: "The companion waiting by the door has a story too. Perhaps it is a dog who insists on the longest walk, a cat who steals the warm chair, or a small animal with a surprisingly big personality. A personalized pet song can celebrate those happy routines or gently remember a companion you miss. Tell the story in the way that feels right for you.",
@@ -151,7 +151,7 @@ export const occasions: Record<string, Occasion> = {
   },
   memorial: {
     name: "Memorial",
-    title: "Personalized Memorial Songs from Your Memories | SongGift",
+    title: "Personalized Memorial Songs from Your Memories | songforalways",
     description: "Create a gentle memorial song from a loved one's stories and everyday kindness. Find remembrance prompts and review the lyrics at your own pace.",
     heading: "A memorial song for the stories you want to keep close.",
     introduction: "A remembrance can begin with something small: a familiar greeting, a shared place, or a lesson that stays with you. You do not need to sum up an entire life or find the perfect words. A personal memorial song offers one way to hold a memory, whether you make it for yourself or for someone who would welcome the gift.",
@@ -163,7 +163,7 @@ export const occasions: Record<string, Occasion> = {
     prompt: "I want to remember my aunt, who taught me to notice the birds on our morning walks. She always carried an extra scarf because someone would forget theirs. I would like a gentle song about her everyday kindness and the things she taught me to see. Please keep it grounded in these memories, without religious language.",
     mood: "Choose nostalgic and gentle for a reflective song, and describe a quieter tone in your story if that feels right. A brighter feeling may fit someone remembered for laughter. There is no required way for a memorial to sound; take time with the lyrics and continue only when the words feel appropriate to you.",
     question: "Will the song recreate my loved one's voice?",
-    answer: "No. SongGift creates an AI-generated song from the written memories you share. It does not clone a person's voice or turn a recording of them into new speech. Review the lyrics as a new tribute inspired by your memories.",
+    answer: "No. songforalways creates an AI-generated song from the written memories you share. It does not clone a person's voice or turn a recording of them into new speech. Review the lyrics as a new tribute inspired by your memories.",
     gifting: { heading: "Leave room for their own listening moment", detail: "If the song is for someone else, ask whether they would welcome it before giving the finished audio. A private file and a simple note let them decide when to listen. Download and keep a backup; if you plan to use it during a service or at a venue, check permissions and playback arrangements beforehand." },
   },
 };

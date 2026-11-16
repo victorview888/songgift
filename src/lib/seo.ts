@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { brandIcon, brandName } from "./brand";
 
 export const siteUrl = "https://www.songforalways.com";
-export const siteName = "SongGift";
-export const socialImagePath = "/brand/songgift-social.png";
-export const socialImageAlt = "SongGift — personalized song gifts from your story";
+export const siteName = brandName;
+export const socialImagePath = "/brand/songforalways-social.png";
+export const socialImageAlt = "songforalways — personalized song gifts from your story";
 
 export function absoluteUrl(path: string) {
   return new URL(path, siteUrl).toString();
@@ -31,7 +32,7 @@ export function websiteStructuredData() {
     "@graph": [
       {
         "@type": "Organization", "@id": absoluteUrl("/#organization"), name: siteName,
-        url: siteUrl, logo: absoluteUrl("/brand/songgift-icon.png"),
+        url: siteUrl, logo: absoluteUrl(brandIcon),
       },
       {
         "@type": "WebSite", "@id": absoluteUrl("/#website"), name: siteName,

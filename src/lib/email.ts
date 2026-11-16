@@ -20,7 +20,7 @@ export async function sendSongReadyEmail(input: { to: string; recipientName: str
   try {
     response = await fetch("https://api.resend.com/emails", {
       method: "POST", headers: { Authorization: "Bearer " + process.env.RESEND_API_KEY, "Content-Type": "application/json", "Idempotency-Key": input.idempotencyKey },
-      body: JSON.stringify({ from: input.from, to: [input.to], subject: "Your SongGift song is ready",
+      body: JSON.stringify({ from: input.from, to: [input.to], subject: "Your songforalways song is ready",
         text: "Your song for " + input.recipientName + " is ready. Sign in to listen or download: " + input.songUrl,
         html: "<p>Your song for <strong>" + escapeHtml(input.recipientName) + "</strong> is ready.</p><p><a href=\"" + escapeHtml(input.songUrl) + "\">Sign in to listen or download your song</a></p>" }),
       cache: "no-store", signal: AbortSignal.timeout(10_000),
