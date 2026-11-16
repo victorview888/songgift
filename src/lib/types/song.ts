@@ -46,4 +46,6 @@ export type MusicGenerationResult = {
   storagePath?: string;
   persistenceStatus?: "saved" | "skipped";
   message?: string;
+  // Server operations only; customer-facing services return curated summaries.
+  providerFailure?: string;
 };

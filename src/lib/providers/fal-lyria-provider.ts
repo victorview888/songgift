@@ -8,7 +8,7 @@ const MODEL = "fal-ai/lyria3/pro";
 const QUEUE_APP = "https://queue.fal.run/fal-ai/lyria3";
 type JsonRecord = Record<string, unknown>;
 class FalHttpError extends Error {
-  constructor(readonly status: number, message: string) { super(message); }
+  constructor(readonly status: number, message: string, readonly failureDetail = "") { super(message); }
 }
 
 function record(value: unknown): JsonRecord {
@@ -36,12 +36,22 @@ export class FalLyriaProvider implements MusicProvider {
       signal: AbortSignal.timeout(30_000),
     });
     if (!response.ok) {
+      let failureDetail = "";
+      if (response.status === 422) {
+        // Only bounded error messages, never echoed input, URLs or response bodies.
+        try {
+          const body = record(await response.json());
+          const detail = Array.isArray(body.detail) ? body.detail.map(item => record(item).msg).filter(item => typeof item === "string").join("; ") : typeof body.detail === "string" ? body.detail : "";
+          failureDetail = detail.replace(/https?:\/\/[^\s<>"']+/g, "[provider URL]").replace(/[\r\n]+/g, " ").slice(0, 300);
+        } catch { /* An invalid diagnostic body does not change failure classification. */ }
+      }
       const error = new FalHttpError(response.status,
         response.status === 401 || response.status === 403
           ? "fal rejected the API credentials or model access. Check FAL_KEY and account permissions."
           : response.status === 402
             ? "fal credits are insufficient. Add credits in the fal dashboard."
             : `fal request failed (HTTP ${response.status}).`,
+        failureDetail,
       );
       if ([401, 402, 403].includes(response.status)) error.name = "ProviderConfigurationError";
       else if ([400, 404, 422, 429].includes(response.status)) error.name = "ProviderRequestRejectedError";
@@ -95,7 +105,7 @@ export class FalLyriaProvider implements MusicProvider {
       // the result endpoint for a failed execution. This confirms failure of
       // the original task; a status lookup/network/auth error does not.
       if (error instanceof FalHttpError && error.status === 422) {
-        return { ...base, status: "failed", message: "The music provider could not create this song." };
+        return { ...base, status: "failed", message: "The music provider could not create this song.", providerFailure: error.failureDetail || undefined };
       }
       throw error;
     }
