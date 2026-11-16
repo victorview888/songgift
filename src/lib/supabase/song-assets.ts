@@ -40,7 +40,11 @@ export async function sourceBytes(source: CachedAudio) {
   const url = new URL(source.audio_url || "");
   if (url.protocol !== "https:" || url.username || url.password) throw new Error("Invalid audio source.");
   const response = await fetch(url, { cache: "no-store", redirect: "error", signal: AbortSignal.timeout(25_000) });
-  if (!response.ok || !response.body || Number(response.headers.get("content-length") || 0) > MAX_AUDIO_BYTES) throw new Error("Could not download generated audio.");
+  if (!response.ok || !response.body || Number(response.headers.get("content-length") || 0) > MAX_AUDIO_BYTES) {
+    const error = new Error("Could not download generated audio.");
+    error.name = `AudioDownloadHttp${response.status}`;
+    throw error;
+  }
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
   let size = 0;

@@ -73,21 +73,32 @@ async function durableFull(p: AudioPreview): Promise<Uint8Array | null> {
   return hash(bytes) === p.full_sha256 ? bytes : null;
 }
 async function store(p: AudioPreview, recovered?: Uint8Array) {
+  let stage = "source_download";
   try {
     const bytes = recovered || await durableFull(p) || await sourceBytes({ audio_url: p.source_url, audio_base64: p.source_base64, mime_type: p.mime_type || "audio/mpeg" });
+    stage = "clip_encoding";
     if (bytes.length > MAX_PREVIEW_SOURCE_BYTES) throw new Error("Preview source is too large.");
     const clip = makePreviewClip(bytes), mime = audioMime(bytes);
     if (clip.mime !== mime) throw new Error("Unexpected preview encoding.");
     const bucket = process.env.SUPABASE_STORAGE_BUCKET || "songs";
     const fullPath = generationStoragePath(p.order_id || p.id, p.id, mime);
     const clipPath = fullPath.replace(/\/final\./, "/preview.");
+    stage = "source_metadata";
     p = await settle(p, "storing", { p_keep_lease: true, p_bucket: bucket, p_full_path: fullPath, p_mime_type: mime, p_full_sha256: hash(bytes) });
+    stage = "original_upload";
     await saveObject(bucket, fullPath, bytes, mime);
+    stage = "excerpt_upload";
     await saveObject(bucket, clipPath, clip.bytes, mime);
+    stage = "ready_metadata";
     return await settle(p, "ready", { p_bucket: bucket, p_full_path: fullPath, p_clip_path: clipPath,
       p_mime_type: mime, p_clip_seconds: clip.seconds, p_full_sha256: hash(bytes), p_clip_sha256: hash(clip.bytes) });
-  } catch {
+  } catch (error) {
+    // Only static stages and a bounded error class enter operational diagnostics.
+    // Provider URLs, response bodies, credentials and customer lyrics stay private.
+    const code = error instanceof Error && /^[A-Za-z0-9_]{1,80}$/.test(error.name) ? error.name : "Error";
+    console.error("Audio preview recovery failed", { stage, code });
     await settle(p, "storing", { p_error_code: "storage_failed" });
+    if (p.kind === "sample") throw new HttpError(503, `Demo audio recovery stopped at ${stage} (${code}). The original request is retained.`);
     throw new HttpError(503, "Your recording is saved for recovery. Check again shortly; no new recording will be requested.");
   }
 }

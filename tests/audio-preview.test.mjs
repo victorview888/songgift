@@ -111,6 +111,10 @@ test("only an active Owner can reserve the fixed three public demos; scoped toke
   for (let i = 0; i < 3; i++) await api().advanceDemoBatch(token);
   assert.equal(f.generateCalls - calls, 3);
   await f.db.query("update public.audio_previews set next_check_at=now()-interval '1 second' where batch_id=$1", [batch]);
+  f.setFail({ clipUpload: true });
+  await assert.rejects(api().advanceDemoBatch(token), /excerpt_upload \(Error\)/);
+  f.setFail({});
+  await f.db.query("update public.audio_previews set next_check_at=now()-interval '1 second' where batch_id=$1", [batch]);
   let result;
   for (let i = 0; i < 3; i++) result = await api().advanceDemoBatch(token);
   assert.equal(result.ready, 3); assert.equal(result.pending, false);
