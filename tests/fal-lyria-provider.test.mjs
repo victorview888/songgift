@@ -98,6 +98,17 @@ test("a completed task whose result endpoint returns 422 is a confirmed failed e
   assert.equal(result.providerJobId, "fal-lyria3-pro:failed-task");
   assert.ok(calls.every(call => !call.init.method || call.init.method === "GET"));
   assert.ok(!result.message.includes("Private provider detail"));
+  assert.equal(result.providerFailure, "Private provider detail");
+});
+
+test("failure diagnostics omit echoed input and provider links", async () => {
+  const { provider } = loadAdapter([
+    { body: { status: "COMPLETED" } },
+    { status: 422, body: { detail: [{ msg: "Provider could not finish. See https://example.com/private-result", input: "PRIVATE APPROVED WORDS" }] } },
+  ]);
+  const result = await provider.getStatus("fal-lyria3-pro:failed-task");
+  assert.ok(!result.providerFailure.includes("https://"));
+  assert.ok(!result.providerFailure.includes("PRIVATE APPROVED WORDS"));
 });
 
 test("a rejected status lookup or unavailable result does not claim the task failed", async () => {

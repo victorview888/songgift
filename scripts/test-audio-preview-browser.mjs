@@ -14,9 +14,9 @@ let checks = 0;
 try {
   for (const width of [1440, 390, 320]) {
     const context = await browser.newContext({ viewport: { width, height: 900 }, serviceWorkers: "block" });
-    const page = await context.newPage(), state = { phase: null, canCreate: true, used: false, lyrics: original, posts: 0, saves: 0, checkouts: 0, audioFail: true, errors: [], unexpected: [] };
+    const page = await context.newPage(), state = { phase: null, canCreate: true, used: false, lyrics: original, posts: 0, saves: 0, checkouts: 0, audioFail: true, paid: false, previewReads: 0, errors: [], unexpected: [] };
     page.on("pageerror", error => state.errors.push(error.message));
-    const summary = () => ({ enabled: true, canCreate: state.canCreate, used: state.used, state: state.phase, lyricsLocked: Boolean(state.phase && state.phase !== "failed"), audioUrl: state.phase === "ready" ? `/api/orders/${id}/preview/audio` : null, seconds: state.phase === "ready" ? 60 : null, paid: false });
+    const summary = () => ({ enabled: true, canCreate: state.canCreate, used: state.used, state: state.phase, lyricsLocked: Boolean(state.phase && state.phase !== "failed"), audioUrl: state.phase === "ready" ? `/api/orders/${id}/preview/audio` : null, seconds: state.phase === "ready" ? 60 : null, paid: state.paid });
     await context.route("**/*", async route => {
       const request = route.request(), url = new URL(request.url());
       if (url.origin !== base.origin) return route.abort();
@@ -24,9 +24,10 @@ try {
       if (url.pathname === "/api/auth/session") return route.fulfill({ json: { user: { id: user, email: "preview@isolated.example" } } });
       if (url.pathname === `/api/orders/${id}`) {
         if (request.method() === "PATCH") { state.saves++; state.lyrics = request.postDataJSON().lyricsText; return route.fulfill({ json: { ok: true } }); }
-        return route.fulfill({ json: { order: { id, status: "lyrics_ready", title: "Ordinary Days", recipient_name: "Alex", occasion: "Birthday", lyrics_text: state.lyrics, song_assets: [], paid_at: null }, checkoutPrice: { value: "9.99", currencyCode: "USD" }, audioPreviewEnabled: true, audioPreviewLocked: summary().lyricsLocked, audioPreviewState: state.phase } });
+        return route.fulfill({ json: { order: { id, status: "lyrics_ready", title: "Ordinary Days", recipient_name: "Alex", occasion: "Birthday", lyrics_text: state.lyrics, song_assets: [], paid_at: state.paid ? "2026-11-16T00:00:00Z" : null }, checkoutPrice: { value: "9.99", currencyCode: "USD" }, audioPreviewEnabled: true, audioPreviewLocked: summary().lyricsLocked, audioPreviewState: state.phase } });
       }
       if (url.pathname === `/api/orders/${id}/preview`) {
+        if (request.method() === "GET") state.previewReads++;
         if (request.method() === "POST") { state.posts++; state.phase = "processing"; state.canCreate = false; state.used = true; }
         return route.fulfill({ json: summary() });
       }
@@ -73,9 +74,15 @@ try {
     await page.getByText("Your free audio allowance is unavailable or already used.", { exact: false }).waitFor();
     assert.equal(await page.getByRole("button", { name: "Create my free preview", exact: true }).count(), 0);
     assert.equal(await editor.isDisabled(), false); assert.equal(await page.getByRole("button", { name: "Pay $9.99 · Create song", exact: true }).isDisabled(), false);
+    state.paid = true; const reads = state.previewReads;
+    await page.reload({ waitUntil: "networkidle" });
+    await page.getByRole("heading", { name: "Payment confirmed", exact: true }).waitFor();
+    assert.equal(await page.getByRole("region", { name: "Your free 60-second preview." }).count(), 0);
+    assert.equal(state.previewReads, reads);
+    assert.equal(await page.getByRole("button", { name: "Create my song", exact: true }).isDisabled(), false);
     assert.deepEqual(state.unexpected, []); assert.deepEqual(state.errors, []);
-    checks += 5; await context.close();
-    console.log(`PASS ${width}px: save-before-preview, one submission, locks, replay/reload, same-recording checkout and used-allowance purchase`);
+    checks += 6; await context.close();
+    console.log(`PASS ${width}px: save-before-preview, one submission, locks, replay/reload, same-recording checkout, used-allowance purchase and paid orders without previews`);
   }
   console.log(`Audio preview browser: ${checks} checks passed, all API calls isolated.`);
 } finally { await browser.close(); }

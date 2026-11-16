@@ -165,7 +165,7 @@ export async function fixture({legacyContent=false,oidcJwks}={}) {
   return {
    async generateSong(input){generateCalls++;calls.push({generationInput:input,pinned:{provider:pinned.provider,model:pinned.model}});if(mode==='unknown')throw new Error('private provider response');
     if(mode==='sync')return {provider:pinned.provider,model:pinned.model,status:'completed',audioBase64:wav().toString('base64'),mimeType:'audio/wav'};
-    if(mode==='failed')return {provider:pinned.provider,model:pinned.model,status:'failed',providerJobId:'failed-'+crypto.randomUUID()};
+    if(mode==='failed')return {provider:pinned.provider,model:pinned.model,status:'failed',providerJobId:'failed-'+crypto.randomUUID(),providerFailure:'PRIVATE_PROVIDER_DIAGNOSTIC'};
     return {provider:pinned.provider,model:pinned.model,status:'queued',providerJobId:'fal-lyria3-pro:'+crypto.randomUUID()};},
    async getStatus(jobId){pollCalls++;if(fail.revokeOnPoll)await db.query('update public.admin_members set active=false where user_id=$1',[userId]);calls.push({pollJob:jobId,pinned:{provider:pinned.provider,model:pinned.model}});if(fail.query)throw new Error('private provider query error');return {provider:pinned.provider,model:pinned.model,status:'completed',providerJobId:jobId,audioUrl:'https://audio.isolated.example/song.wav',mimeType:'audio/wav'};}
   };

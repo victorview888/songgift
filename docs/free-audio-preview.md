@@ -47,3 +47,17 @@ Only `kind=sample`, `state=ready`, `is_public=true` rows appear on the homepage.
 - The existing payment, permissions, delivery, SEO and holiday suites remain part of release validation.
 
 Production activation, generation of the three real demos and live validation must be recorded in the release/PR results; prepared code or synthetic test WAVs do not prove those steps succeeded.
+
+## Runtime recovery verified on 2026-11-16
+
+Cloudflare Workers rejects `redirect: "error"` before an audio download starts. The shared downloader now uses `manual` and rejects non-success/redirect responses without following them. `tests/audio-preview-worker.test.mjs` runs the actual downloader, clipper and range response in workerd; its native Request constructor catches the difference that Node-only tests missed. A cached original can also be saved when provider status polling is unavailable.
+
+fal may report `COMPLETED` without an error field and then return 422 from its result endpoint for a failed execution. Only that combination is treated as a confirmed failure; failed status lookups, authentication errors and unavailable results retain the original request. No new recording is automatically submitted.
+
+Bounded provider error messages omit echoed input and URLs. They are available only through the expiring, Owner-scoped operation for original marketing samples. Customer responses retain curated summaries and omit these internal diagnostics. Any retry of a confirmed failed public demo is a separate bounded operation; pending or uncertain tasks are never reset for resubmission.
+
+The production feature and recovery fixes were merged in PRs #15–17. The original public demos are now ready: **A Birthday to Remember**, **Two Cups, One Table**, and **The Orange Cake Call**, at `/api/samples/birthday-demo/audio`, `/api/samples/anniversary-demo/audio`, and `/api/samples/christmas-demo/audio`. Anniversary/Christmas lyrics were rewritten after confirmed provider content-check failures; no customer material was used. Each published excerpt decodes to 59.898776 seconds, supports valid byte ranges, and rejects ranges beyond the excerpt. Full originals remain in the private `songs` bucket.
+
+The final related regression run passed 77 tests. The actual production homepage passed browser checks at 1440, 390 and 320 pixels for all three real audio players, metadata/duration, playback, pausing other players and layout overflow. No real payment was charged during acceptance; matching-capture promotion and reuse of the original recording are covered by isolated tests.
+
+The final isolated lyrics-page browser run passed 18 checks at 1440/390/320 pixels, including paid orders without an audio-preview record. Those orders retain their existing paid generation flow without displaying an irrelevant free-preview panel or link.

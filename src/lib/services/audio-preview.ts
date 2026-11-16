@@ -105,7 +105,11 @@ async function store(p: AudioPreview, recovered?: Uint8Array) {
 async function consume(p: AudioPreview, result: MusicGenerationResult) {
   if (result.provider !== p.provider || result.providerJobId && p.provider_job_id && result.providerJobId !== p.provider_job_id)
     return settle(p, "needs_review", { p_error_code: "query_failed" });
-  if (result.status === "failed") return settle(p, "failed", { p_error_code: "provider_failed", p_provider_job_id: result.providerJobId || p.provider_job_id });
+  if (result.status === "failed") {
+    const failed = await settle(p, "failed", { p_error_code: "provider_failed", p_provider_job_id: result.providerJobId || p.provider_job_id });
+    if (p.kind === "sample" && result.providerFailure) throw new HttpError(503, "Demo generation failed: " + result.providerFailure);
+    return failed;
+  }
   if (result.status === "queued" || result.status === "processing") {
     if (!result.providerJobId && !p.provider_job_id) return settle(p, "needs_review", { p_error_code: "submission_unknown" });
     return settle(p, result.status, { p_provider_job_id: result.providerJobId || p.provider_job_id });
