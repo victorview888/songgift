@@ -8,6 +8,7 @@ import { holidayOccasions } from "@/lib/holidays";
 import { audioPreviewEnabled } from "@/lib/preview-policy";
 import { SongPrice } from "@/components/song-price";
 import { publicSongPriceUsd } from "@/lib/pricing";
+import { Brand } from "@/components/brand";
 
 export const dynamic = "force-dynamic";
 import { AccountNav } from "@/components/account-nav";
@@ -15,7 +16,7 @@ import { publicPageMetadata, websiteStructuredData } from "@/lib/seo";
 import { JsonLd } from "@/components/json-ld";
 
 export const metadata = publicPageMetadata(
-  "Personalized Song Gifts from Your Story | SongGift",
+  "Personalized Song Gifts from Your Story | songforalways",
   "Create a personalized AI song gift for birthdays, weddings or anniversaries. Preview and edit lyrics for free, then pay once for your song and audio download.",
   "/",
 );
@@ -42,15 +43,6 @@ const faqs = [
   ["Can I choose the mood?", "Yes. Choose from warm, joyful, romantic, nostalgic or uplifting directions, and describe the feeling you want in your story."],
 ];
 
-function Brand() {
-  return (
-    <span className="brand">
-      <span className="brand-mark" aria-hidden="true">♪</span>
-      songgift
-    </span>
-  );
-}
-
 export default async function Home() {
   const samples = await publicSongSamples();
   const hasPreview = audioPreviewEnabled();
@@ -58,7 +50,7 @@ export default async function Home() {
     <main>
       <JsonLd data={websiteStructuredData()} />
       <header className="site-header home-header">
-        <Link className="brand-link" href="/" aria-label="SongGift home"><Brand /></Link>
+        <Link className="brand-link" href="/" aria-label="songforalways home"><Brand /></Link>
         <nav className="desktop-nav" aria-label="Main navigation">
           <a href="#how-it-works">How it works</a>
           <a href="#occasions">Occasions</a>
@@ -87,7 +79,7 @@ Their favorite song.</h1>
           <div className="art-orbit art-orbit-one" />
           <div className="art-orbit art-orbit-two" />
           <div className="album-card">
-            <div className="album-top"><span>SONGGIFT / 001</span><span>FOR SOMEONE SPECIAL</span></div>
+            <div className="album-top"><span>SONGFORALWAYS / 001</span><span>FOR SOMEONE SPECIAL</span></div>
             <div className="record-wrap"><div className="record"><div className="record-label">♪</div></div></div>
             <div className="album-bottom">
               <div><small>A SONG ABOUT</small><strong>The moments<br />that matter</strong></div>
@@ -159,12 +151,6 @@ Their favorite song.</h1>
         </div>
       </section>
 
-      <footer className="site-footer">
-        <div className="footer-main">
-          <div><Link className="brand-link footer-brand-link" href="/"><Brand /></Link><p>Turn the moments that matter into music.</p></div>
-          <div className="footer-links"><Link href="/my-songs">My Songs</Link><Link href="/create">Create a song</Link><Link href="/occasions">Explore song occasions</Link><Link href="/occasions/birthday">Birthday songs</Link><Link href="/occasions/wedding">Wedding songs</Link><Link href="/occasions/anniversary">Anniversary songs</Link><Link href="/help">Help</Link></div>
-        </div>
-      </footer>
     </main>
   );
 }

@@ -3,9 +3,10 @@ import { GiftAudio } from "@/components/gift-audio";
 import { notFound } from "next/navigation";
 import { publicGift } from "@/lib/growth/gifts";
 import { HttpError } from "@/lib/http-error";
+import { Brand } from "@/components/brand";
 export const dynamic = "force-dynamic";
 export const metadata = {
-  title: { absolute: "A song, just for you | SongGift" },
+  title: { absolute: "A song, just for you | songforalways" },
   description: "A private song gift.",
   robots: { index: false, follow: false },
   referrer: "no-referrer" as const,
@@ -30,8 +31,8 @@ export default async function GiftPage({
   }
   return (
     <main className="gift-shell">
-      <Link className="wordmark" href="/">
-        ♪ SongGift
+      <Link className="brand-link" href="/" aria-label="songforalways home">
+        <Brand />
       </Link>
       <p className="section-kicker">Someone made this for you</p>
       <div className="gift-record" aria-hidden="true">

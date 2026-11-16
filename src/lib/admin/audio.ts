@@ -27,7 +27,7 @@ export async function issueAdminAudioLink(input: { orderId: string; assetId: str
   try {
     const extension = asset.data.mime_type.includes("wav") ? "wav" : "mp3";
     const signed = await db.storage.from(asset.data.storage_bucket).createSignedUrl(
-      asset.data.storage_path, 60, input.download ? { download: `SongGift-${input.orderId}.${extension}` } : undefined,
+      asset.data.storage_path, 60, input.download ? { download: `songforalways-${input.orderId}.${extension}` } : undefined,
     );
     if (signed.error || !signed.data?.signedUrl) throw new Error("signing_failed");
     signedUrl = signed.data.signedUrl;

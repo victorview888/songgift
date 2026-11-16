@@ -16,7 +16,7 @@ export function SongAudio({ orderId, label = "Your personalized song", compact =
       const url = URL.createObjectURL(await response.blob());
       const extensions: Record<string, string> = { "audio/wav": "wav", "audio/x-wav": "wav", "audio/ogg": "ogg", "audio/flac": "flac", "audio/mp4": "m4a", "audio/mpeg": "mp3" };
       const extension = extensions[response.headers.get("content-type")!.split(";")[0]] || "mp3";
-      const link = document.createElement("a"); link.href = url; link.download = `songgift-${orderId.slice(0, 8)}.${extension}`; link.click();
+      const link = document.createElement("a"); link.href = url; link.download = `songforalways-${orderId.slice(0, 8)}.${extension}`; link.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Please try your download again."); }
     finally { downloadingRef.current = false; setDownloading(false); }

@@ -7,7 +7,7 @@ import { absoluteUrl, publicPageMetadata } from "@/lib/seo";
 import "./occasions.css";
 
 export const metadata = publicPageMetadata(
-  "Personalized Song Gifts for Every Occasion | SongGift",
+  "Personalized Song Gifts for Every Occasion | songforalways",
   "Find personal song gifts for Christmas, Christmas Eve, New Year, birthdays, weddings and more. Explore story ideas and review your lyrics before paying.",
   "/occasions",
 );
@@ -52,7 +52,7 @@ export default function OccasionsPage() {
       <section className="occasion-gifting" aria-labelledby="occasion-start-heading">
         <p className="section-kicker">Your story, in your words</p>
         <h2 id="occasion-start-heading">One memory is a good place to begin.</h2>
-        <p>Tell us who the song is for, describe a moment you remember, and say what you want them to hear. You do not need to write lyrics yourself. SongGift uses AI to create a draft you can read and edit for free before paying for the music.</p>
+        <p>Tell us who the song is for, describe a moment you remember, and say what you want them to hear. You do not need to write lyrics yourself. songforalways uses AI to create a draft you can read and edit for free before paying for the music.</p>
         <p>Choose a mood and music direction, check the names and details, then create the song when you are ready. The finished audio stays in your account for playback and download. Give the audio file or choose to enable a private gift link from your completed song; your account song page requires your own sign-in.</p>
         <div className="occasion-action-links"><Link href="/pricing">Pricing and what is included</Link><Link href="/help">Help with creating and keeping a song</Link></div>
         <Link className="primary-button" href="/create">Start with free lyrics <ArrowIcon /></Link>

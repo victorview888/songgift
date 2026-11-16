@@ -30,11 +30,10 @@ h1, h2, h3 { overflow-wrap: anywhere; }
 .occasion-card:nth-child(3n) { background: #edf1e7; }
 .occasion-card:hover { background: #fff; }
 .home-pricing { padding-top: 56px; padding-bottom: 0; }
-.site-footer { padding-top: 48px; padding-bottom: 28px; }
-.footer-links { flex-wrap: wrap; gap: 12px 24px; }
 .mobile-menu { display: none; position: relative; }
 .mobile-menu nav { position: absolute; z-index: 5; top: 48px; right: 0; width: 210px; padding: 12px; display: grid; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 30px #29231f18; }
 .mobile-menu nav a { padding: 12px; font-size: 14px; }
+@media(max-width: 1100px) { .home-header .desktop-nav { display: none; }.home-header .mobile-menu { display: block; } }
 .connection-note { background: #fff4d9; padding: 10px 20px; font-size: 14px; text-align: center; }
 .form-shell { padding-top: 48px; padding-bottom: 72px; }
 .form-intro h1 { font-size: clamp(36px, 4.5vw, 52px); line-height: 1.1; letter-spacing: -.04em; }
@@ -132,6 +131,8 @@ h1, h2, h3 { overflow-wrap: anywhere; }
 }
 @media(max-width: 500px) {
   .site-header { gap: 12px; padding: 16px 0; }
+  .brand { gap: 6px; font-size: 20px; }
+  .brand-mark { width: 30px; height: 30px; }
   .home-header { display: grid; grid-template-columns: minmax(0,1fr) auto; }
   .home-header .header-actions { display: contents; }
   .home-header .brand-link { grid-column: 1; grid-row: 1; }
@@ -139,6 +140,7 @@ h1, h2, h3 { overflow-wrap: anywhere; }
   .home-header .mobile-menu { grid-column: 1; grid-row: 2; }
   .home-header .mobile-menu nav { right: auto; left: 0; }
   .home-header .header-cta { grid-column: 2; grid-row: 2; justify-self: end; }
+  .home-header .account-nav { flex-wrap: wrap; max-width: 104px; gap: 0; }
   .header-actions { flex-wrap: wrap; gap: 8px 12px; }
   .header-cta { font-size: 13px; }
   .hero-section { padding-left: 0; padding-right: 0; }

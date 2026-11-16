@@ -59,8 +59,8 @@ export async function createPayPalOrder(quote: Quote, urls: { returnUrl: string;
   }
   const response = await fetch(base(quote.payment_environment) + "/v2/checkout/orders", {
     method: "POST", headers: { Authorization: "Bearer " + token, "Content-Type": "application/json", Prefer: "return=representation", "PayPal-Request-Id": "sg-create-" + quote.id },
-    body: JSON.stringify({ intent: "CAPTURE", purchase_units: [{ custom_id: quote.id, description: "Personalized SongGift song", amount: { currency_code: quote.currency, value: (quote.quoted_amount_minor / 100).toFixed(2) } }],
-      application_context: { brand_name: process.env.PAYPAL_BRAND_NAME || "SongGift", user_action: "PAY_NOW", return_url: urls.returnUrl, cancel_url: urls.cancelUrl } }),
+    body: JSON.stringify({ intent: "CAPTURE", purchase_units: [{ custom_id: quote.id, description: "Personalized songforalways song", amount: { currency_code: quote.currency, value: (quote.quoted_amount_minor / 100).toFixed(2) } }],
+      application_context: { brand_name: process.env.PAYPAL_BRAND_NAME || "songforalways", user_action: "PAY_NOW", return_url: urls.returnUrl, cancel_url: urls.cancelUrl } }),
     cache: "no-store", signal: AbortSignal.timeout(20_000),
   });
   if (!response.ok) throw new HttpError(502, "Could not open PayPal checkout. Please try again.");
