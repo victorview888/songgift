@@ -71,7 +71,8 @@ test("a lost provider submission keeps the allowance reserved and never submits 
   assert.equal((await post(await f.order())).status, 409);
 });
 test("confirmed provider failure restores the lifetime allowance; retries still count toward the daily budget", async () => {
-  const id = await f.order(); f.setMode("failed"); assert.equal((await post(id)).status, 200);
+  const id = await f.order(); f.setMode("failed"); const failed = await post(id); assert.equal(failed.status, 200);
+  assert.ok(!(await failed.text()).includes("PRIVATE_PROVIDER_DIAGNOSTIC"));
   assert.equal((await api().findOrderPreview(id, userId)).state, "failed");
   f.setMode("queued"); assert.equal((await post(id)).status, 200);
   assert.equal((await f.db.query("select starts from public.audio_preview_daily")).rows[0].starts, 2);
