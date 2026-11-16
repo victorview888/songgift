@@ -10,7 +10,8 @@ import { TermsConfirmation } from "@/components/terms-confirmation";
 import { useAccount } from "@/components/account-provider";
 
 import { ACCOUNT_CLEARED_EVENT, clearStoryDraft, initialStory, loadStoryDraft, newStoryDraft, saveStoryDraft, type StoryDraft, type StoryForm } from "@/lib/drafts/story";
-import { getHoliday, holidayForOccasion, holidayOccasions } from "@/lib/holidays";
+import { holidayForOccasion, holidayOccasions } from "@/lib/holidays";
+import { getOccasionPreset } from "@/lib/occasion-presets";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -35,13 +36,13 @@ export default function CreatePage() {
     const timer = window.setTimeout(() => {
       loadedFor.current = user?.id || "guest";
       const restored = loadStoryDraft(user?.id || null);
-      const holiday = getHoliday(new URLSearchParams(window.location.search).get("occasion"));
+      const preset = getOccasionPreset(new URLSearchParams(window.location.search).get("occasion"));
       const next = restored ? { ...restored, ownerId: user?.id || null } : newStoryDraft(user?.id || null);
-      if (!restored && holiday) next.form.occasion = holiday.occasion;
+      if (!restored && preset) next.form.occasion = preset.occasion;
       draftRef.current = next; setDraft(next); setReady(true); setError(""); setIsGenerating(false);
-      const saved = (!restored && !holiday) || saveStoryDraft(next);
+      const saved = (!restored && !preset) || saveStoryDraft(next);
       if (!saved) clearStoryDraft();
-      setNotice(!saved ? "Local saving is unavailable. Keep a copy of your story before leaving this page." : restored && holiday && restored.form.occasion !== holiday.occasion ? restored.orderId ? `Your saved song is unchanged. Continue it below, or choose Start a new story for ${holiday.name}.` : `Your saved story is unchanged. Choose ${holiday.name} in the occasion field if you want to adapt this draft.` : restored ? "Restored your saved story from this tab." : holiday ? `${holiday.name} is selected. Add your own memories below.` : "");
+      setNotice(!saved ? "Local saving is unavailable. Keep a copy of your story before leaving this page." : restored && preset && restored.form.occasion !== preset.occasion ? restored.orderId ? `Your saved song is unchanged. Continue it below, or choose Start a new story for ${preset.name}.` : `Your saved story is unchanged. Choose ${preset.name} in the occasion field if you want to adapt this draft.` : restored ? "Restored your saved story from this tab." : preset ? `${preset.name} is selected. Add your own memories below.` : "");
     }, 0);
     return () => window.clearTimeout(timer);
   }, [loading, user?.id]);
@@ -61,8 +62,8 @@ export default function CreatePage() {
   }
   function startNew() {
     clearStoryDraft(); const next = newStoryDraft(user?.id || null);
-    const holiday = getHoliday(new URLSearchParams(window.location.search).get("occasion"));
-    if (holiday) next.form.occasion = holiday.occasion;
+    const preset = getOccasionPreset(new URLSearchParams(window.location.search).get("occasion"));
+    if (preset) next.form.occasion = preset.occasion;
     persist(next); setError("");
   }
   async function submitStory() {

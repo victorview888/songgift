@@ -52,6 +52,7 @@ try {
         lang: doc.documentElement.lang, scripts, text: doc.body.textContent,
         links: all('a[href]').map(node => node.getAttribute('href')),
         icons: all('link[rel="icon"],link[rel="apple-touch-icon"]').map(node => node.getAttribute('href')),
+        times: all('time[datetime]').map(node => ({ date: node.getAttribute('datetime'), text: node.textContent })),
       };
     }, html);
   }
@@ -158,11 +159,34 @@ try {
     assert.ok(pages.get('/occasions').links.includes(path), path + ': discoverable in occasion directory');
     assert.ok(pages.get('/').links.includes(path), path + ': discoverable from homepage');
     const slug = path.split('/').at(-1);
-    const href = ['christmas', 'christmas-eve', 'new-year'].includes(slug) ? '/create?occasion=' + slug : '/create';
+    const href = ['birthday', 'wedding', 'anniversary', 'memorial', 'christmas', 'christmas-eve', 'new-year'].includes(slug) ? '/create?occasion=' + slug : '/create';
     assert.ok(pages.get(path).links.includes(href), path + ': links to creation with the correct occasion');
     assert.ok(pages.get(path).scripts.flatMap(script => nodes(JSON.parse(script))).some(node => node['@type'] === 'BreadcrumbList'), path + ': breadcrumb schema');
   }
   passed('All nine occasion pages have public discovery links, conversion links and breadcrumbs');
+  for (const path of ['/guides/review-lyrics-before-music', '/guides/give-a-personal-song-gift']) {
+    assert.ok(pages.get('/').links.includes(path), path + ': direct homepage editorial link');
+    const doc = pages.get(path), article = doc.scripts.flatMap(script => nodes(JSON.parse(script))).find(node => node['@type'] === 'Article');
+    assert.equal(article.datePublished, '2026-11-13');
+    assert.equal(article.dateModified, '2026-11-16');
+    assert.ok(doc.times.some(time => time.date === article.dateModified && time.text === '16 November 2026'));
+  }
+  assert.ok(pages.get('/guides/review-lyrics-before-music').text.includes('Fictional editing example'));
+  passed('Updated guides have visible accurate dates, matching Article data, original examples and direct homepage links');
+  for (const path of ['/policies/terms', '/policies/privacy'])
+    assert.ok(pages.get(path).times.some(time => time.date === '2026-11-15' && time.text === '15 November 2026'), path + ': visible policy date matches data');
+  passed('Policy effective dates agree between visible text and machine-readable values');
+  assert.ok(pages.get('/help').text.includes('Create gift link'));
+  assert.ok(pages.get('/help').links.includes('/guides/give-a-personal-song-gift'));
+  assert.ok(pages.get('/pricing').links.includes('/#samples'));
+  passed('Help and pricing explain real preview and private gift workflows with relevant public links');
+  const updatedMap = await page.evaluate(source => {
+    const xml = new DOMParser().parseFromString(source, 'application/xml');
+    return Object.fromEntries([...xml.querySelectorAll('url')].map(node => [new URL(node.querySelector('loc').textContent).pathname, node.querySelector('lastmod')?.textContent || null]));
+  }, await (await get('/sitemap.xml')).text());
+  for (const path of ['/', '/pricing', '/help', '/occasions/wedding', '/policies/terms', '/guides/review-lyrics-before-music', '/guides/give-a-personal-song-gift'])
+    assert.equal(updatedMap[path], '2026-11-16', path + ': fixed content update date');
+  passed('Sitemap reports stable dates for actual public content edits');
   console.log(`SEO runtime: ${checks} checks passed against ${base.origin}; public price US$${expectedPrice}.`);
   await context.close();
 } finally { await browser.close(); }

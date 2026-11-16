@@ -48,7 +48,7 @@ export function songServiceStructuredData(publicPriceUsd: string) {
     "@id": absoluteUrl("/pricing#song"),
     name: "Personalized AI song gift",
     serviceType: "Personalized song creation",
-    description: "One AI-generated vocal song with free lyric preview and editing before music generation, account playback and audio download for personal listening and gifting.",
+    description: "Personalized AI song creation with lyric review, available audio previews, account playback, audio download and private gift sharing for personal listening and gifting.",
     url: absoluteUrl("/pricing"),
     image: absoluteUrl(socialImagePath),
     provider: { "@type": "Organization", "@id": absoluteUrl("/#organization"), name: siteName, url: siteUrl },

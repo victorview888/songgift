@@ -14,7 +14,7 @@ export default function Guides() {
       <section className="guide-hub">
         <p className="section-kicker">Small details, meaningful songs</p>
         <h1>Make your story sing.</h1>
-        <p>Useful steps for the moments before and after your song is made.</p>
+        <p>Start with a real memory, check the words before recording, and give the finished song in a way that suits the person. These guides follow the steps you will use in SongGift, from saving lyrics to testing a private listening link.</p>
         <div className="guide-grid">
           {guides.map((g) => (
             <article key={g.slug}>

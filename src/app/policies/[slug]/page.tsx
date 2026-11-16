@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { SupportShell } from "@/components/support-shell";
 import { publicPageMetadata } from "@/lib/seo";
 import { legalDetails, legalDocuments, type PolicyDocument } from "@/lib/legal/documents";
+import { formatContentDate } from "@/lib/content-dates";
 
 const documents = {
   refunds: { title: "Payments & refund requests", description: "How to check a SongGift payment and ask for help with a refund.", sections: [
@@ -42,7 +43,7 @@ export default async function PolicyPage({ params }: { params: Promise<{ slug: s
     {doc.effectiveDate && <>
       <section className="customer-card policy-identity" aria-label="Policy details">
         <dl>
-          <dt>Effective date</dt><dd><time dateTime={doc.effectiveDate}>10 November 2026</time></dd>
+          <dt>Effective date</dt><dd><time dateTime={doc.effectiveDate}>{formatContentDate(doc.effectiveDate)}</time></dd>
           <dt>Operator</dt><dd lang="zh-CN">{legalDetails.operator}</dd>
           <dt>Location</dt><dd>{legalDetails.location} <span lang="zh-CN">（中国上海）</span></dd>
           <dt>Contact</dt><dd><a className="text-link" href={"mailto:" + legalDetails.email}>{legalDetails.email}</a></dd>

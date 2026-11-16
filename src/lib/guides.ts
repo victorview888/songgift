@@ -4,6 +4,9 @@ export type Guide = {
   description: string;
   category: string;
   minutes: number;
+  publishedOn: string;
+  updatedOn?: string;
+  example?: { heading: string; brief: string; before: string; after: string; explanation: string };
   sections: { title: string; paragraphs: string[] }[];
   faq: { q: string; a: string }[];
   occasion: string;
@@ -16,6 +19,7 @@ export const guides: Guide[] = [
       "Choose details, shape a short story and prepare a useful brief for your song gift.",
     category: "Writing your story",
     minutes: 5,
+    publishedOn: "2026-11-13",
     occasion: "birthday",
     sections: [
       {
@@ -76,7 +80,16 @@ export const guides: Guide[] = [
       "A practical checklist for names, story details, point of view and singable lines before checkout.",
     category: "Review and preparation",
     minutes: 5,
+    publishedOn: "2026-11-13",
+    updatedOn: "2026-11-16",
     occasion: "anniversary",
+    example: {
+      heading: "Replace an invented detail with your actual memory",
+      brief: "Our first conversation was at a station café. Avery saved the seat beside them and brought me a cup of tea. The brief does not mention a wedding or how many years have passed.",
+      before: "Ten summers since our wedding day, you always bring the sunshine.",
+      after: "You saved the seat beside you, with a cup of tea for me.",
+      explanation: "The revision keeps the seat and tea from the brief, removes an invented wedding and anniversary count, and keeps a consistent speaker. This is a fictional editing example; use details you know are accurate in your own song.",
+    },
     sections: [
       {
         title: "Start with facts before polishing the language",
@@ -104,6 +117,13 @@ export const guides: Guide[] = [
         paragraphs: [
           "Save the edited lyrics and wait for the success message. Music generation uses the confirmed song input; editing words after a music task has started does not rewrite an already submitted performance. An additional song or remake is not automatically included in a single purchase.",
           "Review the price and the payment details shown for your order. A browser return from a payment page is not by itself proof of payment: the service checks the payment provider’s result. If something looks unclear, open your existing order rather than repeatedly creating a new checkout.",
+        ],
+      },
+      {
+        title: "Check the saved version before a free audio preview",
+        paragraphs: [
+          "When your order offers a free audio preview, finish the text edits and select Save lyrics before starting it. Wait for the saved confirmation, then check the opening lines against the recording. The offer is one audio creation per verified account, with up to 60 seconds to replay; it does not renew every day.",
+          "Starting the recording locks the approved words. If you purchase that previewed song, you unlock the same complete recording rather than asking the model to make a new version. An excerpt cannot show you every verse or the ending, so review the whole song after purchase before sharing it.",
         ],
       },
       {
@@ -135,7 +155,9 @@ export const guides: Guide[] = [
     description:
       "Plan the listening moment, use a private gift link and keep a backup of the finished audio.",
     category: "Giving your song",
-    minutes: 4,
+    minutes: 5,
+    publishedOn: "2026-11-13",
+    updatedOn: "2026-11-16",
     occasion: "wedding",
     sections: [
       {
@@ -157,6 +179,14 @@ export const guides: Guide[] = [
         paragraphs: [
           "SongGift gift sharing is off until the buyer enables it for a finished song. A separate gift link lets someone listen without using the buyer’s account. The gift page shows the selected song, the recipient’s name and an optional short greeting, rather than the private order, original story or payment information.",
           "Anyone who receives the link may be able to listen and forward it. Send it through a channel you trust. If you replace or turn off a gift link, new playback requests through the old link stop; a recording already buffered or saved cannot be taken back.",
+        ],
+      },
+      {
+        title: "Create and test the recipient's listening link",
+        paragraphs: [
+          "Open the completed song from My Songs. In Give this song to someone special, add an optional greeting, confirm you have permission to share, and select Create gift link. Use Copy link to send the recipient that separate listening page. Sharing is off until you take this step.",
+          "Open the gift link in a signed-out browser before sending it. Check the greeting and the actual playback. Keep your downloaded audio as a separate backup for an event or an unreliable connection. A copy you send as a file can be played independently of the site; turning off a gift link cannot recall a file already received.",
+          "If you select Create a new gift link, earlier links are replaced. Turn off sharing stops future access through the link. Your account page remains your private workspace, so send the gift link or audio file rather than the address of your order page.",
         ],
       },
       {

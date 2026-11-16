@@ -142,6 +142,14 @@ Their favorite song.</h1>
 
       <div className="home-pricing"><SongPrice compact /></div>
 
+      <section className="section home-guides" aria-labelledby="home-guides-heading">
+        <div className="section-heading"><div><p className="section-kicker">Before you press play</p><h2 id="home-guides-heading">Make the words yours. Make the gift feel right.</h2></div><p>A few practical checks help your story become a song you can give with confidence.</p></div>
+        <div className="guide-grid">
+          <article><p className="section-kicker">Check the words</p><h3><Link href="/guides/review-lyrics-before-music">Review names, memories and the chorus</Link></h3><p>See a fictional before-and-after edit, save the approved version and understand what a free audio preview lets you check.</p><Link className="text-link" href="/guides/review-lyrics-before-music">Read the lyric checklist →</Link></article>
+          <article><p className="section-kicker">Give the song</p><h3><Link href="/guides/give-a-personal-song-gift">Plan a listening moment they will enjoy</Link></h3><p>Create and test a private gift link, add a short greeting and keep a downloaded copy ready for the occasion.</p><Link className="text-link" href="/guides/give-a-personal-song-gift">Read the sharing guide →</Link></article>
+        </div>
+      </section>
+
       <section className="section faq-section" id="faq">
         <p className="section-kicker">Good to know</p><h2>Questions, answered.</h2>
         <div className="faq-list">

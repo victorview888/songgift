@@ -4,7 +4,9 @@ import type { Metadata } from "next";
 import { AccountHeader } from "@/components/account-header";
 import { JsonLd } from "@/components/json-ld";
 import { guideBySlug, guides } from "@/lib/guides";
-import { publicPageMetadata, absoluteUrl } from "@/lib/seo";
+import { publicPageMetadata, absoluteUrl, socialImagePath } from "@/lib/seo";
+import { formatContentDate } from "@/lib/content-dates";
+import { occasionCreateHref } from "@/lib/occasion-presets";
 export function generateStaticParams() {
   return guides.map((g) => ({ slug: g.slug }));
 }
@@ -52,6 +54,10 @@ export default async function GuidePage({
               description: g.description,
               url: absoluteUrl("/guides/" + g.slug),
               mainEntityOfPage: absoluteUrl("/guides/" + g.slug),
+              datePublished: g.publishedOn,
+              dateModified: g.updatedOn || g.publishedOn,
+              inLanguage: "en",
+              image: absoluteUrl(socialImagePath),
               author: {
                 "@type": "Organization",
                 name: "SongGift",
@@ -68,6 +74,7 @@ export default async function GuidePage({
         </p>
         <h1>{g.title}</h1>
         <p className="guide-intro">{g.description}</p>
+        <p className="guide-date">SongGift guide · {g.updatedOn ? "Updated" : "Published"}{" "}<time dateTime={g.updatedOn || g.publishedOn}>{formatContentDate(g.updatedOn || g.publishedOn)}</time></p>
         <nav className="guide-toc" aria-label="In this guide">
           <strong>In this guide</strong>
           {g.sections.map((s, i) => (
@@ -75,6 +82,7 @@ export default async function GuidePage({
               {s.title}
             </a>
           ))}
+          {g.example && <a href="#editing-example">A fictional before-and-after example</a>}
         </nav>
         {g.sections.map((s, i) => (
           <section id={"section-" + i} key={s.title}>
@@ -84,6 +92,13 @@ export default async function GuidePage({
             ))}
           </section>
         ))}
+        {g.example && <section className="guide-example" id="editing-example" aria-labelledby="editing-example-heading">
+          <p className="section-kicker">Fictional editing example</p>
+          <h2 id="editing-example-heading">{g.example.heading}</h2>
+          <p><strong>The story:</strong> {g.example.brief}</p>
+          <div className="guide-example-lines"><div><h3>Before review</h3><blockquote>{g.example.before}</blockquote></div><div><h3>After review</h3><blockquote>{g.example.after}</blockquote></div></div>
+          <p>{g.example.explanation}</p>
+        </section>}
         <section>
           <h2>Common questions</h2>
           {g.faq.map((f) => (
@@ -101,8 +116,9 @@ export default async function GuidePage({
               {g.occasion} song ideas
             </Link>
             , read <Link href="/pricing">pricing and what is included</Link>, or{" "}
-            <Link href="/create">start your story</Link>.
+            <Link href={occasionCreateHref(g.occasion)}>start your story</Link>.
           </p>
+          <p><Link href="/#samples">Listen to original AI demo songs</Link> · <Link href="/help#audio-preview">Free preview and saved-order help</Link></p>
           <h3>Keep reading</h3>
           {guides
             .filter((other) => other.slug !== g.slug)
