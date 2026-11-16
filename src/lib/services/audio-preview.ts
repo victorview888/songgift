@@ -220,5 +220,5 @@ export async function advanceDemoBatch(token: string) {
     if (claimed?.lease_token) updated = await submit(claimed);
   } else if (due) updated = await processAudioPreview(due);
   if (updated) rows[rows.findIndex(p => p.id === updated!.id)] = updated;
-  return { ready: rows.filter(p => p.state === "ready").length, total: rows.length, pending: rows.some(p => p.state !== "ready" && p.state !== "failed") };
+  return { ready: rows.filter(p => p.state === "ready").length, total: rows.length, pending: rows.some(p => p.state !== "ready" && p.state !== "failed"), failed: rows.filter(p => p.state === "failed").map(p => p.public_slug) };
 }
