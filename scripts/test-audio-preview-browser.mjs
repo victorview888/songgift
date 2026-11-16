@@ -49,7 +49,9 @@ try {
     assert.equal(await page.getByRole("button", { name: /^Pay / }).isDisabled(), true);
     await page.getByRole("button", { name: "Check preview again", exact: true }).click(); assert.equal(state.posts, 1);
     state.phase = "ready";
-    await page.getByRole("button", { name: "Check preview again", exact: true }).click();
+    // A normal poll can finish before another manual click. Wait for its result
+    // instead of racing a button that correctly disappears when audio is ready.
+    await page.locator(".song-preview-panel audio").waitFor();
     const audio = page.getByRole("region", { name: "Your free 60-second preview." }).locator("audio");
     await audio.evaluate(node => node.load());
     await page.getByRole("button", { name: "Reload preview", exact: true }).waitFor(); state.audioFail = false;

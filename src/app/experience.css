@@ -371,6 +371,15 @@ h1, h2, h3 { overflow-wrap: anywhere; }
 .guide-intro {
   font-size: 20px !important;
 }
+.guide-article .guide-date { font-size: 13px; color: var(--muted); }
+.guide-example { padding: 24px; background: var(--cream); border: 1px solid var(--line); border-radius: 18px; }
+.guide-example-lines { display: grid; gap: 20px; }
+.guide-example-lines h3 { margin-bottom: 10px; font-size: 16px; }
+.guide-example-lines blockquote { margin: 0; padding-left: 16px; border-left: 3px solid var(--orange); line-height: 1.8; }
+.home-guides .guide-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.home-guides h3 { margin: 16px 0; font-size: 25px; line-height: 1.35; }
+.help-topics { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 24px 0; }
+.help-topics a { min-height: 32px; display: inline-flex; align-items: center; }
 @media (max-width: 800px) {
   .guide-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -378,4 +387,5 @@ h1, h2, h3 { overflow-wrap: anywhere; }
   .guide-article p {
     font-size: 16px;
   }
+  .home-guides .guide-grid { grid-template-columns: minmax(0, 1fr); }
 }

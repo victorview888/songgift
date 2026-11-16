@@ -67,6 +67,31 @@ try {
       checks++;
     }
 
+    await page.goto(new URL('/occasions/wedding', base).href, { waitUntil: 'networkidle' });
+    await page.evaluate(() => sessionStorage.clear());
+    await page.locator('.occasion-hero a[href="/create?occasion=wedding"]').click();
+    await page.waitForFunction(() => [...document.querySelectorAll('select')].some(node => node.value === 'Wedding'));
+    assert.equal(await page.getByLabel(/What is the occasion\?/).inputValue(), 'Wedding');
+    await page.getByLabel(/^Tell us the story/).fill('A fictional wedding memory that must remain safe when another occasion is opened.');
+    await page.goto(new URL('/create?occasion=anniversary', base).href, { waitUntil: 'networkidle' });
+    await page.getByText('Your saved story is unchanged.', { exact: false }).waitFor();
+    assert.equal(await page.getByLabel(/What is the occasion\?/).inputValue(), 'Wedding');
+    assert.equal(await page.getByLabel(/^Tell us the story/).inputValue(), 'A fictional wedding memory that must remain safe when another occasion is opened.');
+    await page.evaluate(id => {
+      const draft = JSON.parse(sessionStorage.getItem('songgift-story-draft-v1'));
+      draft.orderId = id; draft.stage = 'ready';
+      sessionStorage.setItem('songgift-story-draft-v1', JSON.stringify(draft));
+    }, orderId);
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.getByRole('region', { name: 'Saved song', exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Start a new story', exact: true }).click();
+    assert.equal(await page.getByLabel(/What is the occasion\?/).inputValue(), 'Anniversary');
+    assert.equal(await page.getByLabel(/^Tell us the story/).inputValue(), '');
+    checks++;
+    await page.evaluate(() => sessionStorage.clear());
+    await page.goto(new URL('/create?occasion=new-year', base).href, { waitUntil: 'networkidle' });
+    await page.waitForFunction(() => [...document.querySelectorAll('select')].some(node => node.value === 'New Year'));
+
     const story = "We shared ordinary adventures this year and always made time for a walk by the river.";
     await page.getByLabel("Their name", { exact: true }).fill("Alex");
     await page.getByLabel(/^Your relationship/).selectOption("Friend");
@@ -98,7 +123,7 @@ try {
     assert.deepEqual(state.errors, []);
     checks++;
     await context.close();
-    console.log(`PASS ${width}px: three holiday routes, presets, draft refresh/preservation, guest-to-login submission, unknown slug and layout`);
+    console.log(`PASS ${width}px: holiday/wedding presets, draft refresh/preservation, explicit new story, guest-to-login submission, unknown slug and layout`);
   }
   console.log(`Holiday browser acceptance: ${checks} checks passed; no live API, payment, music or mail calls.`);
 } finally { await browser.close(); }

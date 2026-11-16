@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { AccountHeader } from "@/components/account-header";
 import { JsonLd } from "@/components/json-ld";
 import { getOccasion, occasionSlugs, occasions } from "@/lib/occasions";
-import { holidayCreateHref } from "@/lib/holidays";
+import { occasionCreateHref } from "@/lib/occasion-presets";
 import { absoluteUrl, publicPageMetadata } from "@/lib/seo";
 import "../occasions.css";
 
@@ -26,7 +26,7 @@ export default async function OccasionPage({ params }: Props) {
   const { slug } = await params;
   const occasion = getOccasion(slug);
   if (!occasion) notFound();
-  const createHref = holidayCreateHref(slug);
+  const createHref = occasionCreateHref(slug);
 
   return (
     <main className="occasion-page">
@@ -72,6 +72,16 @@ export default async function OccasionPage({ params }: Props) {
         </section>
 
         <section className="occasion-gifting" aria-labelledby="occasion-gifting-heading"><p className="section-kicker">When the song is ready</p><h2 id="occasion-gifting-heading">{occasion.gifting.heading}</h2><p>{occasion.gifting.detail}</p><div className="occasion-action-links"><Link href="/policies/audio-storage">Keeping your audio</Link>{slug === "pet" && <Link href="/occasions/memorial">Read the memorial song guide</Link>}<Link href={createHref}>Start with free lyrics <ArrowIcon /></Link></div></section>
+
+        {slug === "wedding" && <section className="occasion-guide" aria-labelledby="wedding-plan-heading">
+          <div className="occasion-section-heading"><p className="section-kicker">Plan the listening moment</p><h2 id="wedding-plan-heading">A wedding song needs a rehearsal, too.</h2><p>Decide where the song belongs in the day, then check the complete recording before you build a moment around it.</p></div>
+          <div className="occasion-idea-grid">
+            <article><span className="occasion-number">01</span><h3>A private gift before the day</h3><p>Write about one memory and the promise you actually want to make. A quiet listening moment gives your partner room to hear the details and respond in their own time.</p></article>
+            <article><span className="occasion-number">02</span><h3>A ceremony, dance or speech</h3><p>AI tempo, pronunciation and duration can vary. Listen to the whole song, agree the start and end cues with your DJ or venue, and check their file and permission requirements before choosing it for an event.</p></article>
+            <article><span className="occasion-number">03</span><h3>A recording ready to keep</h3><p>Download the finished audio and test it on the actual playback device. An available free excerpt helps you judge the opening; check the ending and every important name in the full recording before sharing.</p></article>
+          </div>
+          <div className="occasion-action-links"><Link href="/guides/review-lyrics-before-music">Check your wedding lyrics</Link><Link href="/guides/give-a-personal-song-gift">Create a private listening link</Link><Link href="/#samples">Hear original AI demo songs</Link></div>
+        </section>}
 
         <section className="occasion-next" aria-label="Other occasions"><h2>Find another moment worth singing about.</h2><div>{occasionSlugs.filter((other) => other !== slug).map((other) => <Link key={other} href={`/occasions/${other}`}>{occasions[other].name} songs <ArrowIcon /></Link>)}</div></section>
       </div>
