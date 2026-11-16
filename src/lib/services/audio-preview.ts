@@ -73,21 +73,32 @@ async function durableFull(p: AudioPreview): Promise<Uint8Array | null> {
   return hash(bytes) === p.full_sha256 ? bytes : null;
 }
 async function store(p: AudioPreview, recovered?: Uint8Array) {
+  let stage = "source_download";
   try {
     const bytes = recovered || await durableFull(p) || await sourceBytes({ audio_url: p.source_url, audio_base64: p.source_base64, mime_type: p.mime_type || "audio/mpeg" });
+    stage = "clip_encoding";
     if (bytes.length > MAX_PREVIEW_SOURCE_BYTES) throw new Error("Preview source is too large.");
     const clip = makePreviewClip(bytes), mime = audioMime(bytes);
     if (clip.mime !== mime) throw new Error("Unexpected preview encoding.");
     const bucket = process.env.SUPABASE_STORAGE_BUCKET || "songs";
     const fullPath = generationStoragePath(p.order_id || p.id, p.id, mime);
     const clipPath = fullPath.replace(/\/final\./, "/preview.");
+    stage = "source_metadata";
     p = await settle(p, "storing", { p_keep_lease: true, p_bucket: bucket, p_full_path: fullPath, p_mime_type: mime, p_full_sha256: hash(bytes) });
+    stage = "original_upload";
     await saveObject(bucket, fullPath, bytes, mime);
+    stage = "excerpt_upload";
     await saveObject(bucket, clipPath, clip.bytes, mime);
+    stage = "ready_metadata";
     return await settle(p, "ready", { p_bucket: bucket, p_full_path: fullPath, p_clip_path: clipPath,
       p_mime_type: mime, p_clip_seconds: clip.seconds, p_full_sha256: hash(bytes), p_clip_sha256: hash(clip.bytes) });
-  } catch {
+  } catch (error) {
+    // Only static stages and a bounded error class enter operational diagnostics.
+    // Provider URLs, response bodies, credentials and customer lyrics stay private.
+    const code = error instanceof Error && /^[A-Za-z0-9_]{1,80}$/.test(error.name) ? error.name : "Error";
+    console.error("Audio preview recovery failed", { stage, code });
     await settle(p, "storing", { p_error_code: "storage_failed" });
+    if (p.kind === "sample") throw new HttpError(503, `Demo audio recovery stopped at ${stage} (${code}). The original request is retained.`);
     throw new HttpError(503, "Your recording is saved for recovery. Check again shortly; no new recording will be requested.");
   }
 }
@@ -138,7 +149,16 @@ export async function processAudioPreview(preview: AudioPreview) {
     const provider = getPinnedMusicProvider(claimed);
     if (!provider.getStatus) throw new Error("Provider cannot poll.");
     result = await provider.getStatus(claimed.provider_job_id);
-  } catch { return settle(claimed, "needs_review", { p_error_code: "query_failed" }); }
+  } catch (error) {
+    // A temporary queue-status outage must not hide an already cached result.
+    if (claimed.source_url || claimed.source_base64) return store(claimed);
+    const updated = await settle(claimed, "needs_review", { p_error_code: "query_failed" });
+    if (claimed.kind === "sample") {
+      const known = error instanceof Error && ["ProviderConfigurationError", "ProviderRequestRejectedError"].includes(error.name);
+      throw new HttpError(503, known ? error.message : "The original demo task status is temporarily unavailable; no new recording was submitted.");
+    }
+    return updated;
+  }
   return consume(claimed, result);
 }
 export async function startAudioPreview(order: AccountOrder, userId: string) {
@@ -191,7 +211,9 @@ export async function advanceDemoBatch(token: string) {
   const result = await getSupabaseAdmin().from("audio_previews").select("*").eq("batch_id", batch.id).eq("kind", "sample").order("created_at").limit(3);
   if (result.error || !result.data) throw new HttpError(503, "Demo tasks are temporarily unavailable.");
   const rows = result.data as AudioPreview[];
-  const due = rows.find(p => p.state === "pending") || rows.find(p => !["ready", "failed"].includes(p.state) && (!p.next_check_at || Date.parse(p.next_check_at) <= Date.now()) && (!p.lease_expires_at || Date.parse(p.lease_expires_at) <= Date.now()));
+  const due = rows.find(p => p.state === "pending") || rows
+    .filter(p => !["ready", "failed"].includes(p.state) && (!p.next_check_at || Date.parse(p.next_check_at) <= Date.now()) && (!p.lease_expires_at || Date.parse(p.lease_expires_at) <= Date.now()))
+    .sort((a, b) => Date.parse(a.next_check_at || "1970-01-01") - Date.parse(b.next_check_at || "1970-01-01"))[0];
   let updated: AudioPreview | undefined;
   if (due?.state === "pending") {
     const claimed = await rpc<AudioPreview | null>("claim_songgift_demo_submission", { p_preview_id: due.id, p_batch_id: batch.id });
