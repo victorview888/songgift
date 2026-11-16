@@ -149,7 +149,14 @@ export async function processAudioPreview(preview: AudioPreview) {
     const provider = getPinnedMusicProvider(claimed);
     if (!provider.getStatus) throw new Error("Provider cannot poll.");
     result = await provider.getStatus(claimed.provider_job_id);
-  } catch { return settle(claimed, "needs_review", { p_error_code: "query_failed" }); }
+  } catch (error) {
+    const updated = await settle(claimed, "needs_review", { p_error_code: "query_failed" });
+    if (claimed.kind === "sample") {
+      const known = error instanceof Error && ["ProviderConfigurationError", "ProviderRequestRejectedError"].includes(error.name);
+      throw new HttpError(503, known ? error.message : "The original demo task status is temporarily unavailable; no new recording was submitted.");
+    }
+    return updated;
+  }
   return consume(claimed, result);
 }
 export async function startAudioPreview(order: AccountOrder, userId: string) {
@@ -202,7 +209,9 @@ export async function advanceDemoBatch(token: string) {
   const result = await getSupabaseAdmin().from("audio_previews").select("*").eq("batch_id", batch.id).eq("kind", "sample").order("created_at").limit(3);
   if (result.error || !result.data) throw new HttpError(503, "Demo tasks are temporarily unavailable.");
   const rows = result.data as AudioPreview[];
-  const due = rows.find(p => p.state === "pending") || rows.find(p => !["ready", "failed"].includes(p.state) && (!p.next_check_at || Date.parse(p.next_check_at) <= Date.now()) && (!p.lease_expires_at || Date.parse(p.lease_expires_at) <= Date.now()));
+  const due = rows.find(p => p.state === "pending") || rows
+    .filter(p => !["ready", "failed"].includes(p.state) && (!p.next_check_at || Date.parse(p.next_check_at) <= Date.now()) && (!p.lease_expires_at || Date.parse(p.lease_expires_at) <= Date.now()))
+    .sort((a, b) => Date.parse(a.next_check_at || "1970-01-01") - Date.parse(b.next_check_at || "1970-01-01"))[0];
   let updated: AudioPreview | undefined;
   if (due?.state === "pending") {
     const claimed = await rpc<AudioPreview | null>("claim_songgift_demo_submission", { p_preview_id: due.id, p_batch_id: batch.id });
