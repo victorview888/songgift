@@ -150,6 +150,8 @@ export async function processAudioPreview(preview: AudioPreview) {
     if (!provider.getStatus) throw new Error("Provider cannot poll.");
     result = await provider.getStatus(claimed.provider_job_id);
   } catch (error) {
+    // A temporary queue-status outage must not hide an already cached result.
+    if (claimed.source_url || claimed.source_base64) return store(claimed);
     const updated = await settle(claimed, "needs_review", { p_error_code: "query_failed" });
     if (claimed.kind === "sample") {
       const known = error instanceof Error && ["ProviderConfigurationError", "ProviderRequestRejectedError"].includes(error.name);

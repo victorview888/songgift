@@ -96,6 +96,12 @@ test("a saved full source recovers a failed clip upload even after the provider 
   f.setFail({ download: true }); const polls = f.pollCalls;
   assert.equal((await complete(id)).state, "ready"); assert.equal(f.generateCalls, calls); assert.equal(f.pollCalls, polls);
 });
+test("a cached original result can recover storage while provider status polling is unavailable", async () => {
+  const id = await f.order(); await post(id); const calls = f.generateCalls;
+  f.setFail({ upload: true }); await assert.rejects(complete(id));
+  f.setFail({ query: true });
+  assert.equal((await complete(id)).state, "ready"); assert.equal(f.generateCalls, calls);
+});
 test("old paid-generation reservation cannot submit a second recording for an existing audio preview", async () => {
   const id = await f.order(); await post(id); await complete(id);
   await assert.rejects(f.rpc("reserve_songgift_generation", { p_order_id: id, p_user_id: userId, p_request_id: id, p_provider: "mock", p_model: "local-preview", p_environment: "test" }));
