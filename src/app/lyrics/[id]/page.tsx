@@ -1,4 +1,5 @@
 "use client";
+import { SongPreview } from "@/components/song-preview";
 import { trackUsage } from "@/lib/growth/usage-client";
 import { ArrowIcon } from "@/components/arrow-icon";
 import Link from "next/link";
@@ -24,6 +25,9 @@ function LyricsEditor() {
   const [checkoutCurrency, setCheckoutCurrency] = useState("");
   const [lyrics, setLyrics] = useState("");
   const [savedLyrics, setSavedLyrics] = useState("");
+  const [previewEnabled, setPreviewEnabled] = useState(false), [previewLocked, setPreviewLocked] = useState(false), [previewReady, setPreviewReady] = useState(false), [previewBusy, setPreviewBusy] = useState(false);
+  const [previewPhase, setPreviewPhase] = useState<string | null>(null);
+  const previewState = useCallback((locked: boolean, ready: boolean, phase: string | null) => { setPreviewLocked(locked); setPreviewReady(ready); setPreviewPhase(phase); }, []);
   const [busy, setBusy] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [message, setMessage] = useState("");
@@ -68,10 +72,13 @@ function LyricsEditor() {
         let restored = serverLyrics;
         try {
           const draft = JSON.parse(sessionStorage.getItem(draftKey) || "null");
-          if (draft && draft.base === serverLyrics && typeof draft.text === "string" && draft.text.length <= 12000 && typeof draft.at === "number" && Date.now() - draft.at >= 0 && Date.now() - draft.at < 86400000) restored = draft.text;
-          else sessionStorage.removeItem(draftKey);
+          if (draft && draft.base === serverLyrics && typeof draft.text === "string" && draft.text.length <= 12000 && typeof draft.at === "number" && Date.now() - draft.at >= 0 && Date.now() - draft.at < 86400000) {
+            if (!data.audioPreviewLocked) restored = draft.text;
+          } else sessionStorage.removeItem(draftKey);
         } catch { /* Browser draft storage is optional; server lyrics remain available. */ }
         setOrder(current); setLyrics(restored); setSavedLyrics(serverLyrics);
+        setPreviewEnabled(Boolean(data.audioPreviewEnabled)); setPreviewLocked(Boolean(data.audioPreviewLocked));
+        setPreviewPhase(data.audioPreviewState || null); setPreviewReady(data.audioPreviewState === "ready");
         let price = data.checkoutPrice;
         if (!current.paid_at && !price) {
           const quoted = await fetch("/api/paypal/quote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id }) });
@@ -105,6 +112,7 @@ function LyricsEditor() {
     })();
   }, [order, id, generate]);
   async function save() {
+    if (previewLocked) return;
     const response = await fetch("/api/orders/" + id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lyricsText: lyrics }) });
     const data = await response.json(); if (!response.ok) throw new Error(data.error || "We couldn't save your lyrics.");
     setSavedLyrics(lyrics);
@@ -118,7 +126,7 @@ function LyricsEditor() {
     finally { setBusy(false); }
   }
   async function submit(event: FormEvent) {
-    event.preventDefault(); if (busy) return; setBusy(true); setSaveStatus("idle"); setError(""); setMessage(order?.paid_at ? "Starting your song…" : "Opening secure PayPal checkout…");
+    event.preventDefault(); if (busy || previewBusy || previewPhase && previewPhase !== "ready") return; setBusy(true); setSaveStatus("idle"); setError(""); setMessage(order?.paid_at ? "Starting your song…" : "Opening secure PayPal checkout…");
     try {
       await save();
       if (order?.paid_at) { await generate(); return; }
@@ -130,5 +138,5 @@ function LyricsEditor() {
       window.location.assign(data.approvalUrl);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Please try again."); setBusy(false); setMessage(""); }
   }
-  return <main className="form-page"><AccountHeader step="Step 2 of 3" /><section className="form-shell lyrics-shell"><div className="form-intro"><p className="section-kicker">Your personal lyrics</p><h1>{order ? `Your song for ${order.recipient_name}.` : "Finding your lyrics…"}</h1><p>Read through the lyrics and make any changes you like. Your story is saved to your account.</p></div>{order && <form className="story-form lyrics-form" onSubmit={submit}><div className="lyrics-edit-panel"><div className="lyrics-toolbar"><span>{order.title || "Your song"}</span><small>{lyrics === savedLyrics ? "Saved to your account" : "Unsaved changes"}</small></div><textarea className="lyrics-editor" aria-label="Song lyrics" value={lyrics} maxLength={12000} minLength={20} required disabled={busy} onChange={(event) => { const text = event.target.value; setLyrics(text); setSaveStatus("idle"); try { if (text === savedLyrics) sessionStorage.removeItem(draftKey); else sessionStorage.setItem(draftKey, JSON.stringify({ base: savedLyrics, text, at: Date.now() })); } catch {} }} /><div className="lyrics-save-actions"><button className="text-button" type="button" disabled={busy || lyrics === savedLyrics} onClick={() => void saveLyrics()}>{saveStatus === "saving" ? "Saving…" : "Save lyrics"}</button><p className="lyrics-save-feedback" data-state={saveStatus} role="status" aria-live="polite" aria-atomic="true">{saveStatus === "saved" ? <><span aria-hidden="true">✓</span> Lyrics saved successfully.</> : saveStatus === "saving" ? "Saving your lyrics…" : ""}</p></div></div><aside className="checkout-summary" aria-label="Order summary"><p className="section-kicker">Your personal song</p><h2>{order.paid_at ? "Payment confirmed" : checkoutPrice || "Checking your quote…"}</h2><p>{order.paid_at ? "Your payment is recorded. Continue to create your song." : "One song. One payment. No subscription."}</p><ul><li>Your personal lyrics</li><li>One AI-generated vocal song</li><li>Playback and audio download</li></ul><p className="checkout-detail">For {order.recipient_name} · {order.occasion}</p><Link href="/pricing" target="_blank" rel="noopener" className="text-link">What is included?</Link>{!order.paid_at && <p className="checkout-detail">PayPal · Charged in {checkoutCurrency || "the quoted currency"}</p>}{!order.paid_at && <TermsConfirmation disabled={busy} payment />}<div className="form-submit-row"><button className="primary-button" type="submit" disabled={busy || (!order.paid_at && !checkoutPrice)}>{busy && saveStatus !== "saving" ? "Please wait…" : order.paid_at ? "Create my song" : checkoutPrice ? `Pay ${checkoutPrice} · Create song` : "Pay and create song"}<ArrowIcon /></button></div></aside></form>}{message && <p className="form-note" role="status">{message}</p>}{error && <p className="form-error" role="alert">{error}</p>}<p className="legal-notice"><Link className="text-link" href="/pricing">Pricing and included services</Link> · <Link className="text-link" href={"/report?reference=" + id}>Report content / appeal</Link></p><Link className="text-link back-to-library" href="/my-songs">← My Songs</Link></section></main>;
+  return <main className="form-page"><AccountHeader step="Step 2 of 3" /><section className="form-shell lyrics-shell"><div className="form-intro"><p className="section-kicker">Your personal lyrics</p><h1>{order ? `Your song for ${order.recipient_name}.` : "Finding your lyrics…"}</h1><p>{previewLocked ? "These are the approved lyrics used for your recording. To change the words or style, start a separate song." : "Read through the lyrics and make any changes you like. Your story is saved to your account."}</p></div>{order && <form className="story-form lyrics-form" onSubmit={submit}><div className="lyrics-edit-panel"><div className="lyrics-toolbar"><span>{order.title || "Your song"}</span><small>{lyrics === savedLyrics ? "Saved to your account" : "Unsaved changes"}</small></div><textarea className="lyrics-editor" aria-label="Song lyrics" value={lyrics} maxLength={12000} minLength={20} required disabled={busy || previewBusy || previewLocked} onChange={(event) => { const text = event.target.value; setLyrics(text); setSaveStatus("idle"); try { if (text === savedLyrics) sessionStorage.removeItem(draftKey); else sessionStorage.setItem(draftKey, JSON.stringify({ base: savedLyrics, text, at: Date.now() })); } catch {} }} /><div className="lyrics-save-actions"><button className="text-button" type="button" disabled={busy || previewBusy || previewLocked || lyrics === savedLyrics} onClick={() => void saveLyrics()}>{saveStatus === "saving" ? "Saving…" : "Save lyrics"}</button><p className="lyrics-save-feedback" data-state={saveStatus} role="status" aria-live="polite" aria-atomic="true">{saveStatus === "saved" ? <><span aria-hidden="true">✓</span> Lyrics saved successfully.</> : saveStatus === "saving" ? "Saving your lyrics…" : ""}</p></div>{previewEnabled && <SongPreview key={id + ":" + user?.id} orderId={id} paid={Boolean(order.paid_at)} onPrepare={save} onState={previewState} onBusy={setPreviewBusy} />}</div><aside className="checkout-summary" aria-label="Order summary"><p className="section-kicker">Your personal song</p><h2>{order.paid_at ? "Payment confirmed" : checkoutPrice || "Checking your quote…"}</h2><p>{order.paid_at ? "Your payment is recorded. Continue to create your song." : "One song. One payment. No subscription."}</p><ul><li>Your personal lyrics</li><li>One AI-generated vocal song</li><li>Playback and audio download</li></ul>{previewEnabled && <p><a className="text-link" href="#song-preview-heading">{previewReady ? "Replay your song preview" : previewPhase ? "View preview progress" : "Check your free preview allowance"} ↓</a></p>}<p className="checkout-detail">For {order.recipient_name} · {order.occasion}</p><Link href="/pricing" target="_blank" rel="noopener" className="text-link">What is included?</Link>{!order.paid_at && <p className="checkout-detail">PayPal · Charged in {checkoutCurrency || "the quoted currency"}</p>}{!order.paid_at && <TermsConfirmation disabled={busy || previewBusy} payment />}<div className="form-submit-row"><button className="primary-button" type="submit" disabled={busy || previewBusy || Boolean(previewPhase && previewPhase !== "ready") || (!order.paid_at && !checkoutPrice)}>{busy && saveStatus !== "saving" ? "Please wait…" : order.paid_at ? previewReady ? "Open full song" : "Create my song" : checkoutPrice ? `Pay ${checkoutPrice} · ${previewReady ? "Unlock full song" : "Create song"}` : "Pay and create song"}<ArrowIcon /></button></div></aside></form>}{message && <p className="form-note" role="status">{message}</p>}{error && <p className="form-error" role="alert">{error}</p>}<p className="legal-notice"><Link className="text-link" href="/pricing">Pricing and included services</Link> · <Link className="text-link" href={"/report?reference=" + id}>Report content / appeal</Link></p><Link className="text-link back-to-library" href="/my-songs">← My Songs</Link></section></main>;
 }

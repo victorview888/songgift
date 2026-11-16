@@ -28,6 +28,8 @@
     "DEEPSEEK_MODEL": "deepseek-flash",
     "MUSIC_PROVIDER": "fal",
     "ALLOW_MOCK_FALLBACK": "false",
+    "SONGGIFT_AUDIO_PREVIEW_ENABLED": "true",
+    "SONGGIFT_AUDIO_PREVIEW_DAILY_LIMIT": "10",
     "SUPABASE_URL": "https://ngggfgfpaxzwjphkwmpy.supabase.co",
     "SUPABASE_STORAGE_BUCKET": "songs",
     "SUPABASE_SIGNED_URL_SECONDS": "3600",

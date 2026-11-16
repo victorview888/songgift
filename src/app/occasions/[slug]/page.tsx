@@ -67,7 +67,7 @@ export default async function OccasionPage({ params }: Props) {
         </section>
 
         <section className="occasion-finish" aria-labelledby="occasion-finish-heading">
-          <div><p className="section-kicker">Choose the feeling</p><h2 id="occasion-finish-heading">Make it personal, then review the words.</h2><p>{occasion.mood}</p><p>SongGift uses AI to turn your story into lyrics and music. Read and edit the lyrics for free first. When they feel right, pay once to create the song. Your finished audio is saved to your account for playback and download.</p></div>
+          <div><p className="section-kicker">Choose the feeling</p><h2 id="occasion-finish-heading">Make it personal, then review the words.</h2><p>{occasion.mood}</p><p>SongGift uses AI to turn your story into lyrics and music. Read and edit the lyrics for free first. When they feel right, use an available free audio preview or pay once for the complete song. Your finished audio is saved to your account for playback and download.</p></div>
           <div className="occasion-answer"><h3>{occasion.question}</h3><p>{occasion.answer}</p></div>
         </section>
 

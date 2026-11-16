@@ -32,7 +32,7 @@ export async function getJobAsset(job: GenerationJob): Promise<JobAsset | null> 
   if (error) throw new Error("Saved audio metadata is temporarily unavailable.");
   return data as JobAsset | null;
 }
-async function sourceBytes(source: CachedAudio) {
+export async function sourceBytes(source: CachedAudio) {
   if (source.audio_base64) {
     if (source.audio_base64.length > Math.ceil(MAX_AUDIO_BYTES / 3) * 4) throw new Error("Audio is too large.");
     return Buffer.from(source.audio_base64, "base64");

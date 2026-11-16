@@ -41,6 +41,7 @@ export class FalLyriaProvider implements MusicProvider {
             : `fal request failed (HTTP ${response.status}).`,
       );
       if ([401, 402, 403].includes(response.status)) error.name = "ProviderConfigurationError";
+      else if ([400, 404, 422, 429].includes(response.status)) error.name = "ProviderRequestRejectedError";
       throw error;
     }
     return record(await response.json());

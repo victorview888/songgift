@@ -5,6 +5,7 @@ import { SongSamples } from "@/components/song-samples";
 import { publicSongSamples } from "@/lib/song-samples";
 import { HolidaySongs } from "@/components/holiday-songs";
 import { holidayOccasions } from "@/lib/holidays";
+import { audioPreviewEnabled } from "@/lib/preview-policy";
 import { SongPrice } from "@/components/song-price";
 import { publicSongPriceUsd } from "@/lib/pricing";
 
@@ -50,8 +51,9 @@ function Brand() {
   );
 }
 
-export default function Home() {
-  const samples = publicSongSamples();
+export default async function Home() {
+  const samples = await publicSongSamples();
+  const hasPreview = audioPreviewEnabled();
   return (
     <main>
       <JsonLd data={websiteStructuredData()} />
@@ -72,13 +74,13 @@ export default function Home() {
           <h1>Your story.
 Their favorite song.</h1>
           <p className="hero-description">
-            Turn the names, memories and little moments only you know into a personal AI song. Read your lyrics for free, then bring them to life.
+            Turn the names, memories and little moments only you know into a personal AI song. {hasPreview ? "Read your lyrics, try one free audio preview, then unlock the full song." : "Read your lyrics for free, then bring them to life."}
           </p>
           <div className="hero-actions">
             <Link className="primary-button" href="/create">Create their song <ArrowIcon /></Link>
             <a className="text-link" href={samples.length ? "#samples" : "#how-it-works"}>{samples.length ? "Hear a sample" : "See how it works"} <span aria-hidden="true">↓</span></a>
           </div>
-          <p className="hero-note"><span aria-hidden="true">✦</span> Free lyric preview · US${publicSongPriceUsd()} per song · USD / PayPal</p>
+          <p className="hero-note"><span aria-hidden="true">✦</span> {hasPreview ? "One free 60-second preview per verified account" : "Free lyric preview"} · US${publicSongPriceUsd()} per song · USD / PayPal</p>
         </div>
 
         <div className="hero-art" role="img" aria-label="A record made for a special memory">

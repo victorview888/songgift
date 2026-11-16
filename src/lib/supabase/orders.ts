@@ -18,6 +18,7 @@ export async function saveApprovedLyrics(id: string, userId: string, lyrics: str
   const order = await getOwnedOrder(id, userId);
   if (order.active_generation_job_id || order.provider_job_id || order.song_assets.length || !["draft", "lyrics_ready", "paid"].includes(order.status)) throw new HttpError(409, "This song has already started. Open it from My Songs.");
   const { data, error } = await getSupabaseAdmin().from("song_orders").update({ lyrics_text: lyrics.trim(), updated_at: new Date().toISOString() }).eq("id", id).eq("user_id", userId).is("provider_job_id", null).is("active_generation_job_id", null).in("status", ["draft", "lyrics_ready", "paid"]).select("id").maybeSingle();
+  if (error?.message === "generation_input_immutable") throw new HttpError(409, "This recording has already started with its approved lyrics. Start a separate song to change the words.");
   if (error) throw new Error("Could not save approved lyrics: " + error.message);
   if (!data) throw new HttpError(409, "Your song has already started. Open it from My Songs.");
   return order;

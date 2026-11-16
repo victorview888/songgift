@@ -8,6 +8,7 @@ import { getMusicIdentity, getPinnedMusicProvider } from "@/lib/providers/factor
 import { canonicalMime, getJobAsset, getJobOutput, MAX_AUDIO_BYTES, persistJobAudio } from "@/lib/supabase/song-assets";
 import { bindGeneration, cacheGenerationOutput, claimGeneration, completeGenerationAudio, reserveGeneration, settleGeneration, type GenerationJob } from "./order-operations";
 import { deliveryRpc, enqueueReadyNotification } from "./notifications";
+import { unlockAudioPreview } from "./audio-preview";
 
 type ProcessingOptions = { authorize?: () => Promise<void>; automatic?: boolean; storageOnly?: boolean; strictBusy?: boolean };
 export async function findGenerationJob(id: string, orderId: string): Promise<GenerationJob> {
@@ -125,6 +126,8 @@ export async function startOrderGeneration(order: AccountOrder, userId: string) 
   if (order.song_assets.length) return { orderId: order.id, status: "completed" };
   const existing = await findJob(order.id);
   if (existing) return checkJob(existing);
+  const unlocked = await unlockAudioPreview(order, userId);
+  if (unlocked) return progress(unlocked);
   if (order.provider_job_id || ["generating", "failed", "completed"].includes(order.status)) throw new HttpError(409, "This existing song task needs verification. No new song has been requested.");
   if (!order.lyrics_text) throw new HttpError(400, "Please review and save your lyrics first.");
   const identity = getMusicIdentity();

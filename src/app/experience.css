@@ -97,6 +97,12 @@ h1, h2, h3 { overflow-wrap: anywhere; }
 .sample-card audio { width: 100%; }
 .sample-intro { max-width: 650px; margin: 20px 0 28px; color: var(--muted); font-size: 15px; line-height: 1.7; }
 .sample-create-link { margin-top: 24px; }
+.sample-demo-note { color: var(--muted); font-size: 12px; }
+.song-preview-panel { margin-top: 26px; padding: 24px; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); }
+.song-preview-panel h2 { margin: 8px 0 16px; font-size: 26px; letter-spacing: -.03em; }
+.song-preview-panel p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+.song-preview-panel audio { display: block; width: 100%; margin: 20px 0; }
+.song-preview-panel .preview-small { font-size: 12px; }
 .holiday-section { background: #f4eee5; }
 .holiday-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .holiday-card { min-width: 0; display: flex; flex-direction: column; padding: 28px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--paper); }

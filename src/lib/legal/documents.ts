@@ -7,7 +7,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
   "terms": {
     "title": "Terms of Service",
     "description": "How SongGift accounts, personalised song orders, payments and delivery work.",
-    "effectiveDate": "2026-11-13",
+    "effectiveDate": "2026-11-15",
     "sections": [
       {
         "title": "1. About SongGift and these terms",
@@ -44,7 +44,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
         "blocks": [
           {
             "kind": "paragraph",
-            "text": "You provide the recipient’s name, occasion, story and musical preferences. You can review and edit the generated lyrics before proceeding to payment and music generation. The lyric preview is a text preview; it is not a recording of the finished music."
+            "text": "You provide the recipient’s name, occasion, story and musical preferences. You can review and edit generated lyrics before starting a recording. A lyric draft is text. Where offered, each verified account may create one free audio preview of up to 60 seconds, subject to availability. Replaying that excerpt does not consume another allowance. A confirmed technical failure restores the allowance; an uncertain submission remains reserved while the original request is checked."
           },
           {
             "kind": "paragraph",
@@ -74,7 +74,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
           },
           {
             "kind": "paragraph",
-            "text": "Payment is handled by the payment provider offered at checkout. That provider may apply its own account eligibility rules, currency conversion or other charges, which it explains separately. Returning from a checkout page does not by itself confirm successful payment; SongGift must verify the payment before authorising paid generation."
+            "text": "Payment is handled by the payment provider offered at checkout. That provider may apply its own account eligibility rules, currency conversion or other charges, which it explains separately. Returning from a checkout page does not by itself confirm successful payment; SongGift must verify payment before authorising paid generation or unlocking the full previewed recording and its download. Purchasing a preview unlocks that same recording; it does not create a new musical version."
           },
           {
             "kind": "paragraph",
@@ -223,7 +223,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
   "privacy": {
     "title": "Privacy Policy",
     "description": "How SongGift handles your account, stories, AI generation, payments and saved songs.",
-    "effectiveDate": "2026-11-13",
+    "effectiveDate": "2026-11-15",
     "sections": [
       {
         "title": "1. Who is responsible for your information",
