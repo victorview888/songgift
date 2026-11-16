@@ -117,7 +117,7 @@ export const guides: Guide[] = [
     faq: [
       {
         q: "Does Save lyrics create the audio?",
-        a: "No. It saves the confirmed text. Music creation is a separate step after payment requirements are satisfied.",
+        a: "No. It saves the confirmed text. It does not start a recording. Start an available free audio preview or pay for your complete song separately; the order explains which option is available.",
       },
       {
         q: "Can I change a song after music generation starts?",

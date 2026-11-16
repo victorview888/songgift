@@ -21,6 +21,6 @@ export function HolidaySongs() {
         </div>
       </article>)}
     </div>
-    <p className="holiday-note">Read and edit lyrics for free. Music is created after payment; allow time to listen and check your gift before the occasion.</p>
+    <p className="holiday-note">Read and edit lyrics for free. Pay once for the complete audio; allow time to listen and check your gift before the occasion.</p>
   </section>;
 }

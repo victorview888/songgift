@@ -95,14 +95,14 @@ export async function fixture({legacyContent=false,oidcJwks}={}) {
     if(fail.revokeOnDownload)await db.query('update public.song_gifts set active=false');
     const key=decodeURIComponent(url.pathname.replace(/^\/storage\/v1\/object\/(authenticated\/)?/,''));
     if(method==='POST') {
-     if(fail.upload)return json({message:'fixture storage unavailable',statusCode:'503'},503);
+     if(fail.upload || fail.clipUpload && key.includes('/preview.'))return json({message:'fixture storage unavailable',statusCode:'503'},503);
      if(objects.has(key))return json({message:'The resource already exists',statusCode:'409'},409);
      objects.set(key,Buffer.from(init.body));return json({Key:key},200);
     }
     if(!objects.has(key))return json({message:'Object not found',statusCode:'404'},404);
     return new Response(objects.get(key),{headers:{'Content-Type':'audio/wav'}});
    }
-   const table=url.pathname.split('/').at(-1);assert.ok(['usage_optouts','song_gifts','usage_events','song_order_attribution','admin_customer_directory','radar_reports','song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests','payment_transactions','content_reports','content_report_reviews','content_report_limits'].includes(table),table);
+   const table=url.pathname.split('/').at(-1);assert.ok(['audio_previews','audio_preview_allowances','audio_preview_daily','audio_demo_batches','usage_optouts','song_gifts','usage_events','song_order_attribution','admin_customer_directory','radar_reports','song_orders','generation_jobs','generation_job_outputs','song_assets','admin_members','song_notification_outbox','songgift_maintenance','admin_audit_logs','song_story_requests','payment_transactions','content_reports','content_report_reviews','content_report_limits'].includes(table),table);
    const cond=matches(url.searchParams);
    if(method==='GET') {
     if(fail.paymentHistory&&table==='song_orders'&&url.searchParams.get('select')?.includes('payment_transactions'))return json({message:'isolated history failure'},503);
@@ -151,7 +151,7 @@ export async function fixture({legacyContent=false,oidcJwks}={}) {
   if(String(input).includes('/storage/v1/object/')&&init.body&&typeof init.body!=='string') {
    const original=init.body;const key=decodeURIComponent(new URL(input).pathname.replace('/storage/v1/object/',''));
    calls.push({url:String(input),method:init.method});
-   if(fail.upload)return json({message:'fixture storage unavailable',statusCode:'503'},503);
+   if(fail.upload || fail.clipUpload && key.includes('/preview.'))return json({message:'fixture storage unavailable',statusCode:'503'},503);
    if(objects.has(key))return json({message:'The resource already exists',statusCode:'409'},409);
    objects.set(key,Buffer.from(original));return json({Key:key});
   }

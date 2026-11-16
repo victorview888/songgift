@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { authRoute } from "@/lib/auth/server";
 import { getPaymentOrder, publicPrice, storedQuote } from "@/lib/services/checkout";
 import { getOwnedOrder, saveApprovedLyrics } from "@/lib/supabase/orders";
+import { audioPreviewEnabled } from "@/lib/preview-policy";
+import { findOrderPreview } from "@/lib/services/audio-preview";
 
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ id: string }> };
@@ -10,7 +12,8 @@ export async function GET(request: Request, context: Context) {
     const id = (await context.params).id;
     const order = await getOwnedOrder(id, user!.id);
     const payment = await getPaymentOrder(id, user!.id);
-    return NextResponse.json({ order, checkoutPrice: payment.quoted_at ? publicPrice(storedQuote(payment)) : null });
+    const preview = await findOrderPreview(id, user!.id);
+    return NextResponse.json({ order, checkoutPrice: payment.quoted_at ? publicPrice(storedQuote(payment)) : null, audioPreviewEnabled: audioPreviewEnabled() || Boolean(preview), audioPreviewLocked: Boolean(preview && preview.state !== "failed"), audioPreviewState: preview?.state || null });
   });
 }
 export async function PATCH(request: Request, context: Context) {
