@@ -7,6 +7,9 @@ const MODEL = "fal-ai/lyria3/pro";
 // fal queue retrieval URLs use owner/app, excluding the /pro endpoint suffix.
 const QUEUE_APP = "https://queue.fal.run/fal-ai/lyria3";
 type JsonRecord = Record<string, unknown>;
+class FalHttpError extends Error {
+  constructor(readonly status: number, message: string) { super(message); }
+}
 
 function record(value: unknown): JsonRecord {
   return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -33,7 +36,7 @@ export class FalLyriaProvider implements MusicProvider {
       signal: AbortSignal.timeout(30_000),
     });
     if (!response.ok) {
-      const error = new Error(
+      const error = new FalHttpError(response.status,
         response.status === 401 || response.status === 403
           ? "fal rejected the API credentials or model access. Check FAL_KEY and account permissions."
           : response.status === 402
@@ -85,7 +88,17 @@ export class FalLyriaProvider implements MusicProvider {
     if (data.error || data.error_type) {
       return { ...base, status: "failed", message: "The music provider could not create this song." };
     }
-    const result = await this.request(url);
+    let result: JsonRecord;
+    try { result = await this.request(url); }
+    catch (error) {
+      // fal can report COMPLETED without an error field, then return 422 from
+      // the result endpoint for a failed execution. This confirms failure of
+      // the original task; a status lookup/network/auth error does not.
+      if (error instanceof FalHttpError && error.status === 422) {
+        return { ...base, status: "failed", message: "The music provider could not create this song." };
+      }
+      throw error;
+    }
     const audio = record(result.audio);
     const audioUrl = typeof result.audio === "string" ? result.audio : audio.url;
     if (typeof audioUrl !== "string" || !audioUrl.startsWith("https://")) {

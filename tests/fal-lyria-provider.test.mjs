@@ -88,6 +88,29 @@ test("finished but failed tasks do not fetch audio or resubmit", async () => {
   assert.equal(calls.length, 1);
 });
 
+test("a completed task whose result endpoint returns 422 is a confirmed failed execution", async () => {
+  const { provider, calls } = loadAdapter([
+    { body: { status: "COMPLETED" } },
+    { status: 422, body: { detail: [{ type: "generation_error", msg: "Private provider detail" }] } },
+  ]);
+  const result = await provider.getStatus("fal-lyria3-pro:failed-task");
+  assert.equal(result.status, "failed"); assert.equal(calls.length, 2);
+  assert.equal(result.providerJobId, "fal-lyria3-pro:failed-task");
+  assert.ok(calls.every(call => !call.init.method || call.init.method === "GET"));
+  assert.ok(!result.message.includes("Private provider detail"));
+});
+
+test("a rejected status lookup or unavailable result does not claim the task failed", async () => {
+  for (const status of [401, 422, 500]) {
+    const { provider, calls } = loadAdapter([{ status, body: {} }]);
+    await assert.rejects(provider.getStatus("fal-lyria3-pro:uncertain-task")); assert.equal(calls.length, 1);
+  }
+  for (const status of [401, 404, 500]) {
+    const { provider, calls } = loadAdapter([{ body: { status: "COMPLETED" } }, { status, body: {} }]);
+    await assert.rejects(provider.getStatus("fal-lyria3-pro:uncertain-task")); assert.equal(calls.length, 2);
+  }
+});
+
 test("missing key and insufficient credits fail without resubmission", async () => {
   const missing = loadAdapter([], "");
   await assert.rejects(missing.provider.generateSong(input), { name: "ProviderConfigurationError" });
