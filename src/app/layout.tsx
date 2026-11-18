@@ -3,6 +3,7 @@ import "./globals.css";
 import "./account.css";
 import "./legal.css";
 import "./experience.css";
+import "./gifting.css";
 import { AccountProvider } from "@/components/account-provider";
 import { siteUrl } from "@/lib/seo";
 import { UsageConsent } from "@/components/usage-consent";

@@ -184,8 +184,10 @@ try {
     const xml = new DOMParser().parseFromString(source, 'application/xml');
     return Object.fromEntries([...xml.querySelectorAll('url')].map(node => [new URL(node.querySelector('loc').textContent).pathname, node.querySelector('lastmod')?.textContent || null]));
   }, await (await get('/sitemap.xml')).text());
-  for (const path of ['/', '/pricing', '/help', '/occasions/wedding', '/policies/terms', '/guides/review-lyrics-before-music', '/guides/give-a-personal-song-gift'])
+  for (const path of ['/pricing', '/help', '/policies/terms', '/guides/review-lyrics-before-music', '/guides/give-a-personal-song-gift'])
     assert.equal(updatedMap[path], '2026-11-16', path + ': fixed content update date');
+  for (const path of ['/', '/occasions', ...publicPaths.filter(path => path.startsWith('/occasions/'))])
+    assert.equal(updatedMap[path], '2026-11-18', path + ': fixed date for the original imagery update');
   passed('Sitemap reports stable dates for actual public content edits');
   console.log(`SEO runtime: ${checks} checks passed against ${base.origin}; public price US$${expectedPrice}.`);
   await context.close();

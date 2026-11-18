@@ -1,0 +1,231 @@
+{
+  "createdOn": "2026-11-18",
+  "provenance": "Original OpenAI-generated illustrative scenes; not customer photographs",
+  "images": [
+    {
+      "scene": "anniversary",
+      "source": "design/gifting/anniversary.png",
+      "sourceSha256": "0b6920e4c5090ae9fd95c42b8fa562596e5233220bf92fdd115dd8a778d9ed64",
+      "variants": [
+        {
+          "path": "/images/gifting/anniversary-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 16068
+        },
+        {
+          "path": "/images/gifting/anniversary-960.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 52138
+        },
+        {
+          "path": "/images/gifting/anniversary-1440.webp",
+          "width": 1440,
+          "height": 960,
+          "bytes": 97064
+        }
+      ]
+    },
+    {
+      "scene": "birthday",
+      "source": "design/gifting/birthday.png",
+      "sourceSha256": "0b9ea0ecfe73ccf32af4a89a89941647255f62250f0b7be2e3f596edd32890af",
+      "variants": [
+        {
+          "path": "/images/gifting/birthday-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 28222
+        },
+        {
+          "path": "/images/gifting/birthday-960.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 78904
+        },
+        {
+          "path": "/images/gifting/birthday-1440.webp",
+          "width": 1440,
+          "height": 960,
+          "bytes": 142236
+        }
+      ]
+    },
+    {
+      "scene": "wedding",
+      "source": "design/gifting/wedding.png",
+      "sourceSha256": "6c0fc4e801b8e4e2355ae2fd26db535bef7f3ea34bfc253b77f9a6488a25be4a",
+      "variants": [
+        {
+          "path": "/images/gifting/wedding-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 25816
+        },
+        {
+          "path": "/images/gifting/wedding-960.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 62202
+        },
+        {
+          "path": "/images/gifting/wedding-1440.webp",
+          "width": 1440,
+          "height": 960,
+          "bytes": 104300
+        }
+      ]
+    },
+    {
+      "scene": "family",
+      "source": "design/gifting/family.png",
+      "sourceSha256": "aa476ff624915a7a9014d333336f4d903c78d6e40d093bdb0143b091dd5a07eb",
+      "variants": [
+        {
+          "path": "/images/gifting/family-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 26802
+        },
+        {
+          "path": "/images/gifting/family-960.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 84188
+        },
+        {
+          "path": "/images/gifting/family-1440.webp",
+          "width": 1440,
+          "height": 960,
+          "bytes": 155038
+        }
+      ]
+    },
+    {
+      "scene": "pet",
+      "source": "design/gifting/pet.png",
+      "sourceSha256": "a826def7a1c914eeb4792629b8e9da705ea9a3dcb5e6f53d12415629455f35c1",
+      "variants": [
+        {
+          "path": "/images/gifting/pet-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 24200
+        },
+        {
+          "path": "/images/gifting/pet-960.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 69792
+        },
+        {
+          "path": "/images/gifting/pet-1440.webp",
+          "width": 1440,
+          "height": 960,
+          "bytes": 124534
+        }
+      ]
+    },
+    {
+      "scene": "memorial",
+      "source": "design/gifting/memorial.png",
+      "sourceSha256": "206cf6a1fcde92b20dbb0f253cbdf6170c1e339171675e1df8c7bb722e568144",
+      "variants": [
+        {
+          "path": "/images/gifting/memorial-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 19026
+        },
+        {
+          "path": "/images/gifting/memorial-960.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 50952
+        },
+        {
+          "path": "/images/gifting/memorial-1440.webp",
+          "width": 1440,
+          "height": 960,
+          "bytes": 88536
+        }
+      ]
+    },
+    {
+      "scene": "winter",
+      "source": "design/gifting/winter.png",
+      "sourceSha256": "ddbd7b162b86d30d933cebe74c455a3872db8028234f54633436f2210e43ed78",
+      "variants": [
+        {
+          "path": "/images/gifting/winter-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 27102
+        },
+        {
+          "path": "/images/gifting/winter-960.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 79596
+        },
+        {
+          "path": "/images/gifting/winter-1440.webp",
+          "width": 1440,
+          "height": 960,
+          "bytes": 136978
+        }
+      ]
+    },
+    {
+      "scene": "christmas-eve",
+      "source": "design/gifting/christmas-eve.png",
+      "sourceSha256": "0da3defc8c27474cfee0355579164b972ea157eb38205518a31fbe3dbf94d5b6",
+      "variants": [
+        {
+          "path": "/images/gifting/christmas-eve-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 24488
+        },
+        {
+          "path": "/images/gifting/christmas-eve-960.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 81442
+        },
+        {
+          "path": "/images/gifting/christmas-eve-1440.webp",
+          "width": 1440,
+          "height": 960,
+          "bytes": 150978
+        }
+      ]
+    },
+    {
+      "scene": "new-year",
+      "source": "design/gifting/new-year.png",
+      "sourceSha256": "a10eb95107c97c47dba0826628c81a83ed6c50e4fd2ded6daaa4518b1a29ee89",
+      "variants": [
+        {
+          "path": "/images/gifting/new-year-480.webp",
+          "width": 480,
+          "height": 320,
+          "bytes": 22804
+        },
+        {
+          "path": "/images/gifting/new-year-960.webp",
+          "width": 960,
+          "height": 640,
+          "bytes": 71784
+        },
+        {
+          "path": "/images/gifting/new-year-1440.webp",
+          "width": 1440,
+          "height": 960,
+          "bytes": 130364
+        }
+      ]
+    }
+  ]
+}

@@ -9,6 +9,8 @@ import { audioPreviewEnabled } from "@/lib/preview-policy";
 import { SongPrice } from "@/components/song-price";
 import { publicSongPriceUsd } from "@/lib/pricing";
 import { Brand } from "@/components/brand";
+import { GiftingImage } from "@/components/gifting-image";
+import { sceneForOccasion } from "@/lib/gifting-imagery";
 
 export const dynamic = "force-dynamic";
 import { AccountNav } from "@/components/account-nav";
@@ -60,35 +62,21 @@ export default async function Home() {
         <div className="header-actions"><HomeMenu /><AccountNav /><Link className="header-cta" href="/create">Create a song <ArrowIcon /></Link></div>
       </header>
 
-      <section className="hero-section">
-        <div className="hero-copy">
+      <section className="gift-hero">
+        <GiftingImage scene="anniversary" sizes="(max-width: 600px) 1100px, 100vw" priority />
+        <div className="gift-hero-copy">
           <p className="eyebrow"><span className="eyebrow-dot" />Personalized song gifts, made from your memories</p>
-          <h1>Your story.
-Their favorite song.</h1>
-          <p className="hero-description">
+          <h1>Your story.<br />Their favorite song.</h1>
+          <p className="gift-hero-description">
             Turn the names, memories and little moments only you know into a personal AI song. {hasPreview ? "Read your lyrics, try one free audio preview, then unlock the full song." : "Read your lyrics for free, then bring them to life."}
           </p>
-          <div className="hero-actions">
+          <div className="gift-hero-actions">
             <Link className="primary-button" href="/create">Create their song <ArrowIcon /></Link>
-            <a className="text-link" href={samples.length ? "#samples" : "#how-it-works"}>{samples.length ? "Hear a sample" : "See how it works"} <span aria-hidden="true">↓</span></a>
+            <a className="gift-hero-secondary" href={samples.length ? "#samples" : "#how-it-works"}>{samples.length ? "Hear a sample" : "See how it works"} <span aria-hidden="true">↓</span></a>
           </div>
-          <p className="hero-note"><span aria-hidden="true">✦</span> {hasPreview ? "One free 60-second preview per verified account" : "Free lyric preview"} · US${publicSongPriceUsd()} per song · USD / PayPal</p>
+          <p className="gift-hero-note"><span aria-hidden="true">✦</span> {hasPreview ? "One free 60-second preview per verified account" : "Free lyric preview"} · US${publicSongPriceUsd()} per song · USD / PayPal</p>
         </div>
-
-        <div className="hero-art" role="img" aria-label="A record made for a special memory">
-          <div className="art-orbit art-orbit-one" />
-          <div className="art-orbit art-orbit-two" />
-          <div className="album-card">
-            <div className="album-top"><span>SONGFORALWAYS / 001</span><span>FOR SOMEONE SPECIAL</span></div>
-            <div className="record-wrap"><div className="record"><div className="record-label">♪</div></div></div>
-            <div className="album-bottom">
-              <div><small>A SONG ABOUT</small><strong>The moments<br />that matter</strong></div>
-              <div className="waveform" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
-            </div>
-          </div>
-          <span className="floating-note note-one">for you</span>
-          <span className="floating-note note-two">made with feeling</span>
-        </div>
+        <p className="gift-hero-credit">Illustrative AI scene</p>
       </section>
 
       <div className="trust-strip">
@@ -101,7 +89,7 @@ Their favorite song.</h1>
       <HolidaySongs />
 
       <section className="section" id="how-it-works">
-        <div className="section-heading">
+        <div className="section-heading gift-centered-heading">
           <div><p className="section-kicker">The simple part</p><h2>A little story. A lasting gift.</h2></div>
           <p>No songwriting experience needed. Just bring the story that means something to you.</p>
         </div>
@@ -116,19 +104,21 @@ Their favorite song.</h1>
       </section>
 
       <section className="section section-cream" id="occasions">
-        <div className="section-heading">
+        <div className="section-heading gift-centered-heading">
           <div><p className="section-kicker">Made for their moment</p><h2>For their kind of special.</h2></div>
           <p>Start with an occasion, then make it completely personal with the memories behind it.</p>
         </div>
         <div className="occasion-grid">
           {occasions.map(([title, text, href], index) => (
-            <Link className="occasion-card" href={href} key={title}>
+            <Link className="occasion-card occasion-photo-card" href={href} key={title}>
+              <GiftingImage scene={sceneForOccasion(href.slice("/occasions/".length))} sizes="(max-width: 800px) calc(100vw - 40px), (max-width: 1300px) 32vw, 400px" decorative />
               <span className="occasion-number">0{index + 1}</span>
               <div><h3>{title}</h3><p>{text}</p></div>
               <span className="occasion-arrow"><ArrowIcon /></span>
             </Link>
           ))}
         </div>
+        <p className="imagery-note">Illustrative AI scenes, inspired by the moments a song can celebrate.</p>
         <p className="occasion-season-links">Planning a holiday gift? {holidayOccasions.map((holiday, index) => <span key={holiday.slug}>{index > 0 && " · "}<Link href={`/occasions/${holiday.slug}`}>{holiday.name} songs</Link></span>)}</p>
       </section>
 

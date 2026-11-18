@@ -7,6 +7,8 @@ import { JsonLd } from "@/components/json-ld";
 import { getOccasion, occasionSlugs, occasions } from "@/lib/occasions";
 import { occasionCreateHref } from "@/lib/occasion-presets";
 import { absoluteUrl, publicPageMetadata } from "@/lib/seo";
+import { GiftingImage } from "@/components/gifting-image";
+import { sceneForOccasion } from "@/lib/gifting-imagery";
 import "../occasions.css";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -51,7 +53,7 @@ export default async function OccasionPage({ params }: Props) {
             <Link className="primary-button" href={createHref}>Create your {occasion.name.toLowerCase()} song <ArrowIcon /></Link>
             <div className="occasion-action-links"><Link href="/pricing">See pricing and what is included</Link><Link href="/help">How song delivery works</Link></div>
           </div>
-          <div className="occasion-art" aria-hidden="true"><span>♪</span><p>{occasion.name}<br />memories,<br /><em>made into music.</em></p></div>
+          <figure className="occasion-scene"><GiftingImage scene={sceneForOccasion(slug)} sizes="(max-width: 800px) calc(100vw - 40px), 550px" priority /><figcaption>Illustrative AI scene</figcaption></figure>
         </section>
 
         <section className="occasion-guide" aria-labelledby="occasion-guide-heading">
