@@ -8,6 +8,8 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AccountHeader } from "@/components/account-header";
 import { TermsConfirmation } from "@/components/terms-confirmation";
 import { useAccount } from "@/components/account-provider";
+import { GiftingImage } from "@/components/gifting-image";
+import { sceneForOccasion } from "@/lib/gifting-imagery";
 
 import { ACCOUNT_CLEARED_EVENT, clearStoryDraft, initialStory, loadStoryDraft, newStoryDraft, saveStoryDraft, type StoryDraft, type StoryForm } from "@/lib/drafts/story";
 import { holidayForOccasion, holidayOccasions } from "@/lib/holidays";
@@ -105,56 +107,95 @@ export default function CreatePage() {
       if (controller.current === abort) { inFlight.current = false; setIsGenerating(false); }
     }
   }
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); await submitStory(); }
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const storyInput = event.currentTarget.elements.namedItem("story") as HTMLTextAreaElement;
+    if (storyInput.value.trim().length < 20) {
+      storyInput.setCustomValidity("Add at least 20 characters about your memories, excluding spaces at the beginning and end.");
+      storyInput.reportValidity();
+      return;
+    }
+    await submitStory();
+  }
 
   return (
-    <main className="form-page">
+    <main className="form-page create-page">
       <AccountHeader step="Step 1 of 3" />
 
-      <section className="form-shell">
+      <section className="form-shell create-shell">
         <div className="form-intro">
-          <p className="section-kicker">Start with the story</p>
+          <p className="section-kicker">Made from your memories</p>
           <h1>Every song starts with someone.</h1>
-          <p>Share as much as feels natural. Names, places, tiny habits, and favorite memories are all welcome.</p>
+          <p>A favorite memory, a little habit, a few honest words. Tell us what makes them special. We’ll help you find the lyrics.</p>
+          <div className="create-start-note"><span aria-hidden="true">✦</span> Free lyric draft <span className="create-note-dot" aria-hidden="true">·</span> No payment to start</div>
         </div>
-
-        <p className="legal-notice">See <Link href="/pricing">pricing, payment options and included services</Link> before you start. Please follow our <Link href="/policies/content-standards" target="_blank" rel="noopener">Content Standards</Link>.</p>
-        <div className="account-save-note">{user ? <>Your song will be saved to <strong>{user.email}</strong>. Find it anytime in <Link href="/my-songs">My Songs</Link>.</> : <>Bring your story. <Link href="/login?next=/create">Sign in</Link> to save your lyrics and finished song to your account.</>}</div>
-        {notice && <p className="draft-status" role="status">{notice}</p>}
+        <ol className="create-journey" aria-label="Song creation steps">
+          <li aria-current="step"><span>1</span> Your story</li>
+          <li><span>2</span> Review lyrics</li>
+          <li><span>3</span> Create song</li>
+        </ol>
+        <div className="create-layout">
+        <div className="create-main">
+        <div className="account-save-note">{user ? <>Your lyrics will be saved to <strong>{user.email}</strong> · <Link href="/my-songs">My Songs</Link></> : <>Start with your story. <Link href="/login?next=/create">Sign in</Link> when you’re ready to create your lyrics.</>}</div>
+        <p className="draft-status create-draft-status" role="status">{!ready ? "Getting your story ready…" : notice}</p>
         {ready && activeDraft?.orderId ? <section className="draft-resume" aria-label="Saved song"><h2>Continue where you left off.</h2><p>Continue your saved song to review its lyrics or resume checkout.</p><div className="draft-actions">{activeDraft.stage === "ready" ? <Link className="primary-button" href={"/lyrics/" + activeDraft.orderId}>Continue saved song <ArrowIcon /></Link> : <button className="primary-button" disabled={isGenerating} onClick={() => void submitStory()}>{isGenerating ? "Checking your saved story…" : "Continue saved story"}</button>}<button className="text-button" disabled={isGenerating} onClick={startNew}>Start a new story</button></div></section> : <form className="story-form" onSubmit={handleSubmit}>
           <fieldset className="story-fields" disabled={!ready || !activeDraft || isGenerating || loading}>
-          <h2 className="form-group-heading"><span>01</span> Who is it for?</h2><div className="field-grid">
-            <label><span>Their name</span><input required maxLength={100} value={form.recipientName} onChange={(event) => updateField("recipientName", event.target.value)} placeholder="e.g. Emma" /></label>
-            <label><span>Your relationship</span><select required value={form.relationship} onChange={(event) => updateField("relationship", event.target.value)}>
+          <section className="create-section" aria-labelledby="recipient-heading">
+          <div className="create-section-heading"><span className="create-section-number" aria-hidden="true">01</span><div><h2 id="recipient-heading">Who is it for?</h2><p>Start with the person behind the song.</p></div></div>
+          <div className="field-grid create-recipient-grid">
+            <div><label htmlFor="recipient-name"><span id="recipient-name-label">Their name</span><input id="recipient-name" name="recipientName" aria-labelledby="recipient-name-label" required pattern={".*\\S.*"} maxLength={100} autoComplete="off" value={form.recipientName} onChange={(event) => updateField("recipientName", event.target.value)} placeholder="e.g. Emma" aria-describedby="recipient-name-hint" /></label><small id="recipient-name-hint">The name you’d like in the lyrics.</small></div>
+            <label htmlFor="relationship"><span id="relationship-label">Your relationship</span><select id="relationship" name="relationship" aria-labelledby="relationship-label" required value={form.relationship} onChange={(event) => updateField("relationship", event.target.value)}>
               <option value="">Choose one</option><option>Partner</option><option>Spouse</option><option>Parent</option><option>Child</option><option>Friend</option><option>Family member</option><option>Pet</option><option>Someone I miss</option>
             </select></label>
-          </div>
-          <div className="field-grid">
-            <label><span>What is the occasion?</span><select required value={form.occasion} onChange={(event) => updateField("occasion", event.target.value)}>
+            <label htmlFor="occasion"><span id="occasion-label">What is the occasion?</span><select id="occasion" name="occasion" aria-labelledby="occasion-label" required value={form.occasion} onChange={(event) => updateField("occasion", event.target.value)}>
               <option value="">Choose one</option><option>Birthday</option><option>Wedding</option><option>Anniversary</option><option>Just because</option><option>Thank you</option><option>In memory</option>{holidayOccasions.map(holiday => <option key={holiday.slug} value={holiday.occasion}>{holiday.name}</option>)}
             </select></label>
-
           </div>
-          <h2 className="form-group-heading"><span>02</span> The memories that matter</h2><p className="writing-hint">{selectedHoliday?.storyHint || "Try a moment you shared, a little habit you love, and what you want them to know."}{selectedHoliday && <> <Link href={`/occasions/${selectedHoliday.slug}`} target="_blank" rel="noopener">More {selectedHoliday.name} ideas</Link></>}</p><label><span>Tell us the story</span><textarea required minLength={20} maxLength={8000} rows={8} value={form.story} onChange={(event) => updateField("story", event.target.value)} placeholder={selectedHoliday?.storyPlaceholder || "What do you love about them? Include a favorite memory, a place you share, a phrase they always say, or anything you want them to hear..."} /><small className="story-count">{form.story.length.toLocaleString()} / 8,000 characters · {form.story.length < 20 ? "Add at least 20 characters" : "Ready to turn into lyrics"}</small></label>
-          <h2 className="form-group-heading"><span>03</span> Give it a feeling</h2><div className="field-grid">            <label><span>What should it feel like?</span><select value={form.mood} onChange={(event) => updateField("mood", event.target.value)}>
+          </section>
+          <section className="create-section" aria-labelledby="memories-heading">
+          <div className="create-section-heading"><span className="create-section-number" aria-hidden="true">02</span><div><h2 id="memories-heading">The memories that matter</h2><p>Write naturally. A few sentences are enough to begin.</p></div></div>
+          <ul className="create-story-prompts" aria-label="Ideas for your story">
+            <li><strong>A shared memory</strong><span>A moment or place you remember.</span></li>
+            <li><strong>A little detail</strong><span>A habit, a nickname, a favorite phrase.</span></li>
+            <li><strong>A message for them</strong><span>What you want this song to say.</span></li>
+          </ul>
+          <p id="story-hint" className="writing-hint">{selectedHoliday?.storyHint || "You don’t need to rhyme or write polished lyrics. Specific details help make the song yours."}{selectedHoliday && <> <Link href={`/occasions/${selectedHoliday.slug}`} target="_blank" rel="noopener">More {selectedHoliday.name} ideas</Link></>}</p>
+          <label htmlFor="story"><span id="story-label">Tell us the story</span><textarea id="story" name="story" aria-labelledby="story-label" required minLength={20} maxLength={8000} rows={7} value={form.story} onChange={(event) => { event.target.setCustomValidity(""); updateField("story", event.target.value); }} placeholder={selectedHoliday?.storyPlaceholder || "One memory that always makes me smile is…\nThey have this little habit of…\nWith this song, I want to say…"} aria-describedby="story-hint story-count" /></label>
+          <div className="create-story-tools"><span id="story-count" className="story-count">{form.story.length.toLocaleString()} / 8,000 characters · {form.story.trim().length < 20 ? "Add at least 20 characters" : "Ready to turn into lyrics"}</span></div>
+          <details className="create-story-example"><summary>Need a starting point? See an example</summary><div><p className="create-example-label">Fictional example · Use your own memories</p><p>{form.occasion === "In memory" ? "My dad Alex made pancakes every Sunday, always a little too crispy. On rainy afternoons we listened to his old records in the kitchen. I want a gentle song that remembers those ordinary moments and says how much I still carry them with me." : "My friend Alex brought a thermos of tea on every walk, even in summer. Last autumn we got lost near the lake and laughed all the way home. Whenever life felt busy, Alex made time to listen. I want this song to say thank you for making ordinary days feel like an adventure."}</p></div></details>
+          </section>
+          <section className="create-section" aria-labelledby="feeling-heading">
+          <div className="create-section-heading"><span className="create-section-number" aria-hidden="true">03</span><div><h2 id="feeling-heading">Give it a feeling <span className="create-optional">Optional</span></h2><p>Not sure? Our warm acoustic defaults are a good place to start.</p></div></div>
+          <div className="field-grid"><label><span id="mood-label">What should it feel like?</span><select name="mood" aria-labelledby="mood-label" value={form.mood} onChange={(event) => updateField("mood", event.target.value)}>
               <option>Warm and heartfelt</option><option>Joyful and bright</option><option>Romantic and intimate</option><option>Nostalgic and gentle</option><option>Uplifting and hopeful</option>
-            </select></label><label><span>Music direction</span><select value={form.style} onChange={(event) => updateField("style", event.target.value)}>
+            </select></label><label><span id="style-label">Music direction</span><select name="style" aria-labelledby="style-label" value={form.style} onChange={(event) => updateField("style", event.target.value)}>
               <option>Acoustic pop</option><option>Soft piano ballad</option><option>Indie folk</option><option>Uplifting pop</option><option>Country inspired</option>
             </select></label>
-
           </div>
-          <p className="legal-notice">Your story, recipient details and lyrics are sent to AI services to create your lyrics and music. Include only information you have permission to share, and leave out sensitive personal details. See our <Link href="/policies/privacy" target="_blank" rel="noopener">Privacy Policy</Link>.</p>
+          </section>
+          <div className="create-submit-section">
+          <p className="legal-notice">Your story, recipient details and lyrics are sent to AI services to create your lyrics and music. Share only details you have permission to use and leave out sensitive information. Please follow our <Link href="/policies/content-standards" target="_blank" rel="noopener">Content Standards</Link>.</p>
           <TermsConfirmation disabled={isGenerating || loading} />
           <div className="form-submit-row">
-            <p><span aria-hidden="true">✦</span> You will review the lyrics before the song is made.</p>
-            <button className="primary-button" type="submit" disabled={isGenerating || loading}>
+            <p><strong>Your lyrics come first.</strong><br />Review and edit them before you pay. <Link href="/pricing">View pricing</Link></p>
+            <button className="primary-button" type="submit" disabled={!ready || !activeDraft || isGenerating || loading}>
               {isGenerating ? "Writing lyrics..." : user ? "Continue to lyrics" : "Sign in to continue"}
               {!isGenerating && <ArrowIcon />}
             </button>
           </div>
+          </div>
           </fieldset>
         </form>}
         {error && <p className="form-error" role="alert">{error}</p>}
+        </div>
+        <aside className="create-companion" aria-labelledby="song-outline-heading">
+          <div className="create-cover"><GiftingImage scene={sceneForOccasion(form.occasion)} sizes="300px" decorative /><span>Inspired by your story</span></div>
+          <div className="create-companion-body"><p className="section-kicker">A gift with their name on it</p><h2 id="song-outline-heading">{form.recipientName.trim() ? <>A song for <em>{form.recipientName.trim()}</em>.</> : <>Someone special.<br />Something personal.</>}</h2>
+          <dl><div><dt>Occasion</dt><dd>{form.occasion || "Your reason to celebrate"}</dd></div><div><dt>Feeling</dt><dd>{form.mood}</dd></div><div><dt>Sound</dt><dd>{form.style}</dd></div></dl>
+          <div className="create-next-note"><strong>What happens next?</strong><p>We turn your memories into a lyric draft. Read it, edit it, and decide when you’re ready to make the song.</p></div>
+          <p className="create-illustration-note">Illustrative AI image, not a customer photo.</p></div>
+        </aside>
+        </div>
       </section>
     </main>
   );

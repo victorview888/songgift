@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { publicPageMetadata } from "@/lib/seo";
+import "./create.css";
 
 export const metadata: Metadata = publicPageMetadata(
   "Create a Personalized Song | songforalways",
