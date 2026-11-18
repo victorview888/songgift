@@ -4,6 +4,8 @@ import { ArrowIcon } from "@/components/arrow-icon";
 import { JsonLd } from "@/components/json-ld";
 import { occasionSlugs, occasions } from "@/lib/occasions";
 import { absoluteUrl, publicPageMetadata } from "@/lib/seo";
+import { GiftingImage } from "@/components/gifting-image";
+import { sceneForOccasion } from "@/lib/gifting-imagery";
 import "./occasions.css";
 
 export const metadata = publicPageMetadata(
@@ -41,9 +43,11 @@ export default function OccasionsPage() {
         <p className="section-kicker">Start with someone special</p>
         <h1>Personalized song gifts for life’s meaningful moments.</h1>
         <p>A Christmas surprise, a New Year wish, a birthday or a memory you want to keep. Choose a guide for practical story ideas, then make the song your own with the details only you know.</p>
+        <p className="imagery-note">Scene images are AI-generated illustrations.</p>
       </section>
       <section className="occasion-hub-grid" aria-label="Choose a song occasion">
-        {occasionSlugs.map((slug, index) => <article className="occasion-hub-card" key={slug}>
+        {occasionSlugs.map((slug, index) => <article className="occasion-hub-card occasion-hub-photo-card" key={slug}>
+          <GiftingImage scene={sceneForOccasion(slug)} sizes="(max-width: 500px) calc(100vw - 40px), (max-width: 800px) 46vw, 370px" decorative />
           <span className="occasion-number" aria-hidden="true">0{index + 1}</span>
           <h2><Link href={`/occasions/${slug}`}>{occasions[slug].name} songs <ArrowIcon /></Link></h2>
           <p>{summaries[slug]}</p>
