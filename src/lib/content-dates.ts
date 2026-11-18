@@ -6,7 +6,7 @@ import { occasionSlugs } from "./occasions";
 const modified = new Map<string, string>([
   ["/", "2026-11-18"],
   ["/guides", "2026-11-16"],
-  ["/create", "2026-11-16"],
+  ["/create", "2026-11-18"],
   ["/pricing", "2026-11-16"],
   ["/help", "2026-11-16"],
   ["/occasions", "2026-11-18"],
