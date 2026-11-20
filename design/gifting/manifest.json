@@ -1,5 +1,6 @@
 {
   "createdOn": "2026-11-18",
+  "updatedOn": "2026-11-20",
   "provenance": "Original OpenAI-generated illustrative scenes; not customer photographs",
   "images": [
     {
@@ -224,6 +225,31 @@
           "width": 1440,
           "height": 960,
           "bytes": 130364
+        }
+      ]
+    },
+    {
+      "scene": "home-hero",
+      "source": "design/gifting/home-hero.png",
+      "sourceSha256": "438314e450439ad732a15b385f330662c104279a6135b390c4cf89dd0a0b83f1",
+      "variants": [
+        {
+          "path": "/images/gifting/home-hero-480.webp",
+          "width": 480,
+          "height": 270,
+          "bytes": 13984
+        },
+        {
+          "path": "/images/gifting/home-hero-960.webp",
+          "width": 960,
+          "height": 540,
+          "bytes": 42710
+        },
+        {
+          "path": "/images/gifting/home-hero-1440.webp",
+          "width": 1440,
+          "height": 810,
+          "bytes": 79866
         }
       ]
     }
