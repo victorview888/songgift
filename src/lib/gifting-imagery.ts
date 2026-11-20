@@ -1,5 +1,6 @@
 // Original illustrative scenes, independent of customer orders and public audio.
 export const giftingScenes = {
+  "home-hero": { alt: "Illustrative AI scene of a woman enjoying a personalized song through headphones beside her partner", position: "74% 0%", height: 810 },
   anniversary: { alt: "Illustrative AI scene of two partners sharing a song at home", position: "74% 42%" },
   birthday: { alt: "Illustrative AI scene of friends sharing a birthday celebration", position: "50% 45%" },
   wedding: { alt: "Illustrative AI scene of newlyweds dancing in a sunlit garden", position: "50% 45%" },

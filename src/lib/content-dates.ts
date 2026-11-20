@@ -4,7 +4,7 @@ import { occasionSlugs } from "./occasions";
 // Editorial dates, changed only when the visible content/flow changes.
 // Never use request/build time to make unchanged pages appear freshly edited.
 const modified = new Map<string, string>([
-  ["/", "2026-11-18"],
+  ["/", "2026-11-20"],
   ["/guides", "2026-11-16"],
   ["/create", "2026-11-18"],
   ["/pricing", "2026-11-16"],

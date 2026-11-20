@@ -186,7 +186,8 @@ try {
   }, await (await get('/sitemap.xml')).text());
   for (const path of ['/pricing', '/help', '/policies/terms', '/guides/review-lyrics-before-music', '/guides/give-a-personal-song-gift'])
     assert.equal(updatedMap[path], '2026-11-16', path + ': fixed content update date');
-  for (const path of ['/', '/create', '/occasions', ...publicPaths.filter(path => path.startsWith('/occasions/'))])
+  assert.equal(updatedMap['/'], '2026-11-20', 'Home: fixed date for the approved hero replacement');
+  for (const path of ['/create', '/occasions', ...publicPaths.filter(path => path.startsWith('/occasions/'))])
     assert.equal(updatedMap[path], '2026-11-18', path + ': fixed date for the imagery and story form updates');
   passed('Sitemap reports stable dates for actual public content edits');
   console.log(`SEO runtime: ${checks} checks passed against ${base.origin}; public price US$${expectedPrice}.`);

@@ -63,7 +63,7 @@ export default async function Home() {
       </header>
 
       <section className="gift-hero">
-        <GiftingImage scene="anniversary" sizes="(max-width: 600px) 1100px, 100vw" priority />
+        <GiftingImage scene="home-hero" sizes="(max-width: 600px) 720px, 100vw" priority />
         <div className="gift-hero-copy">
           <p className="eyebrow"><span className="eyebrow-dot" />Personalized song gifts, made from your memories</p>
           <h1>Your story.<br />Their favorite song.</h1>
