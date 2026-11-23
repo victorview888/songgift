@@ -53,7 +53,7 @@ export default async function OccasionPage({ params }: Props) {
             <Link className="primary-button" href={createHref}>Create your {occasion.name.toLowerCase()} song <ArrowIcon /></Link>
             <div className="occasion-action-links"><Link href="/pricing">See pricing and what is included</Link><Link href="/help">How song delivery works</Link></div>
           </div>
-          <figure className="occasion-scene"><GiftingImage scene={sceneForOccasion(slug)} sizes="(max-width: 800px) calc(100vw - 40px), 550px" priority /><figcaption>Illustrative AI scene</figcaption></figure>
+          <figure className="occasion-scene"><GiftingImage scene={sceneForOccasion(slug)} sizes="(max-width: 800px) calc(100vw - 40px), 550px" priority /></figure>
         </section>
 
         <section className="occasion-guide" aria-labelledby="occasion-guide-heading">

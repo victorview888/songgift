@@ -188,7 +188,7 @@ try {
     assert.equal(updatedMap[path], '2026-11-16', path + ': fixed content update date');
   for (const path of ['/', '/help']) assert.equal(updatedMap[path], '2026-11-23', path + ': fixed date for the FAQ expansion');
   for (const path of ['/create', '/occasions', ...publicPaths.filter(path => path.startsWith('/occasions/'))])
-    assert.equal(updatedMap[path], '2026-11-18', path + ': fixed date for the imagery and story form updates');
+    assert.equal(updatedMap[path], '2026-11-23', path + ': fixed date for the image-credit cleanup');
   passed('Sitemap reports stable dates for actual public content edits');
   console.log(`SEO runtime: ${checks} checks passed against ${base.origin}; public price US$${expectedPrice}.`);
   await context.close();

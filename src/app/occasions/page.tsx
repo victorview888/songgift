@@ -43,7 +43,6 @@ export default function OccasionsPage() {
         <p className="section-kicker">Start with someone special</p>
         <h1>Personalized song gifts for life’s meaningful moments.</h1>
         <p>A Christmas surprise, a New Year wish, a birthday or a memory you want to keep. Choose a guide for practical story ideas, then make the song your own with the details only you know.</p>
-        <p className="imagery-note">Scene images are AI-generated illustrations.</p>
       </section>
       <section className="occasion-hub-grid" aria-label="Choose a song occasion">
         {occasionSlugs.map((slug, index) => <article className="occasion-hub-card occasion-hub-photo-card" key={slug}>

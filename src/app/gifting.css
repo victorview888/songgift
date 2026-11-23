@@ -17,20 +17,18 @@
 .gift-centered-heading h2, .gift-centered-heading > p { margin-left: auto; margin-right: auto; }
 .gift-centered-heading > p { max-width: 620px; margin-top: 18px; }
 .occasion-photo-card { isolation: isolate; overflow: hidden; min-height: 340px; padding: 25px; color: white; background: var(--ink); }
-.occasion-photo-card > .gifting-image { position: absolute; inset: 0; z-index: -2; }
-.occasion-photo-card::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, #17131052, #17131014 28%, #171310e0 100%); }
-.occasion-photo-card .occasion-number, .occasion-photo-card .occasion-arrow { color: white; }
-.occasion-photo-card h3 { font-size: 28px; }
-.occasion-photo-card p { color: #fff8f0; font-size: 14px; line-height: 1.65; }
+.occasion-photo-card > .gifting-image { position: absolute; inset: 0; z-index: -2; filter: brightness(1.1); }
+.occasion-photo-card::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, #17131008 0%, transparent 38%, #1713108f 66%, #171310bf 100%); }
+.occasion-photo-card .occasion-number, .occasion-photo-card .occasion-arrow { color: white; text-shadow: 0 1px 3px #171310b3; }
+.occasion-photo-card h3 { font-size: 28px; text-shadow: 0 2px 5px #17131066; }
+.occasion-photo-card p { color: #fff8f0; font-size: 14px; line-height: 1.65; text-shadow: 0 1px 3px #17131080; }
 .occasion-photo-card:hover { background: var(--ink); }
-.imagery-note { margin: 16px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
 .sample-card { overflow: hidden; }
 .sample-artwork { position: relative; height: 185px; margin: -24px -24px 24px; background: #e2d4c3; }
 .sample-artwork::after { content: "♪"; position: absolute; bottom: 14px; left: 18px; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #ffffff80; border-radius: 50%; color: white; background: #29231f99; font-size: 21px; }
 .sample-section > h2, .sample-section > .section-kicker { text-align: center; }
 .sample-intro { margin-left: auto; margin-right: auto; text-align: center; }
 .occasion-scene { position: relative; margin: 0; min-width: 0; height: 460px; overflow: hidden; border-radius: 24px; background: var(--cream); box-shadow: 0 18px 40px #29231f0d; }
-.occasion-scene figcaption { position: absolute; left: 16px; bottom: 14px; padding: 4px 8px; border-radius: 5px; background: #171410ad; color: white; font-size: 10px; }
 .occasion-hub-photo-card { position: relative; isolation: isolate; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; min-height: 330px; color: white; background: var(--ink); }
 .occasion-hub-photo-card > .gifting-image { position: absolute; inset: 0; z-index: -2; }
 .occasion-hub-photo-card::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, #17131038, #1713101f 20%, #171310e6 100%); }
@@ -40,7 +38,6 @@
 .occasion-hub-card.occasion-hub-photo-card h2 a::after { content: ""; position: absolute; inset: 0; }
 .occasion-hub-card.occasion-hub-photo-card p { color: #fff8f0; }
 .occasion-hub-photo-card:focus-within { outline: 3px solid var(--orange-dark); outline-offset: 4px; }
-.occasion-hub-heading .imagery-note { font-size: 11px; }
 @media(max-width: 900px) {
   .gift-hero { min-height: 610px; padding-left: 24px; padding-right: 24px; }
   .gift-hero-copy { width: 65%; }
