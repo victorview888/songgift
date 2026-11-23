@@ -59,7 +59,7 @@ export default async function Home() {
       </header>
 
       <section className="gift-hero">
-        <GiftingImage scene="home-hero" sizes="(max-width: 600px) 720px, 100vw" priority />
+        <GiftingImage scene="home-hero-bright" sizes="(max-width: 600px) 720px, 100vw" priority />
         <div className="gift-hero-copy">
           <p className="eyebrow"><span className="eyebrow-dot" />Personalized song gifts, made from your memories</p>
           <h1>Your story.<br />Their favorite song.</h1>
@@ -72,7 +72,6 @@ export default async function Home() {
           </div>
           <p className="gift-hero-note"><span aria-hidden="true">✦</span> {hasPreview ? "One free 60-second preview per verified account" : "Free lyric preview"} · US${publicSongPriceUsd()} per song · USD / PayPal</p>
         </div>
-        <p className="gift-hero-credit">Illustrative AI scene</p>
       </section>
 
       <div className="trust-strip">
