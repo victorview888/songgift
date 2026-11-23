@@ -193,7 +193,7 @@ export default function CreatePage() {
           <div className="create-companion-body"><p className="section-kicker">A gift with their name on it</p><h2 id="song-outline-heading">{form.recipientName.trim() ? <>A song for <em>{form.recipientName.trim()}</em>.</> : <>Someone special.<br />Something personal.</>}</h2>
           <dl><div><dt>Occasion</dt><dd>{form.occasion || "Your reason to celebrate"}</dd></div><div><dt>Feeling</dt><dd>{form.mood}</dd></div><div><dt>Sound</dt><dd>{form.style}</dd></div></dl>
           <div className="create-next-note"><strong>What happens next?</strong><p>We turn your memories into a lyric draft. Read it, edit it, and decide when you’re ready to make the song.</p></div>
-          <p className="create-illustration-note">Illustrative AI image, not a customer photo.</p></div>
+          </div>
         </aside>
         </div>
       </section>

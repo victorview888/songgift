@@ -113,7 +113,6 @@ export default async function Home() {
             </Link>
           ))}
         </div>
-        <p className="imagery-note">Illustrative AI scenes, inspired by the moments a song can celebrate.</p>
         <p className="occasion-season-links">Planning a holiday gift? {holidayOccasions.map((holiday, index) => <span key={holiday.slug}>{index > 0 && " · "}<Link href={`/occasions/${holiday.slug}`}>{holiday.name} songs</Link></span>)}</p>
       </section>
 

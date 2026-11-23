@@ -73,7 +73,6 @@
 .create-companion dd { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
 .create-next-note { padding-top: 18px; border-top: 1px solid #ded2c4; font-size: 13px; }
 .create-next-note p { margin: 8px 0 0; color: #716357; line-height: 1.8; }
-.create-illustration-note { margin: 18px 0 0; color: #7a6a5d; font-size: 10px; line-height: 1.6; }
 @media (max-width: 1199px) and (min-width: 1001px) {
   .create-page .create-recipient-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .create-recipient-grid > label:last-child { grid-column: 1 / -1; }
