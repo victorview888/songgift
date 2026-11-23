@@ -1,0 +1,46 @@
+.home-faq { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 72px; align-items: start; }
+.home-faq-intro { position: sticky; top: 28px; }
+.home-faq .home-faq-intro h2 { margin: 0; }
+.home-faq-description { margin: 22px 0; color: var(--muted); font-size: 15px; line-height: 1.8; }
+.home-faq-topics { display: grid; gap: 8px; margin-bottom: 22px; }
+.home-faq-topics a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 11px 14px; border: 1px solid #e2d9ce; border-radius: 12px; background: #f6f1e9; font-size: 13px; font-weight: 600; line-height: 1.5; }
+.home-faq-topics a:hover { background: #eee6db; }
+.home-faq-topics a > span { flex: 0 0 22px; display: grid; place-items: center; height: 22px; border-radius: 50%; color: #8a553b; background: #e9ddce; font-size: 11px; }
+.home-faq-intro > .text-link { display: inline-flex; gap: 10px; font-size: 13px; }
+.home-faq-groups { display: grid; gap: 22px; min-width: 0; }
+.home-faq-group { padding: 24px 28px 6px; border: 1px solid #e4dbd0; border-radius: 20px; background: #fffdf9; scroll-margin-top: 24px; }
+.home-faq-group-heading { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
+.home-faq-group-heading > span { color: var(--orange-dark); font-size: 11px; }
+.home-faq-group h3 { margin: 0; font-size: 18px; letter-spacing: -.025em; font-weight: 600; }
+.song-faq-list details { padding: 10px 0; scroll-margin-top: 24px; }
+.song-faq-list details:last-child { border-bottom: 0; }
+.song-faq-list summary { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 44px; font-size: 15px; line-height: 1.65; font-weight: 600; letter-spacing: -.015em; }
+.song-faq-list summary::after { float: none; flex: 0 0 18px; text-align: center; line-height: 1; }
+.song-faq-list .song-faq-answer p { max-width: none; margin-top: 14px; font-size: 14px; line-height: 1.85; }
+.song-faq-links { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 12px; }
+.song-faq-links a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: #a3482a; font-size: 12px; line-height: 1.6; text-decoration: underline; text-underline-offset: 4px; }
+.song-faq-links a > span { text-decoration: none; }
+.home-faq-support { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 24px 28px; border-radius: 18px; background: #f1e9dd; }
+.home-faq-support h3 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
+.home-faq-support p { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.home-faq-support .primary-button { flex-shrink: 0; font-size: 13px; }
+.help-section .song-faq-list { margin-top: 18px; }
+.help-section .song-faq-list summary { font-size: 16px; }
+@media (max-width: 1000px) {
+  .home-faq { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .home-faq-intro { position: static; }
+  .home-faq .home-faq-intro h2 br { display: none; }
+  .home-faq-description { max-width: 580px; margin-top: 16px; }
+  .home-faq-topics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .home-faq-group { padding: 20px 18px 2px; border-radius: 16px; }
+  .home-faq-group-heading { align-items: baseline; gap: 10px; }
+  .home-faq-group h3 { font-size: 17px; }
+  .home-faq-topics { gap: 8px; }
+  .home-faq-topics a { padding: 10px 12px; gap: 6px; font-size: 12px; }
+  .song-faq-list summary { font-size: 14px; gap: 12px; }
+  .song-faq-list .song-faq-answer p { font-size: 14px; }
+  .home-faq-support { align-items: stretch; flex-direction: column; padding: 22px; }
+  .help-section .song-faq-list summary { font-size: 15px; }
+}
