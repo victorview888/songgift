@@ -2,7 +2,7 @@
 .gifting-image { display: block; width: 100%; height: 100%; object-fit: cover; }
 .gift-hero { position: relative; isolation: isolate; display: flex; align-items: center; min-height: 650px; padding: 80px max(32px, calc((100vw - 1240px) / 2)); overflow: hidden; color: white; background: #33271f; }
 .gift-hero > .gifting-image { position: absolute; inset: 0; z-index: -2; object-position: 74% 0% !important; }
-.gift-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, #191511e6 0%, #191511b3 43%, #1915111f 78%); }
+.gift-hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: rgba(0, 0, 0, .48); }
 .gift-hero-copy { width: min(650px, 57%); }
 .gift-hero .eyebrow { color: #ffd9bd; font-size: 12px; line-height: 1.6; }
 .gift-hero h1 { margin: 0; font-size: clamp(44px, 5.1vw, 74px); line-height: 1.06; font-weight: 750; letter-spacing: -.045em; white-space: pre-line; }
@@ -50,7 +50,6 @@
 }
 @media(max-width: 600px) {
   .gift-hero { display: block; min-height: 710px; padding: 240px 20px 36px; }
-  .gift-hero::before { background: linear-gradient(0deg, #171310f5 0%, #171310cc 48%, #1713100d 100%); }
   .gift-hero > .gifting-image { height: 390px; object-position: 100% 0% !important; mask-image: linear-gradient(#000 0%, #000 55%, transparent 100%); }
   .gift-hero-copy { width: 100%; }
   .gift-hero h1 { max-width: 440px; font-size: clamp(36px, 10.1vw, 48px); }

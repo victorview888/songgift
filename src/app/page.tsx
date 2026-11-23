@@ -11,6 +11,8 @@ import { publicSongPriceUsd } from "@/lib/pricing";
 import { Brand } from "@/components/brand";
 import { GiftingImage } from "@/components/gifting-image";
 import { sceneForOccasion } from "@/lib/gifting-imagery";
+import { songFaqGroups } from "@/lib/song-faqs";
+import { SongFaqList } from "@/components/song-faq-list";
 
 export const dynamic = "force-dynamic";
 import { AccountNav } from "@/components/account-nav";
@@ -38,16 +40,10 @@ const occasions = [
   ["In memory", "Keep a meaningful story close with a song full of heart.", "/occasions/memorial"],
 ];
 
-const faqs = [
-  ["What do I need to create a song?", "Just a few personal details and a story. The small moments often make the most meaningful lyrics."],
-  ["Can I review the lyrics first?", "Yes. You can read and refine the lyrics before moving on to the finished song."],
-  ["What occasions work best?", "Birthdays, weddings, anniversaries, family celebrations, pet tributes, and remembrance are all good starting points."],
-  ["Can I choose the mood?", "Yes. Choose from warm, joyful, romantic, nostalgic or uplifting directions, and describe the feeling you want in your story."],
-];
-
 export default async function Home() {
   const samples = await publicSongSamples();
   const hasPreview = audioPreviewEnabled();
+  const faqGroups = songFaqGroups({ price: publicSongPriceUsd(), hasPreview }).map(group => ({ ...group, items: group.items.filter(item => item.home !== false) }));
   return (
     <main>
       <JsonLd data={websiteStructuredData()} />
@@ -132,12 +128,19 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="section faq-section" id="faq">
-        <p className="section-kicker">Good to know</p><h2>Questions, answered.</h2>
-        <div className="faq-list">
-          {faqs.map(([question, answer]) => (
-            <details key={question}><summary>{question}</summary><p>{answer}</p></details>
-          ))}
+      <section className="section faq-section home-faq" id="faq" aria-labelledby="faq-heading">
+        <div className="home-faq-intro">
+          <p className="section-kicker">Good to know</p><h2 id="faq-heading">Questions,<br /> answered.</h2>
+          <p className="home-faq-description">From your first memory to their first listen. Here are the details that help you create with confidence.</p>
+          <nav className="home-faq-topics" aria-label="FAQ topics">{faqGroups.map(group => <a key={group.id} href={`#faq-${group.id}`}>{group.title}<span aria-hidden="true">{group.items.length}</span></a>)}</nav>
+          <Link className="text-link" href="/help">Visit the full help centre <ArrowIcon /></Link>
+        </div>
+        <div className="home-faq-groups">
+          {faqGroups.map((group, index) => <section className="home-faq-group" id={`faq-${group.id}`} aria-labelledby={`faq-heading-${group.id}`} key={group.id}>
+            <div className="home-faq-group-heading"><span aria-hidden="true">0{index + 1}</span><h3 id={`faq-heading-${group.id}`}>{group.title}</h3></div>
+            <SongFaqList items={group.items} idPrefix="home-faq" />
+          </section>)}
+          <div className="home-faq-support"><div><h3>Need a hand with your song?</h3><p>Bring your order reference so we can check the right recording.</p></div><Link className="primary-button" href="/contact">Contact support <ArrowIcon /></Link></div>
         </div>
       </section>
 
