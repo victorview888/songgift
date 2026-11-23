@@ -1,6 +1,6 @@
 {
   "createdOn": "2026-11-18",
-  "updatedOn": "2026-11-20",
+  "updatedOn": "2026-11-23",
   "provenance": "Original OpenAI-generated illustrative scenes; not customer photographs",
   "images": [
     {
@@ -250,6 +250,37 @@
           "width": 1440,
           "height": 810,
           "bytes": 79866
+        }
+      ]
+    },
+    {
+      "scene": "home-hero-bright",
+      "source": "design/gifting/home-hero-bright.png",
+      "sourceSha256": "4822b45c89e84a98a4ee7a2ba0c52d6c09ac01fd547951e5450747680d90a8d5",
+      "variants": [
+        {
+          "path": "/images/gifting/home-hero-bright-480.webp",
+          "width": 480,
+          "height": 270,
+          "bytes": 20302
+        },
+        {
+          "path": "/images/gifting/home-hero-bright-960.webp",
+          "width": 960,
+          "height": 540,
+          "bytes": 66962
+        },
+        {
+          "path": "/images/gifting/home-hero-bright-1440.webp",
+          "width": 1440,
+          "height": 810,
+          "bytes": 126142
+        },
+        {
+          "path": "/images/gifting/home-hero-bright-1672.webp",
+          "width": 1672,
+          "height": 941,
+          "bytes": 156552
         }
       ]
     }
