@@ -13,6 +13,11 @@
 .gift-hero-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 48px; padding: 10px 22px; border: 1px solid #ffffffcc; border-radius: 999px; color: white; font-size: 14px; font-weight: 700; background: #ffffff05; box-shadow: 0 5px 16px #22110926; text-shadow: 0 1px 3px #22110966; }
 .gift-hero-secondary:hover { background: #ffffff1a; }
 .gift-hero-note { max-width: 540px; margin: 22px 0 0; color: #fff4e9; font-size: 12px; line-height: 1.8; text-shadow: 0 1px 3px #221109b3; }
+.home-season-entry { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px 24px; width: min(1240px, calc(100% - 40px)); margin: 24px auto 0; padding: 18px 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--cream); }
+.home-season-entry p { margin: 0; font-size: 16px; }
+.home-season-entry > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 24px; }
+.home-season-entry a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--orange-dark); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+.home-season-entry a svg { width: 16px; }
 .gift-centered-heading { display: block; text-align: center; }
 .gift-centered-heading h2, .gift-centered-heading > p { margin-left: auto; margin-right: auto; }
 .gift-centered-heading > p { max-width: 620px; margin-top: 18px; }

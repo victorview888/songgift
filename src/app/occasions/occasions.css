@@ -1,4 +1,12 @@
 .occasion-breadcrumb { flex-wrap: wrap; }
+.occasion-hero p.occasion-offer { margin: 18px 0 0; color: var(--ink); font-size: 14px; font-weight: 600; line-height: 1.6; }
+.occasion-hero p.occasion-preview-note { margin: 8px 0 0; font-size: 12px; line-height: 1.6; }
+.occasion-shell .sample-section-single { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 16px 48px; padding: 48px 0 64px; border-top: 1px solid var(--line); }
+.occasion-shell .sample-section-single > .section-kicker, .occasion-shell .sample-section-single > h2 { margin: 0; text-align: left; }
+.occasion-shell .sample-section-single > h2 { grid-column: 1; }
+.occasion-shell .sample-section-single .sample-intro { grid-column: 1; margin: 0; text-align: left; }
+.occasion-shell .sample-section-single .sample-grid { grid-column: 2; grid-row: 1 / span 4; grid-template-columns: minmax(0, 1fr); }
+.occasion-shell .sample-section-single .sample-create-link { grid-column: 1; margin-top: 0; }
 .occasion-action-links { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 16px 0 0; }
 .occasion-action-links a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--orange-dark); font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
 .occasion-gifting { padding: 64px 0; border-top: 1px solid var(--line); }
@@ -17,6 +25,8 @@
 .occasion-hub-card h2 a:hover { text-decoration: underline; text-underline-offset: 5px; }
 .occasion-hub-card p { margin-bottom: 0; color: var(--muted); font-size: 15px; line-height: 1.7; }
 @media (max-width: 800px) {
+  .occasion-shell .sample-section-single { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .occasion-shell .sample-section-single .sample-grid { grid-column: 1; grid-row: auto; }
   .occasion-hub-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
   .occasion-hub-heading { padding-top: 40px; }
 }
