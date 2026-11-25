@@ -21,7 +21,7 @@ import { JsonLd } from "@/components/json-ld";
 
 export const metadata = publicPageMetadata(
   "Personalized Song Gifts from Your Story | songforalways",
-  "Create a personalized AI song gift for birthdays, weddings or anniversaries. Preview and edit lyrics for free, then pay once for your song and audio download.",
+  "Turn your memories into a personalized song gift. Edit the lyrics for free, hear original song samples, and pay once for your full recording and download.",
   "/",
 );
 
@@ -43,8 +43,9 @@ const occasions = [
 export default async function Home() {
   const samples = await publicSongSamples();
   const hasPreview = audioPreviewEnabled();
+  const price = publicSongPriceUsd();
   const christmas = featuredHolidays().find(holiday => holiday.slug === "christmas");
-  const faqGroups = songFaqGroups({ price: publicSongPriceUsd(), hasPreview }).map(group => ({ ...group, items: group.items.filter(item => item.home !== false) }));
+  const faqGroups = songFaqGroups({ price, hasPreview }).map(group => ({ ...group, items: group.items.filter(item => item.home !== false) }));
   return (
     <main>
       <JsonLd data={websiteStructuredData()} />
@@ -65,13 +66,13 @@ export default async function Home() {
           <p className="eyebrow"><span className="eyebrow-dot" />Personalized song gifts, made from your memories</p>
           <h1>Your story.<br />Their favorite song.</h1>
           <p className="gift-hero-description">
-            Create a personal AI song for someone you love, made from your names and memories. {hasPreview ? "Read your lyrics, try one free audio preview, then unlock the full song." : "Read your lyrics for free, then bring them to life."}
+            Turn your memories into a personalized song. {hasPreview ? `Edit the lyrics for free, hear up to 60 seconds of your song when a preview is available, then unlock that same full recording for US$${price}.` : `Edit the lyrics for free, then create and download the full song for US$${price}.`}
           </p>
           <div className="gift-hero-actions">
             <Link className="primary-button" href="/create">Create their song <ArrowIcon /></Link>
             <a className="gift-hero-secondary" href={samples.length ? "#samples" : "#how-it-works"}>{samples.length ? "Hear a sample" : "See how it works"} <span aria-hidden="true">↓</span></a>
           </div>
-          <p className="gift-hero-note"><span aria-hidden="true">✦</span> {hasPreview ? "One free 60-second preview per verified account" : "Free lyric preview"} · US${publicSongPriceUsd()} per song · USD / PayPal</p>
+          {hasPreview && <p className="gift-hero-note">One free audio preview per verified account. Availability limits apply.</p>}
         </div>
       </section>
 

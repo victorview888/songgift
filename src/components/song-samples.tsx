@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { GiftingImage } from "./gifting-image";
 import { sceneForOccasion } from "@/lib/gifting-imagery";
@@ -12,6 +12,7 @@ type SongSamplesProps = {
   heading?: string;
   introduction?: string;
   createHref?: string;
+  example?: ReactNode;
 };
 
 export function SongSamples({
@@ -19,6 +20,7 @@ export function SongSamples({
   heading = "Hear how a story can feel.",
   introduction = "Listen to public examples, then bring your own memories. Your account shows any available free audio preview. Pay once for the complete song and download.",
   createHref = "/create",
+  example,
 }: SongSamplesProps) {
   const [failed, setFailed] = useState<string[]>([]);
   const players = useRef<(HTMLAudioElement | null)[]>([]);
@@ -31,10 +33,11 @@ export function SongSamples({
   }
 
   return (
-    <section className={"section sample-section" + (samples.length === 1 ? " sample-section-single" : "")} id="samples" aria-label="Song samples">
+    <section className={"section sample-section" + (samples.length === 1 ? " sample-section-single" : "") + (example ? " sample-section-with-example" : "")} id="samples" aria-label="Song samples">
       <p className="section-kicker">A little inspiration</p>
       <h2>{heading}</h2>
       <p className="sample-intro">{introduction}</p>
+      {example}
       <div className="sample-grid">
         {samples.map((sample, index) => (
           <article className="sample-card" key={sample.url}>

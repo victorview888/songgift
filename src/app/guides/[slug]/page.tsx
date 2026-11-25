@@ -90,6 +90,9 @@ export default async function GuidePage({
             {s.paragraphs.map((p) => (
               <p key={p}>{p}</p>
             ))}
+            {s.examples && <ul>{s.examples.map(example => (
+              <li key={example.href}><Link className="text-link" href={example.href}>{example.label}</Link></li>
+            ))}</ul>}
           </section>
         ))}
         {g.example && <section className="guide-example" id="editing-example" aria-labelledby="editing-example-heading">

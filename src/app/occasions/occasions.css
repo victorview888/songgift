@@ -6,7 +6,13 @@
 .occasion-shell .sample-section-single > h2 { grid-column: 1; }
 .occasion-shell .sample-section-single .sample-intro { grid-column: 1; margin: 0; text-align: left; }
 .occasion-shell .sample-section-single .sample-grid { grid-column: 2; grid-row: 1 / span 4; grid-template-columns: minmax(0, 1fr); }
+.occasion-shell .sample-section-with-example .sample-grid { grid-row: 1 / span 5; }
+.occasion-shell .sample-section-single .occasion-example { grid-column: 1; }
 .occasion-shell .sample-section-single .sample-create-link { grid-column: 1; margin-top: 0; }
+.occasion-example { display: grid; gap: 16px; }
+.occasion-example > div { padding: 18px 20px; border-radius: 12px; background: var(--cream); }
+.occasion-example h3 { margin: 0 0 8px; font-size: 14px; }
+.occasion-example blockquote, .occasion-writing .occasion-example blockquote { margin: 0; padding: 0; color: var(--ink); background: none; font-family: inherit; font-size: 15px; line-height: 1.6; white-space: pre-line; }
 .occasion-action-links { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 16px 0 0; }
 .occasion-action-links a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--orange-dark); font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
 .occasion-gifting { padding: 64px 0; border-top: 1px solid var(--line); }

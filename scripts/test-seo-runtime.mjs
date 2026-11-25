@@ -168,8 +168,9 @@ try {
     assert.ok(pages.get('/').links.includes(path), path + ': direct homepage editorial link');
     const doc = pages.get(path), article = doc.scripts.flatMap(script => nodes(JSON.parse(script))).find(node => node['@type'] === 'Article');
     assert.equal(article.datePublished, '2026-11-13');
-    assert.equal(article.dateModified, '2026-11-16');
-    assert.ok(doc.times.some(time => time.date === article.dateModified && time.text === '16 November 2026'));
+    const day = path.endsWith('/give-a-personal-song-gift') ? 25 : 16;
+    assert.equal(article.dateModified, `2026-11-${day}`);
+    assert.ok(doc.times.some(time => time.date === article.dateModified && time.text === `${day} November 2026`));
   }
   assert.ok(pages.get('/guides/review-lyrics-before-music').text.includes('Fictional editing example'));
   passed('Updated guides have visible accurate dates, matching Article data, original examples and direct homepage links');
@@ -184,14 +185,21 @@ try {
     const xml = new DOMParser().parseFromString(source, 'application/xml');
     return Object.fromEntries([...xml.querySelectorAll('url')].map(node => [new URL(node.querySelector('loc').textContent).pathname, node.querySelector('lastmod')?.textContent || null]));
   }, await (await get('/sitemap.xml')).text());
-  for (const path of ['/pricing', '/policies/terms', '/guides/review-lyrics-before-music', '/guides/give-a-personal-song-gift'])
+  for (const path of ['/pricing', '/policies/terms', '/guides/review-lyrics-before-music'])
     assert.equal(updatedMap[path], '2026-11-16', path + ': fixed content update date');
-  assert.equal(updatedMap['/help'], '2026-11-23', '/help: fixed date for the FAQ expansion');
   assert.equal(updatedMap['/policies/privacy'], '2026-11-25', '/policies/privacy: date of the occasion analytics disclosure');
   for (const path of ['/create', '/occasions'])
     assert.equal(updatedMap[path], '2026-11-23', path + ': fixed date for the image-credit cleanup');
-  for (const path of ['/', ...publicPaths.filter(path => path.startsWith('/occasions/'))])
-    assert.equal(updatedMap[path], '2026-11-24', path + ': fixed date for the search landing improvements');
+  const editedOccasions = ['birthday', 'christmas', 'anniversary', 'memorial', 'new-year'].map(slug => '/occasions/' + slug);
+  for (const path of ['/', '/help', '/guides/give-a-personal-song-gift', ...editedOccasions])
+    assert.equal(updatedMap[path], '2026-11-25', path + ': fixed date for the new story examples and links');
+  for (const path of publicPaths.filter(path => path.startsWith('/occasions/') && !editedOccasions.includes(path)))
+    assert.equal(updatedMap[path], '2026-11-24', path + ': unchanged editorial date');
+  for (const path of ['/occasions/christmas', '/occasions/birthday', '/occasions/new-year'])
+    assert.ok(pages.get('/guides/give-a-personal-song-gift').links.includes(path), path + ': linked from the giving guide');
+  assert.ok(pages.get('/occasions/memorial').text.includes('You carried one more scarf'));
+  assert.ok(pages.get('/occasions/memorial').titles[0].includes('for a Loved One'));
+  passed('Giving guide links to relevant occasions and the memorial lyric example is present in HTML');
   passed('Sitemap reports stable dates for actual public content edits');
   console.log(`SEO runtime: ${checks} checks passed against ${base.origin}; public price US$${expectedPrice}.`);
   await context.close();

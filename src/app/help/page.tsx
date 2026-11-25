@@ -50,6 +50,7 @@ export default function HelpPage() {
     <div className="draft-actions"><Link className="text-link" href="/my-songs">My Songs</Link><Link className="text-link" href="/account/payments">Payment history</Link><Link className="text-link" href="/contact">Contact support</Link></div>
     <nav className="help-topics" aria-label="Help topics">{sections.map(section => <a className="text-link" key={section.id} href={"#" + section.id}>{section.title}</a>)}</nav>
     {sections.map(section => <section className="customer-card help-section" id={section.id} aria-labelledby={`help-heading-${section.id}`} key={section.id}><h2 id={`help-heading-${section.id}`}>{section.title}</h2><SongFaqList items={section.items} idPrefix="help-faq" /></section>)}
+    <p className="customer-intro">Need a starting point for your song? Read a <Link className="text-link" href="/occasions/birthday">birthday story example</Link>, hear a <Link className="text-link" href="/occasions/christmas">Christmas song for a family tradition</Link>, or find <Link className="text-link" href="/occasions/memorial">words for a memorial song</Link>.</p>
     <p className="customer-intro">Step-by-step help: <Link className="text-link" href="/guides/review-lyrics-before-music">Review your lyrics</Link> · <Link className="text-link" href="/guides/give-a-personal-song-gift">Give a song privately</Link>. More details: <Link className="text-link" href="/policies/refunds">Payment & refund help</Link> · <Link className="text-link" href="/policies/audio-storage">Keeping your audio</Link>.</p>
   </SupportShell>;
 }
