@@ -38,6 +38,21 @@ export default async function OccasionPage({ params }: Props) {
   const publicSamples = await publicSongSamples();
   const samples = publicSamples.filter(sample => sample.occasion.trim().toLowerCase() === occasion.name.toLowerCase());
   const hasPreview = audioPreviewEnabled();
+  const demoSlug = occasion.lyricExample?.demoSlug;
+  const pairedDemo = Boolean(demoSlug && samples.length === 1 &&
+    samples[0].demo === true && samples[0].url === `/api/samples/${demoSlug}/audio`);
+  const example = occasion.lyricExample && (
+    <div className="occasion-example">
+      <div>
+        <h3>Fictional story</h3>
+        <blockquote>{occasion.prompt}</blockquote>
+      </div>
+      <div>
+        <h3>{pairedDemo ? "Lyric excerpt from the demo" : "Illustrative lyrics"}</h3>
+        <blockquote>{occasion.lyricExample.lines.join("\n")}</blockquote>
+      </div>
+    </div>
+  );
 
   return (
     <main className="occasion-page">
@@ -60,7 +75,7 @@ export default async function OccasionPage({ params }: Props) {
             <h1>{occasion.heading}</h1>
             <p>{occasion.introduction}</p>
             <Link className="primary-button" href={createHref}>Create your {occasion.name} song <ArrowIcon /></Link>
-            <div className="occasion-action-links">{publicSamples.length > 0 && <a href={samples.length ? "#samples" : "/#samples"}>Hear a song sample</a>}<Link href="/pricing">See what is included</Link></div>
+            <div className="occasion-action-links">{publicSamples.length > 0 && <a href={samples.length ? "#samples" : "/#samples"}>{samples.length ? "Hear a song sample" : "Hear other song samples"}</a>}<Link href="/pricing">See what is included</Link></div>
             <p className="occasion-offer">Free lyric draft · US${publicSongPriceUsd()} per song · One-time payment</p>
             {hasPreview && <p className="occasion-preview-note">One free audio creation per verified account, with up to 60 seconds to listen. Availability limits apply.</p>}
           </div>
@@ -69,9 +84,10 @@ export default async function OccasionPage({ params }: Props) {
 
         {samples.length > 0 && <SongSamples
           samples={samples}
-          heading={`Hear a ${occasion.name} song gift.`}
-          introduction="Listen to a public example, then bring the memories you want in yours. Review and edit your own lyrics for free before starting the music."
+          heading={pairedDemo ? "From story to song" : `${occasion.name} song sample`}
+          introduction={pairedDemo ? "Read the fictional story and a few of the lines it inspired, then play the public demo." : "Listen to a public example, then write about a memory of your own."}
           createHref={createHref}
+          example={pairedDemo ? example : undefined}
         />}
 
         <section className="occasion-guide" aria-labelledby="occasion-guide-heading">
@@ -81,17 +97,27 @@ export default async function OccasionPage({ params }: Props) {
           </div>
         </section>
 
-        <section className="occasion-writing" aria-labelledby="occasion-example-heading">
+        {!pairedDemo && <section className="occasion-writing" aria-labelledby="occasion-example-heading">
           <div><p className="section-kicker">A place to start</p><h2 id="occasion-example-heading">Try telling the story like this.</h2><p>This is an example of what you could put in the story field. Use your own memories and words when you create your song.</p></div>
-          <blockquote>“{occasion.prompt}”</blockquote>
-        </section>
+          {example || <blockquote>“{occasion.prompt}”</blockquote>}
+        </section>}
 
         <section className="occasion-finish" aria-labelledby="occasion-finish-heading">
           <div><p className="section-kicker">Choose the feeling</p><h2 id="occasion-finish-heading">Make it personal, then review the words.</h2><p>{occasion.mood}</p><p>songforalways uses AI to turn your story into lyrics and music. Read and edit the lyrics for free first. When they feel right, use an available free audio preview or pay once for the complete song. Your finished audio is saved to your account for playback and download.</p></div>
           <div className="occasion-answer"><h3>{occasion.question}</h3><p>{occasion.answer}</p></div>
         </section>
 
-        <section className="occasion-gifting" aria-labelledby="occasion-gifting-heading"><p className="section-kicker">When the song is ready</p><h2 id="occasion-gifting-heading">{occasion.gifting.heading}</h2><p>{occasion.gifting.detail}</p><div className="occasion-action-links"><Link href="/policies/audio-storage">Keeping your audio</Link>{slug === "pet" && <Link href="/occasions/memorial">Read the memorial song guide</Link>}<Link href={createHref}>Start with free lyrics <ArrowIcon /></Link></div></section>
+        <section className="occasion-gifting" aria-labelledby="occasion-gifting-heading">
+          <p className="section-kicker">When the song is ready</p>
+          <h2 id="occasion-gifting-heading">{occasion.gifting.heading}</h2>
+          <p>{occasion.gifting.detail}</p>
+          <div className="occasion-action-links">
+            <Link href="/policies/audio-storage">Keeping your audio</Link>
+            {slug === "pet" && <Link href="/occasions/memorial">Read the memorial song guide</Link>}
+            {occasion.reading?.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}
+            <Link href={createHref}>Start with free lyrics <ArrowIcon /></Link>
+          </div>
+        </section>
 
         {slug === "wedding" && <section className="occasion-guide" aria-labelledby="wedding-plan-heading">
           <div className="occasion-section-heading"><p className="section-kicker">Plan the listening moment</p><h2 id="wedding-plan-heading">A wedding song needs a rehearsal, too.</h2><p>Decide where the song belongs in the day, then check the complete recording before you build a moment around it.</p></div>

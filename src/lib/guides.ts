@@ -7,7 +7,7 @@ export type Guide = {
   publishedOn: string;
   updatedOn?: string;
   example?: { heading: string; brief: string; before: string; after: string; explanation: string };
-  sections: { title: string; paragraphs: string[] }[];
+  sections: { title: string; paragraphs: string[]; examples?: { href: string; label: string }[] }[];
   faq: { q: string; a: string }[];
   occasion: string;
 };
@@ -157,7 +157,7 @@ export const guides: Guide[] = [
     category: "Giving your song",
     minutes: 5,
     publishedOn: "2026-11-13",
-    updatedOn: "2026-11-16",
+    updatedOn: "2026-11-25",
     occasion: "wedding",
     sections: [
       {
@@ -165,6 +165,11 @@ export const guides: Guide[] = [
         paragraphs: [
           "Think about where and how the recipient will hear the song. A quiet room, a walk with headphones or a small gathering can each feel right for a different relationship. Ask whether the person enjoys public surprises before playing a personal song in front of other people.",
           "For a wedding or another scheduled event, test the playback setup beforehand and keep a local copy. An internet connection or a venue’s sound system can fail. Do not rely on a link alone for a moment that cannot easily be repeated.",
+        ],
+        examples: [
+          { href: "/occasions/christmas", label: "Make a Christmas song around a family tradition" },
+          { href: "/occasions/birthday", label: "Plan a birthday song for a friend" },
+          { href: "/occasions/new-year", label: "Choose a New Year memory to share" },
         ],
       },
       {
