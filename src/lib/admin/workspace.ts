@@ -1,6 +1,8 @@
 import "server-only";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { HttpError } from "@/lib/http-error";
+import { notificationConfig } from "@/lib/email";
+import { usageEventLabels, usageOccasionLabels, type UsageEvent, type UsageOccasion } from "@/lib/growth/usage";
 export type WorkspaceKind = "users" | "system" | "audit" | "analytics";
 export const uuid = (v: string) =>
   /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(
@@ -148,9 +150,24 @@ export async function workspaceData(
         ...data.steps.map((r: WorkspaceRow) => ({
           type: "浏览器事件",
           name: r.event,
+          label: usageEventLabels[String(r.event) as UsageEvent] || String(r.event),
           events: r.events,
           browsers: r.browsers,
         })),
+        ...(data.occasionSteps || []).map((r: WorkspaceRow) => ({
+          type: "场景步骤",
+          name: `${r.occasion || "unspecified"}:${r.event}`,
+          label: `${usageOccasionLabels[String(r.occasion) as UsageOccasion] || "未指定场景"} / ${usageEventLabels[String(r.event) as UsageEvent] || r.event}`,
+          events: r.events,
+          browsers: r.browsers,
+        })),
+        ...(data.previewCohort ? [
+          { type: "个人预览当前状态", name: "期间创建的个人预览", events: data.previewCohort.created, browsers: null },
+          { type: "个人预览当前状态", name: "其中已就绪", events: data.previewCohort.ready, browsers: null },
+          { type: "个人预览当前状态", name: "其中待处理或处理中", events: data.previewCohort.processing, browsers: null },
+          { type: "个人预览当前状态", name: "其中已确认失败", events: data.previewCohort.failed, browsers: null },
+          { type: "个人预览当前状态", name: "其中需要核查", events: data.previewCohort.needsReview, browsers: null },
+        ] : []),
         ...data.sources.map((r: WorkspaceRow) => ({
           type: "首次来源",
           name: r.source,
@@ -196,6 +213,7 @@ export async function workspaceData(
       ] as WorkspaceRow[],
       total: 0,
       page: 1,
+      analyticsVersion: Number(data.reportVersion || 1),
       window: {
         from: new Date(start).toISOString(),
         to: new Date(end).toISOString(),
@@ -214,6 +232,7 @@ export async function workspaceData(
       )
       .eq("id", true)
       .maybeSingle(),
+    db.rpc("songgift_notification_summary"),
   ]);
   const state = (i: number) =>
     probe[i].status === "fulfilled" && !probe[i].value.error
@@ -223,6 +242,7 @@ export async function workspaceData(
     probe[2].status === "fulfilled" && !probe[2].value.error
       ? probe[2].value.data
       : null;
+  const notifications = probe[3].status === "fulfilled" && !probe[3].value.error ? probe[3].value.data : null;
   const lyrics = (process.env.LYRICS_PROVIDER || "deepseek").toLowerCase(),
     music = (process.env.MUSIC_PROVIDER || "musicapi").toLowerCase();
   const configured = (key: string) =>
@@ -281,10 +301,10 @@ export async function workspaceData(
       {
         item: "歌曲通知（网站配置）",
         state:
-          process.env.RESEND_API_KEY && process.env.SONGGIFT_FROM_EMAIL
+          notificationConfig()
             ? "已配置（未验证投递）"
             : "未配置",
-        detail: "独立维护 Worker 的密钥需另行核对",
+        detail: "网站进程的有效配置；独立维护 Worker 的密钥需另行核对",
       },
       {
         item: "登录邮件",
@@ -293,8 +313,18 @@ export async function workspaceData(
       },
       {
         item: "维护最近结果",
-        state: state(2),
+        state: state(2) === "连接成功" ? maintenance?.last_result || "尚无完成结果" : "查询失败",
         detail: maintenance?.last_result || "尚无完成结果",
+      },
+      {
+        item: "维护记录时效",
+        state: state(2) !== "连接成功" ? "查询失败" : maintenance?.last_finished_at && Date.now() - Date.parse(maintenance.last_finished_at) >= 0 && Date.now() - Date.parse(maintenance.last_finished_at) <= 15 * 60_000 ? "近 15 分钟内有完成记录" : "尚无近期完成记录",
+        detail: "仅依据数据库记录，不代表独立 Worker 的启用设置",
+      },
+      {
+        item: "通知发件箱",
+        state: notifications ? `${notifications.pending} 条待处理 / ${notifications.sending} 条发送中` : "查询失败",
+        detail: notifications ? `服务商已接受 ${notifications.sent} 条；失败 ${notifications.failed} 条；待核查 ${notifications.needsReview} 条；重试中 ${notifications.retrying} 条；跳过 ${notifications.skipped} 条` : "通知统计不可用，请检查迁移或稍后重试",
       },
       {
         item: "维护最近开始",

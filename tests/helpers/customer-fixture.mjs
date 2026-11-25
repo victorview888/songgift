@@ -12,14 +12,14 @@ export const otherId='b3f10454-1234-4234-8234-012345678902';
 export function wav() {
   const b=Buffer.alloc(204);b.write('RIFF');b.writeUInt32LE(196,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(8000,24);b.writeUInt32LE(16000,28);b.writeUInt16LE(2,32);b.writeUInt16LE(16,34);b.write('data',36);b.writeUInt32LE(160,40);return b;
 }
-export async function fixture({legacyContent=false,oidcJwks}={}) {
+export async function fixture({legacyContent=false,beforeOccasionFunnel=false,oidcJwks}={}) {
  const db=new PGlite();
  await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create role supabase_auth_admin;create schema auth;create schema storage;
  create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,created_at timestamptz not null default now(),last_sign_in_at timestamptz);
  create function auth.uid() returns uuid language sql as $$select null::uuid$$;
  create table storage.buckets(id text primary key,name text,public boolean);`);
  const schema=readFileSync('supabase/schema.sql','utf8').replace('create extension if not exists pgcrypto;','');
- await db.exec(legacyContent?schema.split('-- Additive, service-only report intake')[0]:schema);
+ await db.exec(legacyContent?schema.split('-- Additive, service-only report intake')[0]:beforeOccasionFunnel?schema.split('-- Coarse, opt-in occasion and playback events;')[0]:schema);
  await db.query('insert into auth.users(id,email,email_confirmed_at) values ($1,\'owner@isolated.example\',now()),($2,\'other@isolated.example\',now())',[userId,otherId]);
  await db.exec('grant select,insert,update on public.song_orders,public.song_assets to service_role;set role service_role;');
  const env={SUPABASE_SERVICE_ROLE_KEY:'isolated-service-role',DEEPSEEK_API_KEY:'isolated-safety-key',SONG_PRICE_USD:'9.99',PAYPAL_CURRENCY:'USD',PAYPAL_ENVIRONMENT:'sandbox',PAYPAL_CLIENT_ID:'test-id',PAYPAL_CLIENT_SECRET:'test-secret',PAYPAL_LIVE_CLIENT_ID:'live-test-id',PAYPAL_LIVE_CLIENT_SECRET:'live-test-secret',MUSIC_PROVIDER:'fal',SUPABASE_STORAGE_BUCKET:'songs'};

@@ -156,3 +156,29 @@ test("expiry and malformed browser storage do not leak identifiers or break core
     await b.trackUsage("page_view");
   }
 });
+
+test("playback and first-edit analytics use only allowlisted occasion categories", async () => {
+  const b = browser();
+  b.location.href = "https://www.songforalways.com/create?occasion=christmas-eve&story=private";
+  b.location.pathname = "/create";
+  await b.trackUsage("story_started");
+  assert.equal(b.sent.length, 0);
+  b.setUsageChoice(true, []);
+  await b.trackUsage("story_started");
+  assert.equal(JSON.parse(b.sent.at(-1).body).occasion, "christmas-eve");
+  await b.trackUsage("story_started", undefined, "In memory");
+  assert.equal(JSON.parse(b.sent.at(-1).body).occasion, "memorial");
+  b.location.href = "https://www.songforalways.com/create?occasion=private%40example.com";
+  await b.trackUsage("story_started");
+  assert.equal(JSON.parse(b.sent.at(-1).body).occasion, null);
+  b.location.pathname = "/occasions/christmas";
+  b.location.href = "https://www.songforalways.com/occasions/christmas";
+  await b.trackUsage("sample_played", undefined, "Birthday");
+  assert.equal(JSON.parse(b.sent.at(-1).body).occasion, "birthday");
+  b.location.pathname = "/lyrics/private-id";
+  b.location.href = "https://www.songforalways.com/lyrics/private-id";
+  await b.trackUsage("preview_played", "isolated-order");
+  assert.equal(b.sent.at(-1).url, "/api/analytics/order");
+  assert.equal(JSON.parse(b.sent.at(-1).body).occasion, null);
+  assert.doesNotMatch(b.sent.map(r => r.body).join(""), /private|story=|example\.com/);
+});

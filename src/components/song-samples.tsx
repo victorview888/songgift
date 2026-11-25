@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { GiftingImage } from "./gifting-image";
 import { sceneForOccasion } from "@/lib/gifting-imagery";
+import { trackUsage } from "@/lib/growth/usage-client";
 
 export type SongSample = { title: string; occasion: string; style: string; url: string; demo?: boolean };
 
@@ -21,6 +22,13 @@ export function SongSamples({
 }: SongSamplesProps) {
   const [failed, setFailed] = useState<string[]>([]);
   const players = useRef<(HTMLAudioElement | null)[]>([]);
+  const played = useRef(new Set<string>());
+  function handlePlaying(sample: SongSample) {
+    if (!played.current.has(sample.url)) {
+      played.current.add(sample.url);
+      void trackUsage("sample_played", undefined, sample.occasion);
+    }
+  }
 
   return (
     <section className={"section sample-section" + (samples.length === 1 ? " sample-section-single" : "")} id="samples" aria-label="Song samples">
@@ -44,6 +52,7 @@ export function SongSamples({
               src={sample.url}
               aria-label={`Sample: ${sample.title}`}
               onPlay={() => players.current.forEach((player, i) => { if (i !== index) player?.pause(); })}
+              onPlaying={() => handlePlaying(sample)}
               onError={() => setFailed(current => current.includes(sample.url) ? current : [...current, sample.url])}
             />
             {failed.includes(sample.url) && (

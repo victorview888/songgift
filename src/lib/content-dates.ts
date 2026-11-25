@@ -12,7 +12,7 @@ const modified = new Map<string, string>([
   ["/occasions", "2026-11-23"],
   ...occasionSlugs.map(slug => [`/occasions/${slug}`, "2026-11-24"] as [string, string]),
   ["/policies/terms", "2026-11-16"],
-  ["/policies/privacy", "2026-11-16"],
+  ["/policies/privacy", "2026-11-25"],
   ...guides.map(guide => [`/guides/${guide.slug}`, guide.updatedOn || guide.publishedOn] as [string, string]),
 ]);
 

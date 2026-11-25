@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { trackUsage } from "@/lib/growth/usage-client";
 
 type Summary = { enabled: boolean; canCreate: boolean; used: boolean; state: string | null; lyricsLocked: boolean; audioUrl: string | null; seconds: number | null; paid: boolean };
 type Props = { orderId: string; paid: boolean; onPrepare: () => Promise<void>; onState: (locked: boolean, ready: boolean, state: string | null) => void; onBusy: (busy: boolean) => void };
@@ -7,6 +8,12 @@ export function SongPreview({ orderId, paid, onPrepare, onState, onBusy }: Props
   const [data, setData] = useState<Summary | null>(null), [error, setError] = useState(""), [busy, setBusy] = useState(false);
   const [audioError, setAudioError] = useState(false);
   const audio = useRef<HTMLAudioElement | null>(null);
+  const played = useRef(false);
+  function handlePlaying() {
+    if (played.current) return;
+    played.current = true;
+    void trackUsage("preview_played", orderId);
+  }
   const alive = useRef(true), inFlight = useRef(false), polls = useRef(0);
   const read = useCallback(async () => {
     if (inFlight.current) return;
@@ -48,7 +55,7 @@ export function SongPreview({ orderId, paid, onPrepare, onState, onBusy }: Props
     {!data && !error && <p role="status">Checking your preview allowance…</p>}
     {data?.canCreate && !paid && <><p>Finish your lyric edits first. Starting the recording locks these words; a new recording is a separate creation.</p><button className="primary-button" type="button" disabled={busy} onClick={() => void create()}>{busy ? "Preparing your preview…" : data.state === "failed" ? "Retry my free preview" : "Create my free preview"}</button></>}
     {processing && <p role="status">{data?.state === "storing" ? "Saving your audio preview…" : "Creating your original recording…"} Your request is saved. Checking it does not create another song.</p>}
-    {data?.state === "ready" && data.audioUrl && <><audio ref={audio} controls preload="none" src={data.audioUrl} aria-label="Your 60-second song preview" onError={() => setAudioError(true)} />{audioError && <p role="status">This preview could not load. <button className="text-button" type="button" onClick={() => { setAudioError(false); audio.current?.load(); }}>Reload preview</button></p>}<p>{paid ? "Your payment is recorded. Continue below to open the full song." : "Like what you hear? Pay once below to unlock this same full recording, download it and give it as a gift."}</p></>}
+    {data?.state === "ready" && data.audioUrl && <><audio ref={audio} controls preload="none" src={data.audioUrl} aria-label="Your 60-second song preview" onPlaying={handlePlaying} onError={() => setAudioError(true)} />{audioError && <p role="status">This preview could not load. <button className="text-button" type="button" onClick={() => { setAudioError(false); audio.current?.load(); }}>Reload preview</button></p>}<p>{paid ? "Your payment is recorded. Continue below to open the full song." : "Like what you hear? Pay once below to unlock this same full recording, download it and give it as a gift."}</p></>}
     {data?.state === "needs_review" && <p>Your original request needs checking. No new song will be submitted automatically. Use the order help link below.</p>}
     {data && !data.canCreate && !data.state && !paid && <p>Your free audio allowance is unavailable or already used. You can still pay once to create this song.</p>}
     {data?.state === "failed" && <p>The music service could not finish this recording. A confirmed technical failure restores your free allowance; retry availability is checked before submitting. You can also return to My Songs and start a separate story.</p>}
