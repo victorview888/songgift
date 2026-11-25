@@ -4,7 +4,7 @@ import { HomeMenu } from "@/components/home-menu";
 import { SongSamples } from "@/components/song-samples";
 import { publicSongSamples } from "@/lib/song-samples";
 import { HolidaySongs } from "@/components/holiday-songs";
-import { holidayOccasions } from "@/lib/holidays";
+import { featuredHolidays, holidayOccasions } from "@/lib/holidays";
 import { audioPreviewEnabled } from "@/lib/preview-policy";
 import { SongPrice } from "@/components/song-price";
 import { publicSongPriceUsd } from "@/lib/pricing";
@@ -43,6 +43,7 @@ const occasions = [
 export default async function Home() {
   const samples = await publicSongSamples();
   const hasPreview = audioPreviewEnabled();
+  const christmas = featuredHolidays().find(holiday => holiday.slug === "christmas");
   const faqGroups = songFaqGroups({ price: publicSongPriceUsd(), hasPreview }).map(group => ({ ...group, items: group.items.filter(item => item.home !== false) }));
   return (
     <main>
@@ -64,7 +65,7 @@ export default async function Home() {
           <p className="eyebrow"><span className="eyebrow-dot" />Personalized song gifts, made from your memories</p>
           <h1>Your story.<br />Their favorite song.</h1>
           <p className="gift-hero-description">
-            Turn the names, memories and little moments only you know into a personal AI song. {hasPreview ? "Read your lyrics, try one free audio preview, then unlock the full song." : "Read your lyrics for free, then bring them to life."}
+            Create a personal AI song for someone you love, made from your names and memories. {hasPreview ? "Read your lyrics, try one free audio preview, then unlock the full song." : "Read your lyrics for free, then bring them to life."}
           </p>
           <div className="gift-hero-actions">
             <Link className="primary-button" href="/create">Create their song <ArrowIcon /></Link>
@@ -73,6 +74,11 @@ export default async function Home() {
           <p className="gift-hero-note"><span aria-hidden="true">✦</span> {hasPreview ? "One free 60-second preview per verified account" : "Free lyric preview"} · US${publicSongPriceUsd()} per song · USD / PayPal</p>
         </div>
       </section>
+
+      {christmas && <aside className="home-season-entry" aria-label="Christmas song gifts">
+        <p>A Christmas gift with their own story inside.</p>
+        <div><Link href="/occasions/christmas">Christmas song gifts <ArrowIcon /></Link>{samples.some(sample => sample.occasion.trim().toLowerCase() === "christmas") && <Link href="/occasions/christmas#samples">Hear a Christmas sample</Link>}</div>
+      </aside>}
 
       <div className="trust-strip">
         <span>Made for the moments words cannot quite hold</span>
@@ -113,6 +119,7 @@ export default async function Home() {
             </Link>
           ))}
         </div>
+        <p className="occasion-season-links"><Link href="/occasions">Explore all song gift occasions →</Link></p>
         <p className="occasion-season-links">Planning a holiday gift? {holidayOccasions.map((holiday, index) => <span key={holiday.slug}>{index > 0 && " · "}<Link href={`/occasions/${holiday.slug}`}>{holiday.name} songs</Link></span>)}</p>
       </section>
 
@@ -121,9 +128,11 @@ export default async function Home() {
       <section className="section home-guides" aria-labelledby="home-guides-heading">
         <div className="section-heading"><div><p className="section-kicker">Before you press play</p><h2 id="home-guides-heading">Make the words yours. Make the gift feel right.</h2></div><p>A few practical checks help your story become a song you can give with confidence.</p></div>
         <div className="guide-grid">
+          <article><p className="section-kicker">Find your story</p><h3><Link href="/guides/turn-memories-into-a-song">Turn one memory into a personal song</Link></h3><p>Start with a real moment, choose who the song is for and turn a few specific details into a story you can build on.</p><Link className="text-link" href="/guides/turn-memories-into-a-song">Find a story to start with →</Link></article>
           <article><p className="section-kicker">Check the words</p><h3><Link href="/guides/review-lyrics-before-music">Review names, memories and the chorus</Link></h3><p>See a fictional before-and-after edit, save the approved version and understand what a free audio preview lets you check.</p><Link className="text-link" href="/guides/review-lyrics-before-music">Read the lyric checklist →</Link></article>
           <article><p className="section-kicker">Give the song</p><h3><Link href="/guides/give-a-personal-song-gift">Plan a listening moment they will enjoy</Link></h3><p>Create and test a private gift link, add a short greeting and keep a downloaded copy ready for the occasion.</p><Link className="text-link" href="/guides/give-a-personal-song-gift">Read the sharing guide →</Link></article>
         </div>
+        <p className="occasion-season-links"><Link href="/guides">Explore the song gift guides →</Link></p>
       </section>
 
       <section className="section faq-section home-faq" id="faq" aria-labelledby="faq-heading">

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import {
   getChoice,
@@ -26,6 +26,7 @@ export function UsageConsent({ campaigns }: { campaigns: string[] }) {
   const [open, setOpen] = useState(false),
     [error, setError] = useState(""),
     [pending, setPending] = useState(false);
+  const panel = useRef<HTMLElement>(null);
   useEffect(() => {
     if (choice === "allow" && usagePage(path)) {
       refreshContext(campaigns);
@@ -37,6 +38,12 @@ export function UsageConsent({ campaigns }: { campaigns: string[] }) {
     window.addEventListener("songgift:preferences", show);
     return () => window.removeEventListener("songgift:preferences", show);
   }, []);
+  useEffect(() => {
+    if (open) {
+      panel.current?.scrollIntoView({ block: "center" });
+      panel.current?.focus({ preventScroll: true });
+    }
+  }, [open]);
   async function choose(allow: boolean) {
     setPending(true);
     setError("");
@@ -56,7 +63,7 @@ export function UsageConsent({ campaigns }: { campaigns: string[] }) {
   if (path.startsWith("/admin") || path.startsWith("/gift/")) return null;
   if (!open && (choice !== "" || !usagePage(path))) return null;
   return (
-    <section className="usage-consent" aria-label="Optional usage analytics">
+    <section ref={panel} className="usage-consent" aria-label="Optional usage analytics" tabIndex={-1}>
       <div>
         <h2>Help us improve songforalways?</h2>
         <p>

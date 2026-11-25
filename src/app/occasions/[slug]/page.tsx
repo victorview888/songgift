@@ -9,7 +9,13 @@ import { occasionCreateHref } from "@/lib/occasion-presets";
 import { absoluteUrl, publicPageMetadata } from "@/lib/seo";
 import { GiftingImage } from "@/components/gifting-image";
 import { sceneForOccasion } from "@/lib/gifting-imagery";
+import { SongSamples } from "@/components/song-samples";
+import { publicSongSamples } from "@/lib/song-samples";
+import { publicSongPriceUsd } from "@/lib/pricing";
+import { audioPreviewEnabled } from "@/lib/preview-policy";
 import "../occasions.css";
+
+export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -29,6 +35,9 @@ export default async function OccasionPage({ params }: Props) {
   const occasion = getOccasion(slug);
   if (!occasion) notFound();
   const createHref = occasionCreateHref(slug);
+  const publicSamples = await publicSongSamples();
+  const samples = publicSamples.filter(sample => sample.occasion.trim().toLowerCase() === occasion.name.toLowerCase());
+  const hasPreview = audioPreviewEnabled();
 
   return (
     <main className="occasion-page">
@@ -50,11 +59,20 @@ export default async function OccasionPage({ params }: Props) {
             <p className="section-kicker">A song for the occasion</p>
             <h1>{occasion.heading}</h1>
             <p>{occasion.introduction}</p>
-            <Link className="primary-button" href={createHref}>Create your {occasion.name.toLowerCase()} song <ArrowIcon /></Link>
-            <div className="occasion-action-links"><Link href="/pricing">See pricing and what is included</Link><Link href="/help">How song delivery works</Link></div>
+            <Link className="primary-button" href={createHref}>Create your {occasion.name} song <ArrowIcon /></Link>
+            <div className="occasion-action-links">{publicSamples.length > 0 && <a href={samples.length ? "#samples" : "/#samples"}>Hear a song sample</a>}<Link href="/pricing">See what is included</Link></div>
+            <p className="occasion-offer">Free lyric draft · US${publicSongPriceUsd()} per song · One-time payment</p>
+            {hasPreview && <p className="occasion-preview-note">One free audio creation per verified account, with up to 60 seconds to listen. Availability limits apply.</p>}
           </div>
           <figure className="occasion-scene"><GiftingImage scene={sceneForOccasion(slug)} sizes="(max-width: 800px) calc(100vw - 40px), 550px" priority /></figure>
         </section>
+
+        {samples.length > 0 && <SongSamples
+          samples={samples}
+          heading={`Hear a ${occasion.name} song gift.`}
+          introduction="Listen to a public example, then bring the memories you want in yours. Review and edit your own lyrics for free before starting the music."
+          createHref={createHref}
+        />}
 
         <section className="occasion-guide" aria-labelledby="occasion-guide-heading">
           <div className="occasion-section-heading"><p className="section-kicker">Make it personal</p><h2 id="occasion-guide-heading">What to include in your {occasion.name.toLowerCase()} song</h2><p>You do not need a script. Start with a few real details and write as you would to someone you love.</p></div>

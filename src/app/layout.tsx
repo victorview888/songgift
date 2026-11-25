@@ -28,7 +28,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body><AccountProvider>{children}</AccountProvider><LegalFooter /><UsageConsent campaigns={campaignAllowlist(process.env.SONGGIFT_ANALYTICS_CAMPAIGNS || "")} /></body>
+      <body><AccountProvider>{children}</AccountProvider><UsageConsent campaigns={campaignAllowlist(process.env.SONGGIFT_ANALYTICS_CAMPAIGNS || "")} /><LegalFooter /></body>
     </html>
   );
 }
