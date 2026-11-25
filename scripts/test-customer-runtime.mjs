@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
+import { createHash } from 'node:crypto';
 import { fixture,userId,otherId,wav } from '../tests/helpers/customer-fixture.mjs';
 
 // Loopback-only, fake credentials and disposable in-memory data. No .env reads.
@@ -20,6 +21,18 @@ async function serve() {
    if(url.pathname==='/__fixture__/health')return json(200,{fixture:'songgift-customer-loopback',submissions,queries});
    if(url.pathname==='/__fixture__/seed'&&req.method==='POST') {
     const draft=await f.order(),paid=await f.order({paid:true}),foreign=await f.order({owner:otherId,paid:true});
+    if(body.funnel){
+     await f.db.query('insert into public.admin_members(user_id) values($1) on conflict(user_id) do update set active=true',[userId]);
+     const bytes=wav(),hash=createHash('sha256').update(bytes).digest('hex');
+     const batch=(await f.db.query("insert into audio_demo_batches(token_hash,actor_id) values($1,$2) returning id",[createHash('sha256').update(crypto.randomUUID()).digest('hex'),userId])).rows[0].id;
+     for(const [slug,occasion] of [['birthday-demo','Birthday'],['anniversary-demo','Anniversary'],['christmas-demo','Christmas']]){
+      const path='isolated/'+slug+'.wav';f.objects.set('songs/'+path,bytes);
+      await f.db.query("insert into audio_previews(kind,public_slug,title,batch_id,is_public,provider,model,environment,input_snapshot,state,storage_bucket,full_path,clip_path,clip_seconds,full_sha256,clip_sha256,mime_type) values('sample',$1,$2,$3,true,'mock','isolated','test',$4,'ready','songs',$5,$5,0.01,$6,$6,'audio/wav') on conflict(public_slug) do nothing",[slug,'Isolated '+occasion,batch,JSON.stringify({occasion,style:'Acoustic pop'}),path,hash]);
+     }
+     f.objects.set('songs/isolated/private.wav',bytes);
+     await f.db.query("insert into audio_previews(order_id,user_id,provider,model,environment,input_snapshot,state,storage_bucket,full_path,clip_path,clip_seconds,full_sha256,clip_sha256,mime_type) values($1,$2,'mock','isolated','test','{}','ready','songs','isolated/private.wav','isolated/private.wav',0.01,$3,$3,'audio/wav')",[draft,userId,hash]);
+     return json(200,{draft,paid,foreign});
+    }
     if(body.growth){
      await f.db.query('insert into public.admin_members(user_id) values($1) on conflict(user_id) do update set active=true',[userId]);
      await f.db.query("update song_orders set title='A Song for Emma',status='completed' where id=$1",[paid]);
@@ -34,7 +47,7 @@ async function serve() {
     }
     if(body.admin)await f.db.query('insert into public.admin_members(user_id) values($1) on conflict(user_id) do update set active=true',[userId]);return json(200,{draft,paid,foreign});
    }
-   if(url.pathname==='/__fixture__/usage')return json(200,{events:(await f.db.query('select event,page,first_source,last_source,medium,campaign from usage_events order by id')).rows,attributions:(await f.db.query('select count(*)::int n from song_order_attribution')).rows[0].n});
+   if(url.pathname==='/__fixture__/usage')return json(200,{events:(await f.db.query('select event,page,first_source,last_source,medium,campaign,occasion from usage_events order by id')).rows,attributions:(await f.db.query('select count(*)::int n from song_order_attribution')).rows[0].n});
    if(url.pathname==='/__fixture__/membership'&&req.method==='POST'){await f.db.query('update admin_members set active=$1 where user_id=$2',[body.active===true,userId]);return json(200,{ok:true});}
    if(url.pathname==='/__fixture__/stories'){const requestId=url.searchParams.get('requestId');const rows=(await f.db.query('select request_id,order_id,state from public.song_story_requests where request_id=$1',[requestId])).rows;return json(200,{requests:rows});}
    if(url.pathname==='/__fixture__/fault'&&req.method==='POST'){f.setFail(body);return json(200,{ok:true});}

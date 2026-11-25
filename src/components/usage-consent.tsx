@@ -68,7 +68,7 @@ export function UsageConsent({ campaigns }: { campaigns: string[] }) {
         <h2>Help us improve songforalways?</h2>
         <p>
           Optional first-party analytics records a random browser ID, broad
-          traffic sources and song-making steps within a 30-day reporting
+          traffic sources, occasion categories, playback and song-making steps within a 30-day reporting
           window. We do not record stories, lyrics, names or email addresses in
           analytics. <Link href="/policies/privacy">Privacy details</Link>
         </p>

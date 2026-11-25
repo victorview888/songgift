@@ -173,8 +173,8 @@ try {
   }
   assert.ok(pages.get('/guides/review-lyrics-before-music').text.includes('Fictional editing example'));
   passed('Updated guides have visible accurate dates, matching Article data, original examples and direct homepage links');
-  for (const path of ['/policies/terms', '/policies/privacy'])
-    assert.ok(pages.get(path).times.some(time => time.date === '2026-11-15' && time.text === '15 November 2026'), path + ': visible policy date matches data');
+  for (const [path, date, text] of [['/policies/terms', '2026-11-15', '15 November 2026'], ['/policies/privacy', '2026-11-25', '25 November 2026']])
+    assert.ok(pages.get(path).times.some(time => time.date === date && time.text === text), path + ': visible policy date matches data');
   passed('Policy effective dates agree between visible text and machine-readable values');
   assert.ok(pages.get('/help').text.includes('Create gift link'));
   assert.ok(pages.get('/help').links.includes('/guides/give-a-personal-song-gift'));
@@ -187,6 +187,7 @@ try {
   for (const path of ['/pricing', '/policies/terms', '/guides/review-lyrics-before-music', '/guides/give-a-personal-song-gift'])
     assert.equal(updatedMap[path], '2026-11-16', path + ': fixed content update date');
   assert.equal(updatedMap['/help'], '2026-11-23', '/help: fixed date for the FAQ expansion');
+  assert.equal(updatedMap['/policies/privacy'], '2026-11-25', '/policies/privacy: date of the occasion analytics disclosure');
   for (const path of ['/create', '/occasions'])
     assert.equal(updatedMap[path], '2026-11-23', path + ': fixed date for the image-credit cleanup');
   for (const path of ['/', ...publicPaths.filter(path => path.startsWith('/occasions/'))])

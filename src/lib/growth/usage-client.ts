@@ -1,4 +1,4 @@
-import { usagePage, usageSources, usageMedia } from "./usage";
+import { usagePage, usageSources, usageMedia, usageOccasion, type UsageEvent } from "./usage";
 
 const CONTEXT_KEY = "sg_usage_context";
 const CHOICE_KEY = "sg_usage_choice";
@@ -129,8 +129,9 @@ export function refreshContext(campaigns: string[]) {
   }
 }
 export async function trackUsage(
-  event: "page_view" | "story_submitted" | "lyrics_ready" | "checkout_started",
+  event: UsageEvent,
   orderId?: string,
+  occasion?: string | null,
 ) {
   try {
     if (getChoice() !== "allow" || privateSignal()) return;
@@ -138,6 +139,13 @@ export async function trackUsage(
     if (!validContext(value, Date.now())) return;
     const page = orderId ? "lyrics" : usagePage(location.pathname);
     if (!page) return;
+    const url = new URL(location.href);
+    let context = occasion;
+    if (context === undefined && url.pathname.startsWith("/occasions/"))
+      context = url.pathname.slice("/occasions/".length);
+    if (context === undefined && url.pathname === "/create")
+      context = url.searchParams.get("occasion");
+    const scene = usageOccasion(context);
     await fetch(orderId ? "/api/analytics/order" : "/api/analytics/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -149,6 +157,7 @@ export async function trackUsage(
         last: value.last,
         medium: value.medium,
         campaign: value.campaign,
+        occasion: scene,
         ...(orderId ? { orderId } : {}),
       }),
       keepalive: true,

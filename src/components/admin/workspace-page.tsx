@@ -221,9 +221,13 @@ export async function WorkspacePage({
             Live
             捕获账本，交付来自最终音频记录。两类数据窗口和人群不同，不据此直接计算全站转化率。来源归因只覆盖已同意并关联的订单，采用
             30 天统计窗口，过期数据在后续采集时清理。
+            个人预览按期间创建的记录显示当前结果；未记录的场景显示为“未指定场景”。
           </p>
         )}
         <LoadState error={error} />
+        {kind === "analytics" && data && "analyticsVersion" in data && data.analyticsVersion !== 2 && (
+          <p className="admin-order-note">场景和个人预览统计尚未启用，请核对数据库迁移；现有来源和收款统计仍可查看。</p>
+        )}
         {data && (
           <>
             {(kind === "users" || kind === "audit") && (
@@ -256,6 +260,8 @@ export async function WorkspacePage({
                               <Link href={"/admin/orders/" + row[key]}>
                                 {row[key]}
                               </Link>
+                            ) : kind === "analytics" && key === "name" && row.label ? (
+                              String(row.label)
                             ) : key.endsWith("_at") ? (
                               shortDate(row[key] as string)
                             ) : row[key] === null ? (

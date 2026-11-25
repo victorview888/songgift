@@ -223,7 +223,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
   "privacy": {
     "title": "Privacy Policy",
     "description": "How songforalways handles your account, stories, AI generation, payments and saved songs.",
-    "effectiveDate": "2026-11-15",
+    "effectiveDate": "2026-11-25",
     "sections": [
       {
         "title": "1. Who is responsible for your information",
@@ -386,7 +386,7 @@ export const legalDocuments: Record<"terms" | "privacy" | "content-standards", P
           },
           {
             "kind": "paragraph",
-            "text": "We offer optional first-party usage analytics, disabled until you choose “Allow analytics”. A random browser identifier is stored in the sg_usage cookie and local storage, with coarse first and recent traffic sources, a channel category and pre-approved campaign labels. We record public page categories and song-making steps, not full URLs, raw referrers, stories, lyrics, names, emails or IP addresses in the analytics tables. For signed-in users who agree, an order reference may be associated with that random identifier so verified Live payment records can be grouped by source. Browser events can be incomplete or inaccurate and do not confirm a payment. We use no external advertising or analytics service for this feature. Third-party checkout pages have their own cookie notices."
+            "text": "We offer optional first-party usage analytics, disabled until you choose “Allow analytics”. A random browser identifier is stored in the sg_usage cookie and local storage, with coarse first and recent traffic sources, a channel category and pre-approved campaign labels. We record public page categories, broad occasion categories, sample and personal-preview plays, and song-making steps, not full URLs, raw referrers, stories, lyrics, names, emails or IP addresses in the analytics tables. For signed-in users who agree, an order reference may be associated with that random identifier so verified Live payment records can be grouped by source. Browser events can be incomplete or inaccurate and do not confirm a payment. We use no external advertising or analytics service for this feature. Third-party checkout pages have their own cookie notices."
           }
         ]
       },

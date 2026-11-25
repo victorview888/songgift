@@ -8,6 +8,8 @@ import {
   usageEvents,
   usagePages,
   campaignAllowlist,
+  usageOccasion,
+  usageOccasions,
 } from "./usage";
 export function usageSession(request: Request) {
   const value =
@@ -24,7 +26,7 @@ export function usageSession(request: Request) {
 export async function saveUsage(
   request: Request,
   input: Record<string, unknown>,
-  order?: { id: string; userId: string },
+  order?: { id: string; userId: string; occasion?: string },
 ) {
   const sid = usageSession(request);
   if (
@@ -38,6 +40,7 @@ export async function saveUsage(
           "last",
           "medium",
           "campaign",
+          "occasion",
         ].includes(k),
     ) ||
     typeof input.eventKey !== "string" ||
@@ -47,7 +50,11 @@ export async function saveUsage(
     !usageSources.includes(input.first as never) ||
     !usageSources.includes(input.last as never) ||
     !usageMedia.includes(input.medium as never) ||
-    typeof input.campaign !== "string"
+    typeof input.campaign !== "string" ||
+    (input.occasion !== undefined && input.occasion !== null && !usageOccasions.includes(input.occasion as never)) ||
+    (input.event === "sample_played" && !["home", "occasions"].includes(String(input.page))) ||
+    (input.event === "story_started" && input.page !== "create") ||
+    (input.event === "preview_played" && (!order || input.page !== "lyrics"))
   )
     throw new HttpError(400, "Invalid usage event.");
   const campaign = campaignAllowlist(
@@ -66,7 +73,9 @@ export async function saveUsage(
       p_last: input.last,
       p_medium: input.medium,
       p_campaign: campaign,
-      ...(order ? { p_order_id: order.id, p_user_id: order.userId } : {}),
+      p_occasion: order ? usageOccasion(order.occasion) : input.occasion ?? null,
+      p_order_id: order?.id ?? null,
+      p_user_id: order?.userId ?? null,
     },
   );
   if (error)

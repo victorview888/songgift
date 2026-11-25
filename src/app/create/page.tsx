@@ -22,6 +22,7 @@ export default function CreatePage() {
   const draftRef = useRef<StoryDraft | null>(null);
   const loadedFor = useRef<string | undefined>(undefined);
   const inFlight = useRef(false);
+  const started = useRef(false);
   const controller = useRef<AbortController | null>(null);
   const owner = useRef<string | null>(user?.id || null);
   const [ready, setReady] = useState(false);
@@ -49,7 +50,7 @@ export default function CreatePage() {
     return () => window.clearTimeout(timer);
   }, [loading, user?.id]);
   useEffect(() => {
-    const cleared = () => { controller.current?.abort(); inFlight.current = false; loadedFor.current = undefined; draftRef.current = null; setDraft(null); setReady(false); setNotice(""); setError(""); };
+    const cleared = () => { controller.current?.abort(); inFlight.current = false; started.current = false; loadedFor.current = undefined; draftRef.current = null; setDraft(null); setReady(false); setNotice(""); setError(""); };
     window.addEventListener(ACCOUNT_CLEARED_EVENT, cleared);
     return () => { window.removeEventListener(ACCOUNT_CLEARED_EVENT, cleared); controller.current?.abort(); };
   }, []);
@@ -60,9 +61,14 @@ export default function CreatePage() {
   function updateField(field: keyof StoryForm, value: string) {
     const current = draftRef.current;
     if (!current || current.orderId || !ready || inFlight.current || current.form[field] === value) return;
+    if (!started.current && value.trim()) {
+      started.current = true;
+      void trackUsage("story_started", undefined, field === "occasion" ? value : current.form.occasion);
+    }
     persist({ ...current, form: { ...current.form, [field]: value }, requestId: crypto.randomUUID(), savedAt: Date.now() });
   }
   function startNew() {
+    started.current = false;
     clearStoryDraft(); const next = newStoryDraft(user?.id || null);
     const preset = getOccasionPreset(new URLSearchParams(window.location.search).get("occasion"));
     if (preset) next.form.occasion = preset.occasion;

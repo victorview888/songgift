@@ -324,13 +324,14 @@ test("usage collection allows only coarse fields, configured campaigns and cooki
   ).rows;
   assert.equal(rows.length, 1);
   assert.equal(rows[0].campaign, "");
-  await stats().saveUsage(request, usage({ campaign: "birthday_2026" }));
+  const approved = usage({ campaign: "birthday_2026" });
+  await stats().saveUsage(request, approved);
   rows = (
     await f.db.query("select * from usage_events where session_id=$1", [
       session,
     ])
   ).rows;
-  assert.equal(rows[1].campaign, "birthday_2026");
+  assert.equal(rows.find(row => row.event_key === approved.eventKey).campaign, "birthday_2026");
 });
 
 test("order attribution is owner-only, first assignment wins, and cannot invent Live payment facts", async () => {
